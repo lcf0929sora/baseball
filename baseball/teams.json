@@ -7,15 +7,15 @@
       "logo": "./baseball/panda.png",
       "uniforms": {
         "home": {
-          "helmet": "#d8323a",
-          "body": "#d8323a",
-          "arms": "#d8323a",
+          "helmet": "#1c1c1c",
+          "body": "#1c1c1c",
+          "arms": "#1c1c1c",
           "shoes": "#f2f2f2"
         },
         "away": {
-          "helmet": "#d8323a",
-          "body": "#d8323a",
-          "arms": "#d8323a",
+          "helmet": "#1c1c1c",
+          "body": "#1c1c1c",
+          "arms": "#1c1c1c",
           "shoes": "#f2f2f2"
         }
       },
@@ -100,15 +100,15 @@
       "logo": "./baseball/tit.png",
       "uniforms": {
         "home": {
-          "helmet": "#1b2f66",
-          "body": "#1b2f66",
-          "arms": "#1b2f66",
+          "helmet": "#c49a6c",
+          "body": "#c49a6c",
+          "arms": "#c49a6c",
           "shoes": "#f2f2f2"
         },
         "away": {
-          "helmet": "#1b2f66",
-          "body": "#1b2f66",
-          "arms": "#1b2f66",
+          "helmet": "#c49a6c",
+          "body": "#c49a6c",
+          "arms": "#c49a6c",
           "shoes": "#f2f2f2"
         }
       },
@@ -182,6 +182,192 @@
         {
           "id": "BLUE-12",
           "name": "雀定",
+          "number": 12,
+          "position": "替補"
+        }
+      ]
+    },
+    {
+      "id": "GREY",
+      "name": "台中消波塊隊",
+      "logo": "./baseball/tetra.png",
+      "uniforms": {
+        "home": {
+          "helmet": "#708090",
+          "body": "#708090",
+          "arms": "#708090",
+          "shoes": "#f2f2f2"
+        },
+        "away": {
+          "helmet": "#708090",
+          "body": "#708090",
+          "arms": "#708090",
+          "shoes": "#f2f2f2"
+        }
+      },
+      "players": [
+        {
+          "id": "GREY-01",
+          "name": "杜石強",
+          "number": 1,
+          "position": "投手"
+        },
+        {
+          "id": "GREY-02",
+          "name": "石安順",
+          "number": 2,
+          "position": "捕手"
+        },
+        {
+          "id": "GREY-03",
+          "name": "賴穩固",
+          "number": 3,
+          "position": "一壘手"
+        },
+        {
+          "id": "GREY-04",
+          "name": "梁水泥",
+          "number": 4,
+          "position": "二壘手"
+        },
+        {
+          "id": "GREY-05",
+          "name": "洪剛強",
+          "number": 5,
+          "position": "游擊手"
+        },
+        {
+          "id": "GREY-06",
+          "name": "汪重磊",
+          "number": 6,
+          "position": "三壘手"
+        },
+        {
+          "id": "GREY-07",
+          "name": "江岩石",
+          "number": 7,
+          "position": "左外野手"
+        },
+        {
+          "id": "GREY-08",
+          "name": "柯磐石",
+          "number": 8,
+          "position": "中外野手"
+        },
+        {
+          "id": "GREY-09",
+          "name": "廖鐵壁",
+          "number": 9,
+          "position": "右外野手"
+        },
+        {
+          "id": "GREY-10",
+          "name": "許巨石",
+          "number": 10,
+          "position": "替補"
+        },
+        {
+          "id": "GREY-11",
+          "name": "范定海",
+          "number": 11,
+          "position": "替補"
+        },
+        {
+          "id": "GREY-12",
+          "name": "羅防波",
+          "number": 12,
+          "position": "替補"
+        }
+      ]
+    },
+    {
+      "id": "ORANGE",
+      "name": "苗栗貓隊",
+      "logo": "./baseball/leocat.png",
+      "uniforms": {
+        "home": {
+          "helmet": "#e67e22",
+          "body": "#e67e22",
+          "arms": "#e67e22",
+          "shoes": "#f2f2f2"
+        },
+        "away": {
+          "helmet": "#e67e22",
+          "body": "#e67e22",
+          "arms": "#e67e22",
+          "shoes": "#f2f2f2"
+        }
+      },
+      "players": [
+        {
+          "id": "ORANGE-01",
+          "name": "橘貓君",
+          "number": 1,
+          "position": "投手"
+        },
+        {
+          "id": "ORANGE-02",
+          "name": "三花醬",
+          "number": 2,
+          "position": "捕手"
+        },
+        {
+          "id": "ORANGE-03",
+          "name": "波斯王",
+          "number": 3,
+          "position": "一壘手"
+        },
+        {
+          "id": "ORANGE-04",
+          "name": "布偶萌",
+          "number": 4,
+          "position": "二壘手"
+        },
+        {
+          "id": "ORANGE-05",
+          "name": "暹羅勁",
+          "number": 5,
+          "position": "游擊手"
+        },
+        {
+          "id": "ORANGE-06",
+          "name": "豹貓豪",
+          "number": 6,
+          "position": "三壘手"
+        },
+        {
+          "id": "ORANGE-07",
+          "name": "虎斑翔",
+          "number": 7,
+          "position": "左外野手"
+        },
+        {
+          "id": "ORANGE-08",
+          "name": "緬因威",
+          "number": 8,
+          "position": "中外野手"
+        },
+        {
+          "id": "ORANGE-09",
+          "name": "英短宇",
+          "number": 9,
+          "position": "右外野手"
+        },
+        {
+          "id": "ORANGE-10",
+          "name": "摺耳傑",
+          "number": 10,
+          "position": "替補"
+        },
+        {
+          "id": "ORANGE-11",
+          "name": "狸貓凱",
+          "number": 11,
+          "position": "替補"
+        },
+        {
+          "id": "ORANGE-12",
+          "name": "山貓安",
           "number": 12,
           "position": "替補"
         }

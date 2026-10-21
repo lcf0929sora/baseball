@@ -4,7 +4,7 @@
 .team-selects select,.team-tools button,.team-tools input{background:#17243b;color:#f3f1e7;border:1px solid #465775;border-radius:6px;padding:10px;font:inherit}
 .team-tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.team-tools button{cursor:pointer}.team-cards{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .team-pick-card{width:110px;padding:8px;background:#17243b;border:1px solid #354765;border-radius:8px;display:flex;flex-direction:column;gap:5px;overflow:hidden}
-.team-logo{width:72px;height:72px;margin:auto;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}.team-logo img{width:100%;height:100%;object-fit:contain}.team-pick-card small{color:#9aaecb}
+.team-logo{width:72px;height:72px;margin:auto;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}.team-logo img{width:100%;height:100%;object-fit:contain}.team-pick-card small{color:#9aaecb}.team-logo-error{color:#ff7777;font-size:11px;line-height:1.35;overflow-wrap:anywhere;margin-top:3px}.team-logo-error[hidden]{display:none!important}
 </style></head><body>
 <title>夜戰打擊場</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -74,6 +74,11 @@ body{background:var(--night);color:var(--chalk);font-family:var(--f-ui);overflow
 #go{margin-top:14px;cursor:pointer;font:900 20px var(--f-ui);letter-spacing:.3em;padding:14px 34px 14px 40px;background:var(--led);color:#1a1205;border:0}
 #start[hidden]{display:none}
 .sc{position:absolute;top:128px;left:max(16px,env(safe-area-inset-left,0px));background:var(--board);border:1px solid #2a3a58;padding:6px 12px;display:flex;gap:12px;align-items:center;font-family:var(--f-num);font-size:22px;letter-spacing:.06em}
+#inn{display:none!important}
+.base-mini{position:absolute;top:10px;left:190px;width:86px;height:86px;padding:3px;background:var(--board);border:1px solid #2a3a58;box-sizing:border-box}
+.base-mini svg{width:100%;height:100%;display:block}
+#attackTop{position:absolute;top:56px;left:50%;transform:translateX(-50%);padding:5px 18px;background:rgba(8,16,31,.88);border:1px solid #ffb43a;color:#ffb43a;font-size:clamp(16px,2.1vw,24px);font-weight:900;letter-spacing:.08em;white-space:nowrap;text-shadow:0 2px 6px #000}
+#attackTop[hidden]{display:none!important}
 .sc .rs{display:flex;flex-direction:column;line-height:1.1}.sc .rs b{color:var(--led);font-weight:700}.sc #inn{color:var(--dim);font-family:var(--f-ui);font-size:13px;font-weight:900;min-width:4.6em}
 .sc svg rect{fill:#0d1424;stroke:#c9d3e6;stroke-width:1.2}
 #activePlayerInfo{position:absolute;left:max(16px,env(safe-area-inset-left,0px));bottom:62px;display:flex;flex-direction:column;gap:10px;min-width:270px;max-width:min(560px,80vw);padding:10px 13px;background:rgba(8,16,31,.9);border:1px solid #2a3a58;border-left:3px solid var(--led);box-shadow:0 3px 12px #0005;font-size:16px;line-height:1.35;text-shadow:0 1px 3px #000}
@@ -146,7 +151,7 @@ html,body{background:#000}
     </div>
     <div class="pitch" id="pitch"></div>
     <div id="activePlayerInfo" aria-live="polite" aria-label="目前打者與投手資訊"><div class="player-card"><div class="player-line"><span class="role">打者</span><span class="player-number" id="activeBatterNumber">1</span><span class="player-name" id="activeBatterName">陳冠宇</span></div><div class="player-stats" id="activeBatterStats"><span>AVG .000</span><span>RBI 0</span><span>HR 0</span></div></div><div class="player-card"><div class="player-line"><span class="role">投手</span><span class="player-number" id="activePitcherNumber">1</span><span class="player-name" id="activePitcherName">林昱珉</span></div><div class="player-stats" id="activePitcherStats"><span>PC 0</span><span>ERA —</span><span>SO 0</span></div></div></div>
-    <div class="sc"><div id="inn"></div><div class="rs"><span><i id="homeTeamLabel" style="font-style:normal">RED</i> <b id="scMe">0</b></span><span><i id="awayTeamLabel" style="font-style:normal">BLUE</i> <b id="scCpu">0</b></span></div><svg id="mini" width="120" height="110" viewBox="0 0 100 92" aria-label="壘包與跑者位置">
+    <div class="sc"><div id="inn"></div><div class="rs"><span><i id="homeTeamLabel" style="font-style:normal">RED</i> <b id="scMe">0</b></span><span><i id="awayTeamLabel" style="font-style:normal">BLUE</i> <b id="scCpu">0</b></span></div></div><div class="base-mini"><svg id="mini" width="100" height="100" viewBox="0 0 100 92" aria-label="壘包與跑者位置">
       <path d="M50 78 L81 47 L50 16 L19 47 Z" fill="none" stroke="#33456a" stroke-width="1.2" stroke-dasharray="3 2.5"/>
       <circle cx="50" cy="52" r="2" fill="#33456a"/>
       <polygon points="45,75 55,75 55,79.5 50,84 45,79.5" fill="#c9d3e6" stroke="#33456a" stroke-width="1"/>
@@ -155,6 +160,7 @@ html,body{background:#000}
       <rect id="b1" x="75.5" y="41.5" width="11" height="11" transform="rotate(45 81 47)"/>
       <g id="miniRunners"></g>
     </svg></div>
+    <div id="attackTop" aria-live="polite">第 1 局・RED 進攻</div>
     <div id="ptypes" hidden></div>
     <div class="banner" id="banner"><h1 id="bt"></h1><p id="bs"></p></div>
     <div class="tbar" id="tbar"><i></i><u id="tm"></u><span style="left:0">早</span><span style="right:0">晚</span></div>
@@ -170,7 +176,7 @@ html,body{background:#000}
         <label>電腦對手<select id="teamAway"></select></label>
       </div>
       <div class="team-tools">
-        <span id="teamLoadStatus" role="status">正在讀取 ./baseball/teams.json…</span>
+        <span id="teamLoadStatus" role="status" hidden></span>
         <button id="saveTeams" type="button">下載目前 JSON</button>
       </div>
       <div id="teamCards" class="team-cards"></div>
@@ -540,12 +546,22 @@ function sbTexInit(){window.__sbTex=new BABYLON.DynamicTexture('scoreboardTex',{
 //   LS＝每隊每局得分、TH＝安打、TE＝失誤。進入延長賽（超過 9 局）時，顯示最近 9 局。
 const LS={me:[],cpu:[]},TH={me:0,cpu:0},TE={me:0,cpu:0};
 let sbSig='';
+const sbLogoImages={RED:null,BLUE:null};
+function refreshScoreboardLogos(){
+  [['RED',chosenHomeId],['BLUE',chosenAwayId]].forEach(([slot,id])=>{
+    const team=teamConfig.teams.find(t=>t.id===id),src=team&&team.logo?String(team.logo).trim():'';
+    const old=sbLogoImages[slot];if(old&&old._src===src)return;
+    sbLogoImages[slot]=null;if(!src)return;
+    const im=new Image();im._src=src;im.onload=()=>{sbSig='';try{updScoreboard();}catch(e){}};im.onerror=()=>{sbLogoImages[slot]=null;};im.src=src;sbLogoImages[slot]=im;
+  });
+  sbSig='';
+}
 const SB_FONT='"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif',SB_NUM='"Arial Narrow","Helvetica Neue",Arial,sans-serif';
 function updScoreboard(){
   try{
     const tex=window.__sbTex;if(!tex)return;
     let bn='';try{const bt=currentBatter();bn='#'+bt.number+'  '+bt.name;}catch(e){}
-    const sig=[inn,mode,gameOver,balls,strikes,outs,bases.join(''),bn,score.me,score.cpu,LS.me.join(','),LS.cpu.join(','),TH.me,TH.cpu,TE.me,TE.cpu].join('|');
+    const sig=[inn,mode,gameOver,balls,strikes,outs,bases.join(''),bn,score.me,score.cpu,LS.me.join(','),LS.cpu.join(','),TH.me,TH.cpu,TE.me,TE.cpu,chosenHomeId,chosenAwayId].join('|');
     if(sig===sbSig)return;sbSig=sig;
     const g=tex.getContext(),W=SB_PX,H=SB_PY;
     const txt=(t,x,y,size,color,align,font)=>{g.font='bold '+size+'px '+(font||SB_NUM);g.fillStyle=color;g.textAlign=align||'center';g.textBaseline='middle';g.fillText(t,x,y);};
@@ -554,7 +570,7 @@ function updScoreboard(){
     g.strokeStyle='#e9e6dc';g.lineWidth=10;g.strokeRect(8,8,W-16,H-16);
     g.strokeStyle='#4d5a50';g.lineWidth=2;g.strokeRect(24,24,W-48,H-48);
     // 欄位位置
-    const NAME_X=44,NAME_W=290,IN_X=NAME_X+NAME_W+6,IN_W=90,NINN=9,RHE_X=IN_X+NINN*IN_W+22,RHE_W=106;
+    const NAME_X=44,NAME_W=350,IN_X=NAME_X+NAME_W+6,IN_W=78,NINN=9,RHE_X=IN_X+NINN*IN_W+22,RHE_W=90;
     const HY=44,HH=78,R1=HY+HH+8,RH=118,R2=R1+RH+6,BY=R2+RH+16;
     const first=Math.max(1,inn-NINN+1);   // 延長賽時窗口右移
     // 表頭：局數 1..9、R H E
@@ -565,11 +581,13 @@ function updScoreboard(){
     txt('TEAM',NAME_X+NAME_W/2,HY+HH/2+2,40,'#8d9a90');
     // 兩隊列
     const batTeam=mode==='bat'?'me':'cpu';
-    [['RED','#d8323a','me',R1],['BLUE','#2f6fe0','cpu',R2]].forEach(([nm,col,key,y])=>{
+    [['RED','#d8323a','me',R1,chosenHomeId],['BLUE','#2f6fe0','cpu',R2,chosenAwayId]].forEach(([nm,col,key,y,teamId])=>{
       const batting=!gameOver&&batTeam===key;
+      const teamInfo=teamConfig.teams.find(t=>t.id===teamId),teamName=(teamInfo&&teamInfo.name)||nm;
       g.fillStyle=batting?'#1d2a20':'#101612';g.fillRect(NAME_X,y,NAME_W,RH);
       g.fillStyle=col;g.fillRect(NAME_X,y,22,RH);
-      txt(nm,NAME_X+46,y+RH/2+3,70,'#f2f2ee','left');
+      const logo=sbLogoImages[nm];if(logo&&logo.complete&&logo.naturalWidth){g.save();g.beginPath();g.rect(NAME_X+24,y+6,94,RH-12);g.clip();const scale=Math.min(94/logo.naturalWidth,(RH-12)/logo.naturalHeight),lw=logo.naturalWidth*scale,lh=logo.naturalHeight*scale;g.drawImage(logo,NAME_X+71-lw/2,y+RH/2-lh/2,lw,lh);g.restore();}
+      const nameFont=teamName.length>7?30:(teamName.length>5?36:48);g.save();g.beginPath();g.rect(NAME_X+122,y+4,NAME_W-170,RH-8);g.clip();txt(teamName,NAME_X+126,y+RH/2+3,nameFont,'#f2f2ee','left',SB_FONT);g.restore();
       if(batting){g.fillStyle='#ffb43a';g.beginPath();g.moveTo(NAME_X+NAME_W-14,y+RH/2-16);g.lineTo(NAME_X+NAME_W-14,y+RH/2+16);g.lineTo(NAME_X+NAME_W-38,y+RH/2);g.closePath();g.fill();}
       for(let i=0;i<NINN;i++){const x=IN_X+i*IN_W,n=first+i;
         g.fillStyle='#101612';g.fillRect(x+3,y,IN_W-6,RH);
@@ -580,7 +598,7 @@ function updScoreboard(){
         if(played){const r=LS[key][n-1]||0;txt(String(r),x+IN_W/2,y+RH/2+3,82,r>0?'#ffffff':'#7f8b82');}
       }
       const vals=[score[key],TH[key],TE[key]];
-      vals.forEach((v,i)=>{const x=RHE_X+i*RHE_W;g.fillStyle='#101612';g.fillRect(x+3,y,RHE_W-6,RH);txt(String(v),x+RHE_W/2,y+RH/2+3,i===0?96:82,i===0?'#ffb43a':'#f2f2ee');});
+      vals.forEach((v,i)=>{const x=RHE_X+i*RHE_W;g.fillStyle='#101612';g.fillRect(x+3,y,RHE_W-6,RH);txt(String(v),x+RHE_W/2,y+RH/2+3,i===0?82:72,i===0?'#ffb43a':'#f2f2ee');});
     });
     // 下方：B S O 燈號、壘包、目前打者
     g.fillStyle='#0d130f';g.fillRect(NAME_X,BY,W-2*NAME_X,H-BY-34);
@@ -590,7 +608,7 @@ function updScoreboard(){
       for(let k=0;k<m;k++){g.beginPath();g.arc(x0+66+k*52,cy,19,0,6.2832);g.fillStyle=k<n?c:'#1d2433';g.fill();g.lineWidth=2;g.strokeStyle='#3a4560';g.stroke();}});
     [[858,cy+14],[816,cy-14],[774,cy+14]].forEach((pt,i)=>{g.save();g.translate(pt[0],pt[1]);g.rotate(Math.PI/4);g.fillStyle=bases[i]?'#ffb43a':'#1d2433';g.fillRect(-14,-14,28,28);g.lineWidth=3;g.strokeStyle='#3a4560';g.strokeRect(-14,-14,28,28);g.restore();});
     if(gameOver)txt('FINAL',1000,cy+2,52,'#ffb43a','center');
-    else txt((mode==='bat'?'▲ ':'▼ ')+'打擊  '+bn,1480,cy+2,40,'#f2f2ee','right',SB_FONT);
+    else txt('B  S  O',1480,cy+2,34,'#c9d1e0','right',SB_FONT);
     tex.update();
   }catch(e){}
 }
@@ -860,6 +878,7 @@ function applyTeamConfig(c){
  teamConfig=validTeamConfig(c);
  const a=teamConfig.teams.find(t=>t.id===chosenHomeId)||teamConfig.teams[0],b=teamConfig.teams.find(t=>t.id===chosenAwayId&&t.id!==a.id)||teamConfig.teams.find(t=>t.id!==a.id);
  chosenHomeId=a.id;chosenAwayId=b.id;
+ refreshScoreboardLogos();
  [['RED',a],['BLUE',b]].forEach(([slot,t])=>{
    const list=t.players.map((p,i)=>{const q=makePlayer(slot,String(p.name||('球員 '+(i+1))),i);q.id=slot+'-'+(p.id||i+1);q.name=String(p.name||('球員 '+(i+1)));q.number=Number(p.number)||i+1;q.pos=p.position||POS_ORDER[i]||'替補';return q;});
    rosters[slot].splice(0,rosters[slot].length,...list);
@@ -876,7 +895,23 @@ function refreshTeamPicker(){
 }
 function renderTeamCards(){
  const box=$('teamCards');if(!box)return;
- box.innerHTML=teamConfig.teams.map(t=>`<div class="team-pick-card"><div class="team-logo">${t.logo?`<img src="${String(t.logo).replace(/"/g,'&quot;')}" alt="" onerror="this.remove()">`:''}</div><b>${String(t.name).replace(/</g,'&lt;')}</b><small>${t.players.length} 名球員</small></div>`).join('');
+ box.innerHTML=teamConfig.teams.map((t,i)=>`<div class="team-pick-card" data-team-index="${i}"><div class="team-logo"></div><b>${String(t.name).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</b><small>${t.players.length} 名球員</small><div class="team-logo-error" role="alert" hidden></div></div>`).join('');
+ [...box.querySelectorAll('.team-pick-card')].forEach((card,i)=>{
+   const team=teamConfig.teams[i],logoBox=card.querySelector('.team-logo'),error=card.querySelector('.team-logo-error');
+   const showError=message=>{error.textContent=message;error.hidden=false;};
+   if(!team.logo||!String(team.logo).trim()){
+     showError('隊徽載入失敗：未設定 logo 路徑');
+     return;
+   }
+   const img=document.createElement('img');img.alt='';img.loading='lazy';
+   img.addEventListener('error',()=>{
+     img.remove();
+     showError('隊徽載入失敗：'+String(team.logo)+'（請檢查檔名、路徑及大小寫）');
+   },{once:true});
+   img.addEventListener('load',()=>{error.hidden=true;error.textContent='';},{once:true});
+   img.src=String(team.logo);
+   logoBox.appendChild(img);
+ });
 }
 function downloadTeamJSON(){
  const blob=new Blob([JSON.stringify(teamConfig,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
@@ -1957,7 +1992,7 @@ function lampsAfterOut(sub,k){
   hud2();return [sub,note].filter(Boolean).join(' ・ ');
 }
 function updateActivePlayerStats(){const b=currentBatter(),p=currentPitcher(),bs=b.batting,ps=p.pitching;const be=$('activeBatterStats'),pe=$('activePitcherStats');if(be)be.innerHTML='<span>AVG '+statAVG(bs)+'</span><span>RBI '+bs.RBI+'</span><span>HR '+bs.HR+'</span>';if(pe)pe.innerHTML='<span>PC '+(ps.pitches||0)+'</span><span>ERA '+statERA(ps)+'</span><span>SO '+ps.SO+'</span>';}
-function hud2(){const b=currentBatter(),p=currentPitcher();if($('homeTeamLabel'))$('homeTeamLabel').textContent=(teamConfig.teams.find(t=>t.id===chosenHomeId)||{}).name||'RED';if($('awayTeamLabel'))$('awayTeamLabel').textContent=(teamConfig.teams.find(t=>t.id===chosenAwayId)||{}).name||'BLUE';$('inn').textContent='第'+inn+'局 '+(mode==='bat'?'RED 攻':'BLUE 攻');$('scMe').textContent=score.me;$('scCpu').textContent=score.cpu;$('activeBatterNumber').textContent=String(b.number);$('activeBatterName').textContent=b.name;$('activePitcherNumber').textContent=String(p.number);$('activePitcherName').textContent=p.name;$('activePlayerInfo').hidden=(st==='title'||lockerRoomView);updateActivePlayerStats();syncBaseRunners();updateLockerRoster();}
+function hud2(){const b=currentBatter(),p=currentPitcher();if($('homeTeamLabel'))$('homeTeamLabel').textContent=(teamConfig.teams.find(t=>t.id===chosenHomeId)||{}).name||'RED';if($('awayTeamLabel'))$('awayTeamLabel').textContent=(teamConfig.teams.find(t=>t.id===chosenAwayId)||{}).name||'BLUE';$('inn').textContent='第'+inn+'局';const attackSlot=mode==='bat'?'RED':'BLUE',attackId=attackSlot==='RED'?chosenHomeId:chosenAwayId,attackName=(teamConfig.teams.find(t=>t.id===attackId)||{}).name||attackSlot;if($('attackTop'))$('attackTop').textContent='第 '+inn+' 局　｜　'+attackName+' 進攻';$('scMe').textContent=score.me;$('scCpu').textContent=score.cpu;$('activeBatterNumber').textContent=String(b.number);$('activeBatterName').textContent=b.name;$('activePitcherNumber').textContent=String(p.number);$('activePitcherName').textContent=p.name;$('activePlayerInfo').hidden=(st==='title'||lockerRoomView);updateActivePlayerStats();syncBaseRunners();updateLockerRoster();}
 function applyTeamColors(){
   const batC=mode==='bat'?COL_RED:COL_BLUE,fldC=mode==='bat'?COL_BLUE:COL_RED;
   const paint=(list,c)=>list.forEach(([m,k])=>{m.diffuseColor=new BABYLON.Color3(Math.min(1,c.r*k),Math.min(1,c.g*k),Math.min(1,c.b*k));});
@@ -3064,10 +3099,10 @@ async function loadFixedTeamConfig(){
    if(!response.ok)throw new Error('HTTP '+response.status);
    const cfg=await response.json();
    applyTeamConfig(cfg);
-   if(status)status.textContent='已載入 ./baseball/teams.json（'+cfg.teams.length+' 支球隊）';
+   if(status){status.textContent='';status.hidden=true;}
  }catch(err){
    applyTeamConfig(DEFAULT_TEAM_CONFIG);
-   if(status)status.textContent='JSON 載入失敗，使用內建預設球隊（請透過 HTTP 伺服器開啟）';
+   if(status){status.textContent='JSON 載入失敗：無法讀取 ./baseball/teams.json；目前使用內建預設球隊。請確認檔案路徑並透過 HTTP 伺服器開啟。';status.hidden=false;}
    console.warn('無法載入 ./baseball/teams.json，使用內建預設球隊：',err);
  }
 }

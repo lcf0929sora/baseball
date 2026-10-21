@@ -4,7 +4,7 @@
     {
       "id": "RED",
       "name": "四川熊貓隊",
-      "logo": "panda.png",
+      "logo": "./baseball/panda.png",
       "uniforms": {
         "home": {
           "helmet": "#d8323a",
@@ -97,7 +97,7 @@
     {
       "id": "BLUE",
       "name": "北海道山雀隊",
-      "logo": "tit.png",
+      "logo": "./baseball/tit.png",
       "uniforms": {
         "home": {
           "helmet": "#1b2f66",

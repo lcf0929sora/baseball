@@ -115,73 +115,73 @@
       "players": [
         {
           "id": "BLUE-01",
-          "name": "林昱珉",
+          "name": "雀雀",
           "number": 1,
           "position": "投手"
         },
         {
           "id": "BLUE-02",
-          "name": "曾頌恩",
+          "name": "雀胖胖",
           "number": 2,
           "position": "捕手"
         },
         {
           "id": "BLUE-03",
-          "name": "陳傑憲",
+          "name": "雀中中",
           "number": 3,
           "position": "一壘手"
         },
         {
           "id": "BLUE-04",
-          "name": "江坤宇",
+          "name": "雀小愛",
           "number": 4,
           "position": "二壘手"
         },
         {
           "id": "BLUE-05",
-          "name": "林安可",
+          "name": "雀小玉",
           "number": 5,
           "position": "游擊手"
         },
         {
           "id": "BLUE-06",
-          "name": "高宇杰",
+          "name": "雀笨笨",
           "number": 6,
           "position": "三壘手"
         },
         {
           "id": "BLUE-07",
-          "name": "徐若熙",
+          "name": "雀大冰",
           "number": 7,
           "position": "左外野手"
         },
         {
           "id": "BLUE-08",
-          "name": "吉力吉撈",
+          "name": "雀中冰",
           "number": 8,
           "position": "中外野手"
         },
         {
           "id": "BLUE-09",
-          "name": "王政順",
+          "name": "雀小摳",
           "number": 9,
           "position": "右外野手"
         },
         {
           "id": "BLUE-10",
-          "name": "邱智呈",
+          "name": "雀小快",
           "number": 10,
           "position": "替補"
         },
         {
           "id": "BLUE-11",
-          "name": "陳文杰",
+          "name": "雀小可",
           "number": 11,
           "position": "替補"
         },
         {
           "id": "BLUE-12",
-          "name": "楊志龍",
+          "name": "雀定",
           "number": 12,
           "position": "替補"
         }

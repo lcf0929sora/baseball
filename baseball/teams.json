@@ -1,0 +1,191 @@
+{
+  "version": 1,
+  "teams": [
+    {
+      "id": "RED",
+      "name": "四川熊貓隊",
+      "logo": "panda.png",
+      "uniforms": {
+        "home": {
+          "helmet": "#d8323a",
+          "body": "#d8323a",
+          "arms": "#d8323a",
+          "shoes": "#f2f2f2"
+        },
+        "away": {
+          "helmet": "#d8323a",
+          "body": "#d8323a",
+          "arms": "#d8323a",
+          "shoes": "#f2f2f2"
+        }
+      },
+      "players": [
+        {
+          "id": "RED-01",
+          "name": "陳冠宇",
+          "number": 1,
+          "position": "投手"
+        },
+        {
+          "id": "RED-02",
+          "name": "林子豪",
+          "number": 2,
+          "position": "捕手"
+        },
+        {
+          "id": "RED-03",
+          "name": "張育成",
+          "number": 3,
+          "position": "一壘手"
+        },
+        {
+          "id": "RED-04",
+          "name": "王柏融",
+          "number": 4,
+          "position": "二壘手"
+        },
+        {
+          "id": "RED-05",
+          "name": "李承恩",
+          "number": 5,
+          "position": "游擊手"
+        },
+        {
+          "id": "RED-06",
+          "name": "黃偉哲",
+          "number": 6,
+          "position": "三壘手"
+        },
+        {
+          "id": "RED-07",
+          "name": "吳俊霖",
+          "number": 7,
+          "position": "左外野手"
+        },
+        {
+          "id": "RED-08",
+          "name": "蔡明修",
+          "number": 8,
+          "position": "中外野手"
+        },
+        {
+          "id": "RED-09",
+          "name": "鄭凱文",
+          "number": 9,
+          "position": "右外野手"
+        },
+        {
+          "id": "RED-10",
+          "name": "周家翔",
+          "number": 10,
+          "position": "替補"
+        },
+        {
+          "id": "RED-11",
+          "name": "許文傑",
+          "number": 11,
+          "position": "替補"
+        },
+        {
+          "id": "RED-12",
+          "name": "郭俊宏",
+          "number": 12,
+          "position": "替補"
+        }
+      ]
+    },
+    {
+      "id": "BLUE",
+      "name": "北海道山雀隊",
+      "logo": "tit.png",
+      "uniforms": {
+        "home": {
+          "helmet": "#1b2f66",
+          "body": "#1b2f66",
+          "arms": "#1b2f66",
+          "shoes": "#f2f2f2"
+        },
+        "away": {
+          "helmet": "#1b2f66",
+          "body": "#1b2f66",
+          "arms": "#1b2f66",
+          "shoes": "#f2f2f2"
+        }
+      },
+      "players": [
+        {
+          "id": "BLUE-01",
+          "name": "林昱珉",
+          "number": 1,
+          "position": "投手"
+        },
+        {
+          "id": "BLUE-02",
+          "name": "曾頌恩",
+          "number": 2,
+          "position": "捕手"
+        },
+        {
+          "id": "BLUE-03",
+          "name": "陳傑憲",
+          "number": 3,
+          "position": "一壘手"
+        },
+        {
+          "id": "BLUE-04",
+          "name": "江坤宇",
+          "number": 4,
+          "position": "二壘手"
+        },
+        {
+          "id": "BLUE-05",
+          "name": "林安可",
+          "number": 5,
+          "position": "游擊手"
+        },
+        {
+          "id": "BLUE-06",
+          "name": "高宇杰",
+          "number": 6,
+          "position": "三壘手"
+        },
+        {
+          "id": "BLUE-07",
+          "name": "徐若熙",
+          "number": 7,
+          "position": "左外野手"
+        },
+        {
+          "id": "BLUE-08",
+          "name": "吉力吉撈",
+          "number": 8,
+          "position": "中外野手"
+        },
+        {
+          "id": "BLUE-09",
+          "name": "王政順",
+          "number": 9,
+          "position": "右外野手"
+        },
+        {
+          "id": "BLUE-10",
+          "name": "邱智呈",
+          "number": 10,
+          "position": "替補"
+        },
+        {
+          "id": "BLUE-11",
+          "name": "陳文杰",
+          "number": 11,
+          "position": "替補"
+        },
+        {
+          "id": "BLUE-12",
+          "name": "楊志龍",
+          "number": 12,
+          "position": "替補"
+        }
+      ]
+    }
+  ]
+}

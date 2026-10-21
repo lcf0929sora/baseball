@@ -102,6 +102,21 @@ html,body{background:#000}
   #snd{width:40px;height:40px}
   .pitch{font-size:18px}
 }
+
+/* 攻守交換時清空其他面板，只留下同一列隊徽與超大比分 */
+#inningScoreFlash{position:absolute;z-index:50;inset:0;width:100%;height:100%;box-sizing:border-box;padding:0;background:transparent;border:0;border-radius:0;box-shadow:none;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transform:scale(.98);transition:opacity .18s,transform .18s;pointer-events:none;text-align:center;overflow:hidden}
+#inningScoreFlash.show{opacity:1;visibility:visible;transform:scale(1)}
+#app.changing-sides #hud> :not(#inningScoreFlash){visibility:hidden!important;opacity:0!important}
+#app.changing-sides #inningScoreFlash{visibility:visible;opacity:1;transform:scale(1)}
+#inningScoreFlash .flash-line{--flash-size:clamp(54px,12vw,180px);display:flex;align-items:center;justify-content:center;gap:clamp(4px,1.7vw,24px);width:100%;height:100%;padding:0 2.5%;box-sizing:border-box;white-space:nowrap}
+#inningScoreFlash .flash-logo{display:block;flex:0 1 var(--flash-size);width:var(--flash-size);height:var(--flash-size);max-width:22vw;object-fit:contain;filter:drop-shadow(0 4px 8px #000);}
+#inningScoreFlash .flash-logo[hidden]{display:block;visibility:hidden}
+#inningScoreFlash .flash-score{display:contents;font-family:var(--f-num);font-size:var(--flash-size);font-weight:700;line-height:1;font-variant-numeric:tabular-nums;text-shadow:0 5px 0 #111827,0 0 24px rgba(255,180,58,.35)}
+#inningScoreFlash .flash-score b{display:block;flex:0 1 auto;min-width:0;font-size:var(--flash-size);line-height:1;font-weight:700;color:var(--led)}
+#inningScoreFlash .flash-score i{display:block;flex:0 0 auto;font-style:normal;color:var(--chalk);font-size:calc(var(--flash-size)*.72);line-height:1}
+#inningScoreFlash .flash-caption{display:none!important}
+@media(max-width:520px){#inningScoreFlash .flash-line{--flash-size:clamp(42px,15.5vw,82px);gap:clamp(3px,1vw,8px);padding:0 2%}#inningScoreFlash .flash-logo{max-width:21vw}}
+
 @media (prefers-reduced-motion:reduce){.banner,.pitch,.tbar{transition:none}}
 #menuBtn{position:absolute;z-index:25;top:12px;right:12px;width:46px;height:46px;border:1px solid #465775;border-radius:8px;background:rgba(8,16,31,.92);color:var(--chalk);font-size:27px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px #0005}
 #menuBtn:focus-visible,#settings button:focus-visible{outline:2px solid var(--led);outline-offset:2px}
@@ -162,6 +177,13 @@ html,body{background:#000}
     <div id="attackTop" aria-live="polite">第 1 局　｜　RED 進攻</div>
     <div class="sc"><div id="inn">第1局</div><div class="rs"><div class="team-score-row"><span class="team-name-cell"><img class="score-team-logo" id="homeScoreLogo" alt="" hidden><i class="team-name-text" id="homeTeamLabel" style="font-style:normal">RED</i></span><b id="scMe">0</b></div><div class="team-score-row"><span class="team-name-cell"><img class="score-team-logo" id="awayScoreLogo" alt="" hidden><i class="team-name-text" id="awayTeamLabel" style="font-style:normal">BLUE</i></span><b id="scCpu">0</b></div></div></div>
     <div id="ptypes" hidden></div>
+    <div id="inningScoreFlash" aria-live="polite" aria-hidden="true">
+      <div class="flash-line">
+        <img class="flash-logo" id="flashHomeLogo" alt="主隊隊徽" hidden>
+        <div class="flash-score"><b id="flashHomeScore">0</b><i>:</i><b id="flashAwayScore">0</b></div>
+        <img class="flash-logo" id="flashAwayLogo" alt="客隊隊徽" hidden>
+      </div>
+    </div>
     <div class="banner" id="banner"><h1 id="bt"></h1><p id="bs"></p></div>
     <div class="tbar" id="tbar"><i></i><u id="tm"></u><span style="left:0">早</span><span style="right:0">晚</span></div>
     <div class="hint" id="hint">投手出手後會出現紅點（球的落點），把金色準心移過去　球到板時點擊</div>
@@ -1945,6 +1967,17 @@ function hud(){
 }
 function banner(txt,cls,sub){el.bt.textContent=txt;el.bs.textContent=sub||'';el.banner.className='banner show '+(cls||'');}
 function hideBanner(){el.banner.className='banner';}
+let inningFlashTimer=null;
+function showInningScoreFlash(){
+  const panel=$('inningScoreFlash');if(!panel)return;
+  const home=teamConfig.teams.find(t=>t.id===chosenHomeId)||{},away=teamConfig.teams.find(t=>t.id===chosenAwayId)||{};
+  [['flashHomeLogo',home],['flashAwayLogo',away]].forEach(([id,t])=>{const img=$(id),src=t&&t.logo?String(t.logo).trim():'';img.onload=null;img.onerror=null;if(!src){img.removeAttribute('src');img.hidden=true;return;}img.hidden=false;img.onerror=()=>{img.hidden=true;};img.src=src;});
+  $('flashHomeScore').textContent=score.me;$('flashAwayScore').textContent=score.cpu;
+  panel.classList.add('show');panel.setAttribute('aria-hidden','false');
+  if(inningFlashTimer)clearTimeout(inningFlashTimer);
+  inningFlashTimer=setTimeout(()=>{panel.classList.remove('show');panel.setAttribute('aria-hidden','true');inningFlashTimer=null;},2300);
+}
+function hideInningScoreFlash(){const panel=$('inningScoreFlash');if(panel){panel.classList.remove('show');panel.setAttribute('aria-hidden','true');}if(inningFlashTimer){clearTimeout(inningFlashTimer);inningFlashTimer=null;}}
 function timingText(dt){return Math.abs(dt)<0.02?'完美時機':(dt<0?'偏早 ':'偏晚 ')+Math.round(Math.abs(dt)*1000)+' ms';}
 function showTiming(dt){el.tm.style.left=(50+clamp(dt/0.12,-1,1)*50)+'%';el.tbar.className='tbar show';}
 function addRuns(n){if(n>0){lastRuns+=n;const t=mode==='bat'?'me':'cpu';score[t]+=n;LS[t][inn-1]=(LS[t][inn-1]||0)+n;}}
@@ -1979,8 +2012,8 @@ function switchSides(){clearExiters();bases=[0,0,0];balls=strikes=0;
   else{mode='bat';if(inn>=INNINGS&&score.me!==score.cpu){gameOver=true;return;}inn++;}
   currentPitcher().pitching.inningPitches=0;
   setMode();hud();
-  setTimeout(()=>{banner(mode==='pit'?'換你投球':'換你打擊','good','第'+inn+'局'+(mode==='pit'?'下半':'上半'));setTimeout(hideBanner,1700);},40);}
-function endGame(){st='title';chase=false;hideBanner();el.start.hidden=false;$('stT').textContent=score.me>score.cpu?'你贏了':'你輸了';
+  hideInningScoreFlash();}
+function endGame(){st='title';chase=false;hideInningScoreFlash();hideBanner();el.start.hidden=false;$('stT').textContent=score.me>score.cpu?'你贏了':'你輸了';
   $('stP').textContent='最終比分　我 '+score.me+' : '+score.cpu+' 敵　安打 '+hits+'　全壘打 '+hrs;$('go').textContent='再來一場';hud();}
 $('snd').addEventListener('click',e=>{soundOn=!soundOn;e.currentTarget.textContent=soundOn?'音效':'靜音';if(soundOn)ac();});
 $('forceInning').addEventListener('click',e=>{
@@ -2711,13 +2744,14 @@ function startChange(){
   chase=false;hbpView=false;walkCam=false;camFollow=null;wpOpt=null;
   chg={phase:'leave',t:0,team:team,mv:chgPaths(team,true),banOff:false};
   st='change';stT=0;
+  hideBanner();showInningScoreFlash();$('app').classList.add('changing-sides');
   $('hint').textContent='換場中　點擊畫面可略過';
 }
 // 退場結束 → 換邊 → 另一隊上場。回傳 false 表示比賽已結束。
 function finishLeave(skip){
   clearExiters();
   swPend=false;switchSides();
-  if(gameOver){chg=null;fieldGone.clear();endGame();return false;}
+  if(gameOver){chg=null;fieldGone.clear();$('app').classList.remove('changing-sides');hideInningScoreFlash();endGame();return false;}
   if(skip)return true;
   if(!kWalk)setBatterVisible(false);
   const team=pitchingTeam();   // 換邊後的守備隊＝剛才的進攻隊
@@ -2728,7 +2762,7 @@ function finishLeave(skip){
   $('hint').textContent='換場中　點擊畫面可略過';
   return true;
 }
-function finishChange(){chg=null;fieldGone.clear();setMode();enterReady();}
+function finishChange(){chg=null;fieldGone.clear();$('app').classList.remove('changing-sides');hideInningScoreFlash();setMode();enterReady();}
 function skipChange(){
   if(!chg)return;
   clearExiters();clearWalk();runnerActive=false;
@@ -2777,7 +2811,7 @@ function enterReady(){
   if(swPend){swPend=false;switchSides();if(gameOver){endGame();return;}}
   if(testMode){balls=strikes=outs=0;bases=[0,0,0];}
   throwReq=false;st='ready';stT=0;pclock=0;flightClock=0;wait=rnd(0.9,1.6);chase=false;FL=null;
-  hideBanner();el.pitch.className='pitch';el.tbar.className='tbar';resetBall();hud();aimLock=false;missInfo='';
+  hideBanner();hideInningScoreFlash();el.pitch.className='pitch';el.tbar.className='tbar';resetBall();hud();aimLock=false;missInfo='';
 }
 function startGame(){
   if(st!=='title')return;clearExiters();clearRunners();ac();score.me=score.cpu=0;LS.me.length=0;LS.cpu.length=0;TH.me=TH.cpu=TE.me=TE.cpu=0;inn=1;mode='bat';bases=[0,0,0];balls=strikes=outs=0;swPend=gameOver=false;hits=hrs=best=0;setMode();el.start.hidden=true;canvas.focus();enterReady();

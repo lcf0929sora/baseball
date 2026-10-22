@@ -4,7 +4,7 @@
     {
       "id": "RED",
       "name": "四川熊貓隊",
-      "logo": "./baseball/panda.png",
+      "logo": "./baseball/panda.webp",
       "uniforms": {
         "home": {
           "helmet": "#1c1c1c",
@@ -97,7 +97,7 @@
     {
       "id": "BLUE",
       "name": "北海道山雀隊",
-      "logo": "./baseball/tit.png",
+      "logo": "./baseball/tit.webp",
       "uniforms": {
         "home": {
           "helmet": "#c49a6c",
@@ -190,7 +190,7 @@
     {
       "id": "GREY",
       "name": "台中消波塊隊",
-      "logo": "./baseball/tetra.png",
+      "logo": "./baseball/tetra.webp",
       "uniforms": {
         "home": {
           "helmet": "#708090",
@@ -283,7 +283,7 @@
     {
       "id": "ORANGE",
       "name": "苗栗貓隊",
-      "logo": "./baseball/leocat.png",
+      "logo": "./baseball/leocat.webp",
       "uniforms": {
         "home": {
           "helmet": "#e67e22",
@@ -368,6 +368,192 @@
         {
           "id": "ORANGE-12",
           "name": "山貓安",
+          "number": 12,
+          "position": "替補"
+        }
+      ]
+    },
+    {
+      "id": "GREEN",
+      "name": "黃金海岸無尾熊隊",
+      "logo": "./baseball/koala.webp",
+      "uniforms": {
+        "home": {
+          "helmet": "#27ae60",
+          "body": "#27ae60",
+          "arms": "#27ae60",
+          "shoes": "#f2f2f2"
+        },
+        "away": {
+          "helmet": "#27ae60",
+          "body": "#27ae60",
+          "arms": "#27ae60",
+          "shoes": "#f2f2f2"
+        }
+      },
+      "players": [
+        {
+          "id": "GREEN-01",
+          "name": "尤加利",
+          "number": 1,
+          "position": "投手"
+        },
+        {
+          "id": "GREEN-02",
+          "name": "樹果安",
+          "number": 2,
+          "position": "捕手"
+        },
+        {
+          "id": "GREEN-03",
+          "name": "抱抱龍",
+          "number": 3,
+          "position": "一壘手"
+        },
+        {
+          "id": "GREEN-04",
+          "name": "桉樹峰",
+          "number": 4,
+          "position": "二壘手"
+        },
+        {
+          "id": "GREEN-05",
+          "name": "林間快",
+          "number": 5,
+          "position": "游擊手"
+        },
+        {
+          "id": "GREEN-06",
+          "name": "枝頭威",
+          "number": 6,
+          "position": "三壘手"
+        },
+        {
+          "id": "GREEN-07",
+          "name": "葉影翔",
+          "number": 7,
+          "position": "左外野手"
+        },
+        {
+          "id": "GREEN-08",
+          "name": "森之風",
+          "number": 8,
+          "position": "中外野手"
+        },
+        {
+          "id": "GREEN-09",
+          "name": "草地奔",
+          "number": 9,
+          "position": "右外野手"
+        },
+        {
+          "id": "GREEN-10",
+          "name": "漫步者",
+          "number": 10,
+          "position": "替補"
+        },
+        {
+          "id": "GREEN-11",
+          "name": "慢條理",
+          "number": 11,
+          "position": "替補"
+        },
+        {
+          "id": "GREEN-12",
+          "name": "憨吉特",
+          "number": 12,
+          "position": "替補"
+        }
+      ]
+    },
+    {
+      "id": "BUSAN",
+      "name": "釜山海鷗隊",
+      "logo": "./baseball/gull.webp",
+      "uniforms": {
+        "home": {
+          "helmet": "#1b365d",
+          "body": "#1b365d",
+          "arms": "#1b365d",
+          "shoes": "#f2f2f2"
+        },
+        "away": {
+          "helmet": "#1b365d",
+          "body": "#1b365d",
+          "arms": "#1b365d",
+          "shoes": "#f2f2f2"
+        }
+      },
+      "players": [
+        {
+          "id": "BUSAN-01",
+          "name": "朴翔宇",
+          "number": 1,
+          "position": "投手"
+        },
+        {
+          "id": "BUSAN-02",
+          "name": "金大智",
+          "number": 2,
+          "position": "捕手"
+        },
+        {
+          "id": "BUSAN-03",
+          "name": "李守護",
+          "number": 3,
+          "position": "一壘手"
+        },
+        {
+          "id": "BUSAN-04",
+          "name": "崔敏浩",
+          "number": 4,
+          "position": "二壘手"
+        },
+        {
+          "id": "BUSAN-05",
+          "name": "姜振遠",
+          "number": 5,
+          "position": "游擊手"
+        },
+        {
+          "id": "BUSAN-06",
+          "name": "尹海風",
+          "number": 6,
+          "position": "三壘手"
+        },
+        {
+          "id": "BUSAN-07",
+          "name": "韓飛翔",
+          "number": 7,
+          "position": "左外野手"
+        },
+        {
+          "id": "BUSAN-08",
+          "name": "宋天際",
+          "number": 8,
+          "position": "中外野手"
+        },
+        {
+          "id": "BUSAN-09",
+          "name": "權浪潮",
+          "number": 9,
+          "position": "右外野手"
+        },
+        {
+          "id": "BUSAN-10",
+          "name": "鄭智賢",
+          "number": 10,
+          "position": "替補"
+        },
+        {
+          "id": "BUSAN-11",
+          "name": "林俊浩",
+          "number": 11,
+          "position": "替補"
+        },
+        {
+          "id": "BUSAN-12",
+          "name": "申宇鎮",
           "number": 12,
           "position": "替補"
         }

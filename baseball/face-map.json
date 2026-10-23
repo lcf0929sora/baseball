@@ -1,0 +1,331 @@
+{
+ "version": 1,
+ "_說明": "players 以 teams.json 的球員 id 為鍵。eyes：style(round anime happy；沒寫＝原版眼睛) color size(0~1)。beard：style(mustache goatee full；none＝無鬍) color length(0~1)。沒列在這裡的球員由 default 決定；連 default 也沒有就依名字自動配。球員在 teams.json 內的 face 欄位優先於本檔。 cheeks：style(none＝拿掉腮紅 blush eyeblack；沒寫＝原版腮紅) color size(0~1)。",
+ "default": {
+  "eyes": {
+   "style": "round",
+   "color": "black",
+   "size": 0.5
+  },
+  "cheeks": {
+   "style": "blush",
+   "size": 0.5
+  }
+ },
+ "players": {
+  "RED-01": {
+   "eyes": {
+    "style": "round",
+    "color": "black",
+    "size": 0.35
+   },
+   "cheeks": {
+    "style": "blush",
+    "size": 0.5
+   }
+  },
+  "RED-02": {
+   "eyes": {
+    "style": "anime",
+    "color": "blue",
+    "size": 0.45
+   },
+   "cheeks": {
+    "style": "eyeblack",
+    "size": 0.5
+   }
+  },
+  "RED-03": {
+   "eyes": {
+    "style": "happy",
+    "color": "black",
+    "size": 0.55
+   },
+   "cheeks": {
+    "style": "blush",
+    "size": 0.5
+   }
+  },
+  "RED-04": {
+   "eyes": {
+    "style": "anime",
+    "color": "green",
+    "size": 0.65
+   },
+   "cheeks": {
+    "style": "none",
+    "size": 0.5
+   }
+  },
+  "RED-05": {
+   "eyes": {
+    "style": "round",
+    "color": "darkbrown",
+    "size": 0.75
+   },
+   "cheeks": {
+    "style": "eyeblack",
+    "size": 0.5
+   }
+  },
+  "RED-06": {
+   "eyes": {
+    "style": "anime",
+    "color": "hazel",
+    "size": 0.85
+   },
+   "cheeks": {
+    "style": "blush",
+    "size": 0.5
+   }
+  },
+  "RED-07": {
+   "eyes": {
+    "style": "round",
+    "color": "black",
+    "size": 0.35
+   },
+   "beard": {
+    "style": "full",
+    "color": "brown",
+    "length": 0.6
+   },
+   "cheeks": {
+    "style": "blush",
+    "size": 0.5
+   }
+  },
+  "RED-08": {
+   "eyes": {
+    "style": "anime",
+    "color": "blue",
+    "size": 0.45
+   },
+   "beard": {
+    "style": "mustache",
+    "color": "auburn",
+    "length": 0.2
+   },
+   "cheeks": {
+    "style": "eyeblack",
+    "size": 0.5
+   }
+  },
+  "RED-09": {
+   "eyes": {
+    "style": "happy",
+    "color": "black",
+    "size": 0.55
+   },
+   "beard": {
+    "style": "goatee",
+    "color": "black",
+    "length": 0.5
+   },
+   "cheeks": {
+    "style": "blush",
+    "size": 0.5
+   }
+  },
+  "RED-10": {
+   "eyes": {
+    "style": "anime",
+    "color": "green",
+    "size": 0.65
+   },
+   "beard": {
+    "style": "full",
+    "color": "black",
+    "length": 0.8
+   },
+   "cheeks": {
+    "style": "none",
+    "size": 0.5
+   }
+  },
+  "RED-11": {
+   "eyes": {
+    "style": "round",
+    "color": "darkbrown",
+    "size": 0.75
+   },
+   "beard": {
+    "style": "mustache",
+    "color": "darkbrown",
+    "length": 0.4
+   },
+   "cheeks": {
+    "style": "eyeblack",
+    "size": 0.5
+   }
+  },
+  "RED-12": {
+   "eyes": {
+    "style": "anime",
+    "color": "hazel",
+    "size": 0.85
+   },
+   "cheeks": {
+    "style": "blush",
+    "size": 0.5
+   }
+  },
+  "BLUE-01": {
+   "eyes": {
+    "style": "anime",
+    "color": "green",
+    "size": 0.35
+   },
+   "cheeks": {
+    "style": "blush",
+    "size": 0.5
+   }
+  },
+  "BLUE-02": {
+   "eyes": {
+    "style": "round",
+    "color": "darkbrown",
+    "size": 0.45
+   },
+   "cheeks": {
+    "style": "blush",
+    "size": 0.5
+   }
+  },
+  "BLUE-03": {
+   "eyes": {
+    "style": "anime",
+    "color": "hazel",
+    "size": 0.55
+   },
+   "cheeks": {
+    "style": "eyeblack",
+    "size": 0.5
+   }
+  },
+  "BLUE-04": {
+   "eyes": {
+    "style": "round",
+    "color": "black",
+    "size": 0.65
+   },
+   "cheeks": {
+    "style": "blush",
+    "size": 0.5
+   }
+  },
+  "BLUE-05": {
+   "eyes": {
+    "style": "anime",
+    "color": "blue",
+    "size": 0.75
+   },
+   "cheeks": {
+    "style": "none",
+    "size": 0.5
+   }
+  },
+  "BLUE-06": {
+   "eyes": {
+    "style": "happy",
+    "color": "black",
+    "size": 0.85
+   },
+   "cheeks": {
+    "style": "eyeblack",
+    "size": 0.5
+   }
+  },
+  "BLUE-07": {
+   "eyes": {
+    "style": "anime",
+    "color": "green",
+    "size": 0.35
+   },
+   "cheeks": {
+    "style": "blush",
+    "size": 0.5
+   }
+  },
+  "BLUE-08": {
+   "eyes": {
+    "style": "round",
+    "color": "darkbrown",
+    "size": 0.45
+   },
+   "beard": {
+    "style": "full",
+    "color": "brown",
+    "length": 0.2
+   },
+   "cheeks": {
+    "style": "blush",
+    "size": 0.5
+   }
+  },
+  "BLUE-09": {
+   "eyes": {
+    "style": "anime",
+    "color": "hazel",
+    "size": 0.55
+   },
+   "beard": {
+    "style": "mustache",
+    "color": "auburn",
+    "length": 0.5
+   },
+   "cheeks": {
+    "style": "eyeblack",
+    "size": 0.5
+   }
+  },
+  "BLUE-10": {
+   "eyes": {
+    "style": "round",
+    "color": "black",
+    "size": 0.65
+   },
+   "beard": {
+    "style": "goatee",
+    "color": "black",
+    "length": 0.8
+   },
+   "cheeks": {
+    "style": "blush",
+    "size": 0.5
+   }
+  },
+  "BLUE-11": {
+   "eyes": {
+    "style": "anime",
+    "color": "blue",
+    "size": 0.75
+   },
+   "beard": {
+    "style": "full",
+    "color": "black",
+    "length": 0.4
+   },
+   "cheeks": {
+    "style": "none",
+    "size": 0.5
+   }
+  },
+  "BLUE-12": {
+   "eyes": {
+    "style": "happy",
+    "color": "black",
+    "size": 0.85
+   },
+   "beard": {
+    "style": "mustache",
+    "color": "darkbrown",
+    "length": 0.7
+   },
+   "cheeks": {
+    "style": "eyeblack",
+    "size": 0.5
+   }
+  }
+ }
+}

@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "_說明": "players 以 teams.json 的球員 id 為鍵。欄位：style(造型) color(#rrggbb 或色名) length(0~1) volume(0~1)。style 可用：buzz short bob long mullet ponytail pigtails bun braid afro dreads spiky mohawk，或 bald(光頭)。沒列在這裡的球員由 default 決定；若連 default 也沒有，就依名字自動配一個固定的造型。球員在 teams.json 內的 hair 欄位優先於本檔。",
+  "default": { "style": "short", "color": "darkbrown", "length": 0.4, "volume": 0.5 },
+  "players": {
+    "RED-01":  { "style": "short",    "color": "#17130f", "length": 0.4, "volume": 0.5 },
+    "RED-02":  { "style": "buzz",     "color": "#17130f", "length": 0.3, "volume": 0.2 },
+    "RED-03":  { "style": "spiky",    "color": "#2b1d14", "length": 0.6, "volume": 0.5 },
+    "RED-04":  { "style": "ponytail", "color": "#17130f", "length": 0.7, "volume": 0.5 },
+    "RED-05":  { "style": "mullet",   "color": "#5a3a22", "length": 0.6, "volume": 0.5 },
+    "RED-06":  { "style": "afro",     "color": "#17130f", "length": 0.5, "volume": 0.7 },
+    "RED-07":  { "style": "braid",    "color": "#2b1d14", "length": 0.8, "volume": 0.4 },
+    "RED-08":  { "style": "short",    "color": "#d9b45a", "length": 0.3, "volume": 0.6 },
+    "RED-09":  { "style": "mohawk",   "color": "#a8321f", "length": 0.6, "volume": 0.4 },
+    "RED-10":  { "style": "bob",      "color": "#5a3a22", "length": 0.5, "volume": 0.5 },
+    "RED-11":  { "style": "bun",      "color": "#17130f", "length": 0.3, "volume": 0.5 },
+    "RED-12":  { "style": "buzz",     "color": "#7a3b1e", "length": 0.5, "volume": 0.3 },
+
+    "BLUE-01": { "style": "long",     "color": "#17130f", "length": 0.8, "volume": 0.5 },
+    "BLUE-02": { "style": "short",    "color": "#2b1d14", "length": 0.6, "volume": 0.4 },
+    "BLUE-03": { "style": "dreads",   "color": "#17130f", "length": 0.6, "volume": 0.3 },
+    "BLUE-04": { "style": "spiky",    "color": "#d9b45a", "length": 0.8, "volume": 0.5 },
+    "BLUE-05": { "style": "pigtails", "color": "#5a3a22", "length": 0.6, "volume": 0.5 },
+    "BLUE-06": { "style": "buzz",     "color": "#17130f", "length": 0.2, "volume": 0.2 },
+    "BLUE-07": { "style": "mullet",   "color": "#2b1d14", "length": 0.8, "volume": 0.6 },
+    "BLUE-08": { "style": "ponytail", "color": "#7a3b1e", "length": 0.4, "volume": 0.5 },
+    "BLUE-09": { "style": "afro",     "color": "#2b1d14", "length": 0.5, "volume": 0.4 },
+    "BLUE-10": { "style": "bob",      "color": "#2f6fe0", "length": 0.6, "volume": 0.5 },
+    "BLUE-11": { "style": "short",    "color": "#9a9a9a", "length": 0.4, "volume": 0.5 },
+    "BLUE-12": { "style": "braid",    "color": "#17130f", "length": 0.5, "volume": 0.4 }
+  }
+}

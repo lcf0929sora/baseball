@@ -422,7 +422,7 @@ function drawFieldingIndicator(kind){
   ctx.lineTo(48,228);ctx.quadraticCurveTo(22,228,22,202);ctx.lineTo(22,48);ctx.quadraticCurveTo(22,22,48,22);ctx.closePath();
   ctx.fillStyle='rgba(255,255,255,0.98)';ctx.fill();ctx.strokeStyle='#e32636';ctx.lineWidth=12;ctx.stroke();
   ctx.fillStyle='#e32636';ctx.textAlign='center';ctx.textBaseline='middle';
-  if(kind==='out'){ctx.font='900 78px Arial,sans-serif';ctx.fillText('OUT',128,124,200);}
+  if(kind==='out'){ctx.font='900 156px Arial,sans-serif';ctx.fillText('OUT',128,124,220);}
   else{ctx.font='900 190px Arial,sans-serif';ctx.fillText('!',128,119);}
   ctx.restore();missIndicatorTexture.update(true);
 }
@@ -572,9 +572,13 @@ const diamond=worldPoly('infield',[[0,19.4-14.85],[14.85,19.4],[0,19.4+14.85],[-
 worldPoly('d',circlePts(0,0,6),0.04,dirtHome,DIRT_TILE);
 worldPoly('d',circlePts(0,18.44,2.7),0.05,dirtMound,DIRT_TILE);
 put(MB.CreateBox('rubber',{width:0.6,height:0.05,depth:0.15}),0,0.1,18.44,chalk);
-[[19.4,19.4],[-19.4,19.4],[0,38.8]].forEach(p=>{const b=put(MB.CreateBox('base',{width:0.4,height:0.1,depth:0.4}),p[0],0.08,p[1],chalk);b.rotation.y=Math.PI/4;});
-const plate=put(MB.CreateCylinder('plate',{diameter:0.5,height:0.04,tessellation:5}),0,0.08,0,chalk);
-plate.rotation.y=Math.PI;
+// 壘包：平面寬與深都由 0.4 m 加倍至 0.8 m，厚度仍維持薄片外觀。
+[[19.4,19.4],[-19.4,19.4],[0,38.8]].forEach(p=>{const b=put(MB.CreateBox('base',{width:0.8,height:0.1,depth:0.8}),p[0],0.08,p[1],chalk);b.rotation.y=Math.PI/4;});
+// 本壘板與打擊框對齊尺寸：寬度等於打擊框寬度，前後深度等於打擊框高度。
+const ZX=0.25,ZY0=0.5,ZY1=1.35;
+const plate=put(MB.CreateCylinder('plate',{diameter:2*ZX,height:0.04,tessellation:5}),0,0.06,0,chalk);
+plate.scaling.z=(ZY1-ZY0)/(2*ZX); // X 寬 0.5 m、Z 深 0.85 m，和打擊框兩個方向的尺寸一致
+plate.rotation.y=Math.PI/2; // 尖端朝投手丘（+Z），平直底邊朝捕手（-Z）
 [-1,1].forEach(s=>{const l=put(MB.CreateBox('foul',{width:0.12,height:0.02,depth:115}),s*Math.sin(Math.PI/4)*57.5,0.06,Math.cos(Math.PI/4)*57.5,chalk);l.rotation.y=s*Math.PI/4;});
 
 // ---- outfield wall (105 m from home plate) and crowd stands
@@ -691,6 +695,8 @@ function crowdUV(mesh,w,h,d,yBase,rowBase){
 crowdFrontMat.backFaceCulling=false;crowdTopMat.backFaceCulling=false;
 const OUT_R0=107,OUT_N=14,OUT_D=1.1,OUT_TH=0.8,OUT_A=80,OUT_SEG=48;
 const outTop=k=>4.2+OUT_TH*k;
+// 擊球模擬需走到看台後牆與外野照明塔附近，不能在 r=119 m 就提早截斷，否則高飛球會看似穿過看台。
+const BALL_SIMULATION_OUTER_LIMIT=150;
 {
   const pos=[],uv=[],idxR=[],idxT=[],TW=CROWD_TILE_W;
   const P=(a,r,y)=>pos.push(r*Math.sin(a),y,r*Math.cos(a));
@@ -834,8 +840,9 @@ function updScoreboard(){
 }
 const lampMat=M('#fff6d8',{em:'#fff6d8'}),poleMat=M('#2a3550');
 [-62,-32,32,62].forEach(a=>{const th=a*Math.PI/180,r=142;
-  put(MB.CreateCylinder('p',{diameter:1.2,height:52}),r*Math.sin(th),26,r*Math.cos(th),poleMat);
-  const p=put(MB.CreateBox('lp',{width:18,height:9,depth:1}),r*Math.sin(th),54,r*Math.cos(th),lampMat);p.rotation.y=th;});
+  // 照明塔與燈具也是球場中的實體，納入和全壘打牆／看台相同的球體碰撞索引。
+  registerBallSolid(put(MB.CreateCylinder('p',{diameter:1.2,height:52}),r*Math.sin(th),26,r*Math.cos(th),poleMat));
+  const p=put(MB.CreateBox('lp',{width:18,height:9,depth:1}),r*Math.sin(th),54,r*Math.cos(th),lampMat);p.rotation.y=th;registerBallSolid(p);});
 
 // ================= 內野看台 / 觀眾席 / 本壘後方牆面 / 休息室凹槽 =================
 // 座標：沿界外線 r、往界外側偏移 o（界外牆在 o=20）。point(side,r,o)。
@@ -900,10 +907,11 @@ for(const side of [-1,1]){
  put(MB.CreateBox('standback',{width:2*HW,height:15,depth:0.6}),0,7.5,zb,concrete);
  put(MB.CreateBox('standbackglow',{width:2*HW,height:0.25,depth:0.3}),0,15,zb+0.2,glowMat);
  [-1,1].forEach(sd=>put(MB.CreateBox('standend',{width:0.5,height:7,depth:Math.abs(zb)-24}),sd*HW,3.5,(zb-24)/2,concrete));
- put(MB.CreateBox('homerail',{width:2*HW,height:0.08,depth:0.08}),0,standTop(0)+1.0,-24.15,railMat);}
+ registerBallSolid(put(MB.CreateBox('homerail',{width:2*HW,height:0.08,depth:0.08}),0,standTop(0)+1.0,-24.15,railMat));}
 // 休息室出入口（跑者進出動線）：E＝前緣矮牆外側，T＝凹槽內長椅前
 const solidBoxes=[];
-const legacySolidNames=new Set(['stand','sb','wing','homewall','standback','standend','foul-side-wall']);
+const legacySolidNames=new Set(['stand','sb','wing','homewall','standback','standend','foul-side-wall','base','plate','rubber']);
+const FIELD_SURFACE_SOLIDS=new Set(['base','plate','rubber']); // 壘包、本壘板、投手板都是棒球實體碰撞面：與牆共用 solidHit，不使用機率彈跳。
 scene.meshes.forEach(m=>{
   const registered=ballSolidMeshes.has(m);
   if(!registered&&!legacySolidNames.has(m.name))return;
@@ -913,13 +921,12 @@ scene.meshes.forEach(m=>{
   // 薄牆與牆頂飾條也是實體；只排除真正退化或尺寸極小的幾何。
   if(Math.max(sx,sy,sz)<0.2||Math.min(sx,sy,sz)<1e-6)return;
   const wm=m.getWorldMatrix().clone();
-  solidBoxes.push({mesh:m,wm,inv:BABYLON.Matrix.Invert(wm),mn:mn.clone(),mx:mx.clone(),w:bb.minimumWorld.clone(),W:bb.maximumWorld.clone(),isFence:fenceCollisionMeshes.includes(m),isOutfieldFence:!!m.isOutfieldFence,ballRuleKind:m.ballRuleKind||(['stand','standback','standend'].includes(m.name)?'spectator':'solid')});
+  solidBoxes.push({mesh:m,wm,inv:BABYLON.Matrix.Invert(wm),mn:mn.clone(),mx:mx.clone(),w:bb.minimumWorld.clone(),W:bb.maximumWorld.clone(),isFence:fenceCollisionMeshes.includes(m),isOutfieldFence:!!m.isOutfieldFence,ballRuleKind:m.ballRuleKind||(FIELD_SURFACE_SOLIDS.has(m.name)?'fieldSurface':(['stand','standback','standend'].includes(m.name)?'spectator':'solid'))});
 });
 const DUGS=[-1,1].map(side=>({side,E:lpt(side,DUG_R,18.6),T:lpt(side,DUG_R,22.4)}));
 
 
-// ---- strike zone frame (drawn at the plate)
-const ZX=0.25,ZY0=0.5,ZY1=1.35;
+// ---- strike zone frame (drawn at the plate); dimensions share ZX/ZY0/ZY1 with the home plate below.
 const zone=MB.CreateLines('zone',{points:[V(-ZX,ZY0,0),V(ZX,ZY0,0),V(ZX,ZY1,0),V(-ZX,ZY1,0),V(-ZX,ZY0,0)]},scene);
 zone.color=C(0.9,0.95,1);zone.alpha=0.5;zone.isPickable=false;
 const zg=MB.CreateLineSystem('zg',{lines:[
@@ -1981,14 +1988,16 @@ function blockedByPlayer(x,z,radius=PLAYER_COLLISION_RADIUS,movingRoot=null){
   }
   return false;
 }
-// Players collide with every registered field solid, not only the outfield fence.
-// Probe several heights so short rails and taller walls both block the full body.
+// 人物會被牆面、欄杆與看台等立體障礙物阻擋；本壘板、壘包、投手板是地面標記，人物可以踩過。
+// 這裡只調整人物移動碰撞，不從 solidBoxes 移除標記，因此棒球仍照常與它們進行球體碰撞。
 function blockedByWorldSolid(x,z,radius=PLAYER_COLLISION_RADIUS){
   if(typeof solidBoxes==='undefined'||!solidBoxes.length)return false;
   for(const s of solidBoxes){
     // World-space broad phase avoids matrix work for distant stands and fences.
     if(x+radius<s.w.x||x-radius>s.W.x||z+radius<s.w.z||z-radius>s.W.z||s.W.y<0.05||s.w.y>1.8)continue;
     const mesh=s.mesh;if(!mesh||mesh.isDisposed&&mesh.isDisposed()||!mesh.isEnabled())continue;
+    // 地面標記不能當成人物的垂直障礙，否則跑者在本壘板得分／出局後會被自己的碰撞盒困住，無法走去休息室。
+    if(mesh.name==='base'||mesh.name==='plate'||mesh.name==='rubber')continue;
     const inv=s.inv||BABYLON.Matrix.Invert(mesh.getWorldMatrix()),mn=s.mn,mx=s.mx;
     for(const y of [0.28,0.78,1.28]){
       const q=BABYLON.Vector3.TransformCoordinates(V(x,y,z),inv);
@@ -2307,7 +2316,7 @@ function chooseThrow(d){
       if(tagIntercept(d,r))return {tagRunner:r};
       const cv0=baseCover[b];if(cv0&&cv0!==d)return {cover:cv0,base:b};
       continue;}
-    if((r.forced||(r.state==='back'&&r.retouch))&&!d.isCatcher&&onBase(d,b)){putOut(r,r.state==='back'?'appeal':'force');return 'self';}   // 持球者自己就在壘包上且跑者被迫進壘：直接踩壘封殺
+    if((r.forced||(r.state==='back'&&r.retouch))&&!d.isCatcher&&onBase(d,b)){putOut(r,r.state==='back'?'appeal':'force',d);return 'self';}   // 持球者自己就在壘包上且跑者被迫進壘：直接踩壘封殺
     // 方案 A：持球者自己帶球跑去踩壘／等跑者來觸殺（跑速 7.5 m/s，抵達壘包中心 0.3 m 內）
     const dp=d.root.position,q=BASEP[b],selfT=Math.max(0,Math.hypot(dp.x-q.x,dp.z-q.z)-0.05)/7.5,selfOk=selfT<tRun-0.05;
     // 方案 B：傳給補位者；補位者要在球到之前站上壘包，球也要比跑者早到
@@ -2399,7 +2408,7 @@ function stepTags(dt){   // 每幀推進所有守備員的觸殺動作與冷卻
         // 接觸判定：伸到極限的手套與跑者軀幹距離 < TAG_R；跑者需仍在場上且沒有保送安全權
         // 閃躲中的跑者：判定半徑縮小到 30%（手套幾乎要貼到才碰得到），側移的位置也已反映在 P 裡
         g.ok=!!r&&(simLive||r.pickoff)&&(r.pickoff||!inningOver)&&!r.out&&!r.exiting&&r.state!=='score'&&!(r.safe&&r.base<r.safe)&&(!r.pickoff||pkTagValid())&&BABYLON.Vector3.Distance(tip,P)<(g.dodged?TAG_R*0.3:TAG_R);
-        if(g.ok){if(r.pickoff)pkTagOut();else putOut(r,'tag');}
+        if(g.ok){if(r.pickoff){showOutIndicator(f);pkTagOut();}else putOut(r,'tag',f);}
       }
     }else if(g.phase==='contact'){
       f.aim=V(g.tip.x,g.tip.y,g.tip.z);
@@ -2851,7 +2860,7 @@ function updateDefense(dt){
     if(hd.touching){   // 帶球跑壘中：每幀檢查，球到壘包（0.6 m 內）時若跑者還沒踩到壘 → 跑者出局
       const tb=hd.touching,r=runners.find(q=>!q.out&&((q.state==='run'&&q.to===tb)||(q.state==='back'&&q.retouch&&q.base===tb)));
       if(!r)hd.touching=null;
-      else if((r.forced||r.state==='back')&&onBase(hd,tb)){putOut(r,r.state==='back'?'appeal':'force');hd.touching=null;}   // 非強迫進壘：站在壘上等跑者進入觸殺範圍（checkTags）
+      else if((r.forced||r.state==='back')&&onBase(hd,tb)){putOut(r,r.state==='back'?'appeal':'force',hd);hd.touching=null;}   // 非強迫進壘：站在壘上等跑者進入觸殺範圍（checkTags）
     }
     recheckT-=dt;
     if(recheckT<=0&&!hd.touching&&!hd.tagChase&&!hd.tag){recheckT=0.12;
@@ -3428,7 +3437,7 @@ function simHit(v0,L,ang,x0,y0,free,allowBeyondFence=false){
   const K=0.0055,KM=0.0178,RB=0.0368,h=1/120,pts=[[x,y,z]];
   const wSpin=clamp(L*65,-1800,3200)*Math.PI/30;   // rpm→rad/s
   let spun=true;
-  let t=0,landed=null,apex=y,cross=null,wall=false,stop=false,n=0,hitT=null;const bounces=[];   // hitT＝球第一次碰到牆／固體的時間（之後即使在空中被接到也不算接殺）
+  let t=0,landed=null,apex=y,cross=null,wall=false,stop=false,n=0,hitT=null,structureContact=null;const bounces=[];   // hitT＝球第一次碰到牆／固體的時間（之後即使在空中被接到也不算接殺）
   while(t<10&&!stop){
     const s=Math.hypot(vx,vy,vz);
     let ax=-K*s*vx,ay=-9.8-K*s*vy,az=-K*s*vz;
@@ -3443,8 +3452,12 @@ function simHit(v0,L,ang,x0,y0,free,allowBeyondFence=false){
         if(vn<-1e-6){
           const f=clamp(hn.hitTime===undefined?1:hn.hitTime,0,1),cx=px+(tx-px)*f,cy=py+(ty-py)*f,cz=pz+(tz-pz)*f,ct=t-h+h*f;
           if(hitT===null)hitT=ct;
+          // 紀錄實際物體碰撞時刻。即使球先越過外野牆（cross 已是 outfieldBoundary），後續撞上觀眾席／照明塔也必須留出時間顯示反彈。
+          const isSpectatorOrBoard=hn.ballRuleKind==='spectator'||hn.ballRuleKind==='scoreboard';
+          // 壘包／本壘板／投手板只改變球的物理速度與方向，不是死球事件；不改變 play 狀態、不終止軌跡。
+          if(!structureContact&&(isSpectatorOrBoard||cross))structureContact={y:cy,a:Math.atan2(cx,cz)*180/Math.PI,t:ct,x:cx,z:cz,afterGround:!!landed,kind:hn.ballRuleKind||'solid'};
           // 觀眾席／記分板是死球區實體；首次接觸事件保留接觸前是否已落地，供統一規則表裁決。
-          if(!cross&&(hn.ballRuleKind==='spectator'||hn.ballRuleKind==='scoreboard'))cross={y:cy,a:Math.atan2(cx,cz)*180/Math.PI,t:ct,x:cx,z:cz,afterGround:!!landed,kind:hn.ballRuleKind};
+          if(!cross&&isSpectatorOrBoard)cross=structureContact;
           // 撞到外野牆但反彈回場內不等於出界，只記錄物理碰撞，不直接判二壘安打。
           if(hn.isOutfieldFence){wall=true;outfieldWallHitThisStep=true;}
           vx=(vx-1.4*vn*hn.x)*0.9;vy=(vy-1.4*vn*hn.y)*0.9;vz=(vz-1.4*vn*hn.z)*0.9;
@@ -3466,14 +3479,15 @@ function simHit(v0,L,ang,x0,y0,free,allowBeyondFence=false){
           }
         }
       }
-      if(cross&&Math.hypot(x,z)>FENCE_R+14&&!allowBeyondFence)stop=true;
+      // 讓球能穿過看台區域並撞到看台後牆或半徑 142 m 的照明塔；不再在看台中途 r=119 m 提前終止。
+      if(cross&&Math.hypot(x,z)>BALL_SIMULATION_OUTER_LIMIT&&!allowBeyondFence)stop=true;
     }
     groundResolve(y,vx,vy,vz,0,h);   // 共用地面物理
     if(_g.hit){spun=false;if(!landed)landed={x:x,z:z,t:t};if(free)break;if(_g.bounce)bounces.push(t);}
     y=_g.y;vx=_g.vx;vy=_g.vy;vz=_g.vz;if(_g.stop)stop=true;
     if(++n%2===0)pts.push([x,y,z]);
   }
-  return {pts:pts,landed:landed,apex:apex,cross:cross,wall:wall,hitT:hitT,tEnd:t,bounces:bounces};
+  return {pts:pts,landed:landed,apex:apex,cross:cross,wall:wall,hitT:hitT,structureContact:structureContact,tEnd:t,bounces:bounces};
 }
 const OUT_OF_PLAY_RULINGS=Object.freeze({
   airborne:Object.freeze({k:4,hr:true,hit:true,deadBallAward:0,txt:'全壘打',cls:'hr'}),
@@ -3486,7 +3500,12 @@ function resolveBoundaryOutcome(event,sim,L,v0,x0,y0,ang){
   let lp={x:event.x,z:event.z},d=Math.round(Math.hypot(event.x,event.z));
   if(rule.hr){const free=simHit(v0,L,ang,x0,y0,true),landing=free.landed;if(landing){lp=landing;d=Math.round(Math.hypot(landing.x,landing.z));}else d=Math.round(FENCE_R+8);}
   const sub=event.kind==='scoreboard'?'擊中記分板':event.kind==='spectator'?'進入觀眾席':event.kind==='outfieldBoundary'?(event.afterGround?'彈跳出場':'越過外野牆'):'球出界';
-  return {...rule,lp,d,sub,tShow:event.t,deadBall:rule.deadBallAward>0};
+  // 不在球剛碰到觀眾席／記分板／牆後的同一幀就隱藏球；至少播放約 0.55 秒碰撞後軌跡，讓反彈清楚可見。
+  // 若先越過外野牆、再撞到看台或照明塔，使用後續真正的物體接觸時刻，而非只用越牆時刻。
+  const visibleImpactT=sim.structureContact&&sim.structureContact.t>=event.t-1e-5?sim.structureContact.t:
+    ((event.kind==='spectator'||event.kind==='scoreboard')?event.t:null);
+  const visibleUntil=visibleImpactT===null?event.t:Math.min(sim.tEnd,visibleImpactT+0.55);
+  return {...rule,lp,d,sub,tShow:visibleUntil,deadBall:rule.deadBallAward>0};
 }
 function classify(sim,L,v0,x0,y0,ang){
   const ld=sim.landed||{x:0,z:0},d=Math.hypot(ld.x,ld.z),la=Math.atan2(ld.x,ld.z)*180/Math.PI;
@@ -3822,10 +3841,12 @@ function cancelPlayRuns(){if(playRuns>0){const t=mode==='bat'?'me':'cpu';score[t
 //  觸殺 tag：持球守備員碰到「不在壘包上」的跑者 → 出局
 //  回壘失敗 appeal：接殺後離壘的跑者，球先到他的原壘、守備員踩壘 → 出局
 //  第三個出局：若是封殺／接殺／打者在到一壘前出局，這個打席的得分全部無效；若是觸殺或回壘失敗（時間差），先踩回本壘的得分有效
-function putOut(r,how){
+function putOut(r,how,defender=null){
   if(r.out||r.state==='score')return;
   if(r.safe&&r.base<r.safe)return;   // 保送獲得的安全進壘權：還沒踏上獲得的壘包前不會被出局
   r.out=true;r.how=how;r.state='out';r.forced=false;playOuts++;
+  // 接殺、封殺、觸殺／回壘失敗使用同一個 OUT billboard；封殺與觸殺顯示在實際完成出局的守備員旁。
+  if(defender&&(how==='force'||how==='tag'||how==='appeal'))showOutIndicator(defender);
   runners.forEach(q=>{if(q.o>r.o)q.forced=false;});   // 前面的強迫進壘因此解除
   // 守備練習沿用相同的跑者出局姿勢與離場動畫，但不改正式比分／出局數，也不觸發換局。
   if(practiceMode){sfx.pop();startExit(r);syncBaseRunners();updateMini();return;}
@@ -3839,7 +3860,7 @@ function putOut(r,how){
 }
 function resolveArrival(rc,b){   // 球傳到壘包守備員手套：跑者還沒到＝封殺；接殺後回壘中、還沒重踩＝回壘失敗
   const r=runners.find(q=>!q.out&&((q.forced&&q.state==='run'&&q.to===b)||(q.state==='back'&&q.retouch&&q.base===b)));
-  if(r&&onBase(rc,b))putOut(r,r.state==='back'?'appeal':'force');
+  if(r&&onBase(rc,b))putOut(r,r.state==='back'?'appeal':'force',rc);
 }
 function scoreRunner(r){
   r.state='score';r.v=0;
@@ -4661,6 +4682,15 @@ function simulateDeflectedBall(start,velocity){
   if(n%2!==0)pts.push([x,y,z]);
   return {pts,landed,apex,hitT,wall,tEnd:t,bounces};
 }
+// 軌跡重算時分開保存「本次球路的落點」與「整球第一次觸地時間」。
+// 球在地面彈跳／滾動後即使被野手碰歪或漏接，也不能再被判成接殺。
+function updateGroundContactClock(impactTime,tail,baseFrame){
+  if(!FL||!FL.sim)return;
+  const previousGroundT=Number.isFinite(FL.groundContactT)?FL.groundContactT:(FL.sim.landed?FL.sim.landed.t:null);
+  const groundedBeforeImpact=previousGroundT!==null&&previousGroundT<=impactTime+1e-5;
+  FL.groundContactT=groundedBeforeImpact?previousGroundT:(tail.landed?baseFrame/60+tail.landed.t:null);
+}
+
 function rebuildTrajectoryAfterBodyHit(defender,from,cur,impact,frameDt){
   if(!FL||!FL.sim||!impact)return false;
   const old=FL.sim.pts,impactTime=Math.max(0,ft-Math.max(0,frameDt)*(1-impact.t));
@@ -4680,6 +4710,7 @@ function rebuildTrajectoryAfterBodyHit(defender,from,cur,impact,frameDt){
   const baseFrame=Math.floor(impactTime*60),fraction=impactTime*60-baseFrame;
   const gridStart=hitPoint.subtract(velocity.scale(fraction/60));gridStart.y=Math.max(BALL_R,gridStart.y);
   const tail=simulateDeflectedBall(gridStart,velocity),past=old.slice(0,baseFrame),pastApex=past.reduce((m,p)=>Math.max(m,p[1]),0);
+  updateGroundContactClock(impactTime,tail,baseFrame);   // 保留重算前已發生的首次觸地；若尚未觸地，才採用新軌跡的觸地時間
   FL.sim.pts=past.concat(tail.pts);FL.sim.bounces=mergeBounces(FL.sim.bounces,tail,baseFrame/60,impactTime);
   FL.sim.landed=tail.landed?{x:tail.landed.x,z:tail.landed.z,t:baseFrame/60+tail.landed.t}:null;
   FL.sim.apex=Math.max(pastApex,tail.apex);FL.sim.tEnd=baseFrame/60+tail.tEnd;
@@ -4845,6 +4876,7 @@ function muffBallAtGlove(d,contact,frameDt,st,c){
   const baseFrame=Math.floor(impactTime*60),fraction=impactTime*60-baseFrame;
   const gridStart=hitPoint.subtract(velocity.scale(fraction/60));gridStart.y=Math.max(BALL_R,gridStart.y);
   const tail=simulateDeflectedBall(gridStart,velocity),past=old.slice(0,baseFrame),pastApex=past.reduce((m,p)=>Math.max(m,p[1]),0);
+  updateGroundContactClock(impactTime,tail,baseFrame);   // 保留重算前已發生的首次觸地；若尚未觸地，才採用新軌跡的觸地時間
   FL.sim.pts=past.concat(tail.pts);FL.sim.bounces=mergeBounces(FL.sim.bounces,tail,baseFrame/60,impactTime);
   FL.sim.landed=tail.landed?{x:tail.landed.x,z:tail.landed.z,t:baseFrame/60+tail.landed.t}:null;
   FL.sim.apex=Math.max(pastApex,tail.apex);FL.sim.tEnd=baseFrame/60+tail.tEnd;
@@ -4949,7 +4981,8 @@ function checkDefenderContact(frameDt=1/60){
     }
     // Catching is possible only after the shared glove-contact pipeline confirms physical or legal-reach contact.
     // Random muff/error probability is intentionally deferred until the deterministic collision layer is verified.
-    const lt=FL.sim.landed?FL.sim.landed.t:0,fly=!FL.wp&&st==='flight'&&ft<lt-0.03&&!(FL.sim.hitT!=null&&ft>=FL.sim.hitT-0.03);
+    const groundT=Number.isFinite(FL.groundContactT)?FL.groundContactT:(FL.sim.landed?FL.sim.landed.t:null),
+      fly=!FL.wp&&st==='flight'&&groundT!==null&&ft<groundT-0.03&&!(FL.sim.hitT!=null&&ft>=FL.sim.hitT-0.03);   // 使用整球首次觸地時間，不受漏接後重算落點影響
     if(!allFielders().includes(d))continue;
     if(d.muffPlay===FL&&ft<d.muffUntil)continue;   // 剛漏接：同一個野手的手套短暫忽略這顆球，避免下一幀又吸回去
     {const st0=ballStateAtContact(contact,frameDt);   // 接球統一流程：先確定共用手套碰撞，再由共用失誤率模型決定接穩或漏接

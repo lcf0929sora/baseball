@@ -22,73 +22,73 @@
       "players": [
         {
           "id": "RED-01",
-          "name": "陳冠宇",
+          "name": "潘達",
           "number": 1,
           "position": "投手"
         },
         {
           "id": "RED-02",
-          "name": "林子豪",
+          "name": "張蜀龍",
           "number": 2,
           "position": "捕手"
         },
         {
           "id": "RED-03",
-          "name": "張育成",
+          "name": "劉錦程",
           "number": 3,
           "position": "一壘手"
         },
         {
           "id": "RED-04",
-          "name": "王柏融",
+          "name": "關雲長",
           "number": 4,
           "position": "二壘手"
         },
         {
           "id": "RED-05",
-          "name": "李承恩",
+          "name": "趙子龍",
           "number": 5,
           "position": "游擊手"
         },
         {
           "id": "RED-06",
-          "name": "黃偉哲",
+          "name": "諸葛錦",
           "number": 6,
           "position": "三壘手"
         },
         {
           "id": "RED-07",
-          "name": "吳俊霖",
+          "name": "魏天府",
           "number": 7,
           "position": "左外野手"
         },
         {
           "id": "RED-08",
-          "name": "蔡明修",
+          "name": "鄧錦城",
           "number": 8,
           "position": "中外野手"
         },
         {
           "id": "RED-09",
-          "name": "鄭凱文",
+          "name": "唐麻婆",
           "number": 9,
           "position": "右外野手"
         },
         {
           "id": "RED-10",
-          "name": "周家翔",
+          "name": "華竹林",
           "number": 10,
           "position": "替補"
         },
         {
           "id": "RED-11",
-          "name": "許文傑",
+          "name": "孟錦江",
           "number": 11,
           "position": "替補"
         },
         {
           "id": "RED-12",
-          "name": "郭俊宏",
+          "name": "薛青城",
           "number": 12,
           "position": "替補"
         }
@@ -554,6 +554,99 @@
         {
           "id": "BUSAN-12",
           "name": "申宇鎮",
+          "number": 12,
+          "position": "替補"
+        }
+      ]
+    },
+    {
+      "id": "TURKEY",
+      "name": "土耳其火雞隊",
+      "logo": "./baseball/turkey.webp",
+      "uniforms": {
+        "home": {
+          "helmet": "#e74c3c",
+          "body": "#e74c3c",
+          "arms": "#e74c3c",
+          "shoes": "#f2f2f2"
+        },
+        "away": {
+          "helmet": "#e74c3c",
+          "body": "#e74c3c",
+          "arms": "#e74c3c",
+          "shoes": "#f2f2f2"
+        }
+      },
+      "players": [
+        {
+          "id": "TURKEY-01",
+          "name": "艾爾段",
+          "number": 1,
+          "position": "投手"
+        },
+        {
+          "id": "TURKEY-02",
+          "name": "卡巴布",
+          "number": 2,
+          "position": "捕手"
+        },
+        {
+          "id": "TURKEY-03",
+          "name": "巴克拉瓦",
+          "number": 3,
+          "position": "一壘手"
+        },
+        {
+          "id": "TURKEY-04",
+          "name": "梅赫梅特",
+          "number": 4,
+          "position": "二壘手"
+        },
+        {
+          "id": "TURKEY-05",
+          "name": "塞利姆",
+          "number": 5,
+          "position": "游擊手"
+        },
+        {
+          "id": "TURKEY-06",
+          "name": "穆斯塔法",
+          "number": 6,
+          "position": "三壘手"
+        },
+        {
+          "id": "TURKEY-07",
+          "name": "奧斯曼",
+          "number": 7,
+          "position": "左外野手"
+        },
+        {
+          "id": "TURKEY-08",
+          "name": "伊斯坦堡",
+          "number": 8,
+          "position": "中外野手"
+        },
+        {
+          "id": "TURKEY-09",
+          "name": "卡帕多奇亞",
+          "number": 9,
+          "position": "右外野手"
+        },
+        {
+          "id": "TURKEY-10",
+          "name": "帕穆克",
+          "number": 10,
+          "position": "替補"
+        },
+        {
+          "id": "TURKEY-11",
+          "name": "阿爾普",
+          "number": 11,
+          "position": "替補"
+        },
+        {
+          "id": "TURKEY-12",
+          "name": "埃姆雷",
           "number": 12,
           "position": "替補"
         }

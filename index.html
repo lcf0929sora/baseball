@@ -212,6 +212,8 @@ html,body{height:100%;background:#000}
 
 .shadow-options button{padding:13px 5px;border:1px solid #465775;border-radius:9px;background:#17243b;color:var(--chalk);font:700 15px var(--f-ui);cursor:pointer}
 .shadow-options button.active{background:var(--led);border-color:var(--led);color:#1a1205}
+.shadow-options.snd{grid-template-columns:1fr 1fr;margin-top:10px}
+.snd-name{grid-column:1/-1;font-size:14px;color:var(--chalk)}
 .settings-note{margin:16px 0 0;color:var(--dim);font-size:13px;line-height:1.7}
 
 
@@ -438,6 +440,11 @@ html,body{height:100%;background:#000}
         <button type="button" data-view-deg="90">90°</button>
       </div>
       <p class="settings-note">擊球後鏡頭相對地面的俯角：15° 接近平視、90° 為正上方俯視。預設 45°。不論角度，球飛到外野時都會停在畫面中央。</p>
+      <div class="settings-label" style="margin-top:22px">聲音</div>
+      <div class="shadow-options snd" role="group" aria-label="音樂開關"><span class="snd-name">音樂（應援曲）</span><button type="button" data-snd-cat="music" data-on="1">開</button><button type="button" data-snd-cat="music" data-on="0">關</button></div>
+      <div class="shadow-options snd" role="group" aria-label="音效開關"><span class="snd-name">音效（揮棒、擊球）</span><button type="button" data-snd-cat="sfx" data-on="1">開</button><button type="button" data-snd-cat="sfx" data-on="0">關</button></div>
+      <div class="shadow-options snd" role="group" aria-label="觀眾音效開關"><span class="snd-name">觀眾音效（尖叫聲）</span><button type="button" data-snd-cat="crowd" data-on="1">開</button><button type="button" data-snd-cat="crowd" data-on="0">關</button></div>
+      <p class="settings-note">音樂：應援曲與出局曲。音效：揮棒、擊球、接球等一般音效。觀眾音效：高飛球、三振、得分、安打、全壘打、贏球的尖叫聲與歡呼。音檔由球隊 JSON 指定，沒定義或找不到檔案就沒有聲音。</p>
       <div class="roster-actions">
         <button id="openRoster" type="button">球員名單／數據</button>
         <button id="lockerToggle" type="button">進入球員休息室視角</button>
@@ -1194,6 +1201,7 @@ function statAVG(b){return rate(b.H,b.AB);}
 function statOBP(b){const d=b.AB+b.BB+b.HBP+b.SF;return rate(b.H+b.BB+b.HBP,d);}
 function statSLG(b){return b.AB?((b.oneB+2*b.twoB+3*b.threeB+4*b.HR)/b.AB).toFixed(3).replace(/^0/,'') : '.000';}
 function addBatEvent(kind,extra={}){
+  if(!practiceMode){if(kind==='HR')crowd('homerun');else if(kind==='1B'||kind==='2B'||kind==='3B')crowd('hit');else if(kind==='SO')crowd('strikeout');}   // 觀眾音效：crowd() 內已限定只有主場打擊時才會播
   const p=currentBatter(),b=p.batting;b.PA++;b.G= Math.max(b.G,1);
   if(kind!=='BB'&&kind!=='HBP'&&kind!=='SF')b.AB++;
   if(kind==='1B'||kind==='2B'||kind==='3B'||kind==='HR'){
@@ -3124,19 +3132,19 @@ function musicSetup(){
 }
 // 主場守備、對手出局時呼叫：播放 out 曲一次（沒定義／檔案壞掉＝什麼都不做）
 function musicOnOut(){
-  if(practiceMode||gameOver||!soundOn||mode!=='pit')return;
+  if(practiceMode||gameOver||!soundOn||!SND.music||mode!=='pit')return;
   musicSetup();const t=musicTracks.out;if(!t||t.bad)return;
   try{t.el.currentTime=0;t.el.volume=clamp(MUSIC.vol,0,1);const p=t.el.play();if(p&&p.catch)p.catch(e=>{if(e&&e.name!=='NotAllowedError'&&e.name!=='AbortError')t.bad=true;});}catch{}
 }
 function musicTick(dt){
   musicSetup();
   // 目前應播放哪一首：只在投球循環中更新（打出去後跑壘期間維持原狀，避免跑者移動時來回切換）
-  const live=!practiceMode&&!gameOver&&soundOn&&mode==='bat';
+  const live=!practiceMode&&!gameOver&&soundOn&&SND.music&&mode==='bat';
   if(!live||!['ready','windup','pitch','flight','result'].includes(st))musicWant='none';
   else if(st==='ready'||st==='windup'||st==='pitch')musicWant=(bases[1]||bases[2])?'chance':'cheer';
   else if(musicWant==='none')musicWant=(bases[1]||bases[2])?'chance':'cheer';
   musicRetryT-=dt;
-  {const o=musicTracks.out;if(o&&!o.bad&&!o.el.paused&&(!soundOn||practiceMode||gameOver||st==='title')){try{o.el.pause();o.el.currentTime=0;}catch{}}}
+  {const o=musicTracks.out;if(o&&!o.bad&&!o.el.paused&&(!soundOn||!SND.music||practiceMode||gameOver||st==='title')){try{o.el.pause();o.el.currentTime=0;}catch{}}}
   MUSIC.kinds.forEach(k=>{const t=musicTracks[k];if(!t||t.bad)return;
     const tgt=musicWant===k?MUSIC.vol:0,rate=MUSIC.vol/(tgt>t.vol?MUSIC.fadeIn:MUSIC.fadeOut)*dt;
     t.vol=t.vol<tgt?Math.min(tgt,t.vol+rate):Math.max(tgt,t.vol-rate);
@@ -3146,11 +3154,52 @@ function musicTick(dt){
   if(musicRetryT<=0)musicRetryT=1;
 }
 
+// ================= 觀眾音效（尖叫聲／歡呼，由主場球隊 JSON 指定）=================
+// teams.json 的球隊物件可加：
+//   "crowd": { "fly":"crowd/fly.m4a", "strikeout":["crowd/k1.mp3","crowd/k2.mp3"], "score":..., "hit":..., "homerun":..., "win":... }
+// 每項可寫單一路徑（字串）或多個路徑（陣列）：多個＝每次隨機挑一個播，只有一個＝固定播那個；沒定義或檔案讀不到＝沒有聲音。
+// 路徑規則同音樂（相對於 ./baseball/，或 http(s):// ./ ../ / 開頭）。歸類為「觀眾音效」，由設定內的觀眾音效開關控制。
+//   fly 主場打擊時擊出高飛球｜strikeout 主場投手三振對手（主場守備時）｜score 主場得分｜hit 主場安打｜homerun 主場全壘打｜win 主場贏球（整場結束時）；除 strikeout 與 win 外，都只在主場打擊時才算
+// 同一瞬間發生多件事（例如全壘打＝得分＋安打）只播優先權最高的一個：win > homerun > score > hit > strikeout > fly；播放中只有同級或更高優先權能打斷。
+const CROWD={vol:0.8,kinds:['fly','strikeout','score','hit','homerun','win'],pri:{fly:1,strikeout:2,hit:3,score:4,homerun:5,win:6},merge:0.12};
+const crowdTracks={};let crowdKey='',crowdPend=null,crowdCur=null;
+function crowdList(v){return (Array.isArray(v)?v:[v]).map(x=>musicUrl(x)).filter(Boolean);}
+function crowdDispose(){Object.keys(crowdTracks).forEach(k=>{crowdTracks[k].forEach(t=>{try{t.el.pause();t.el.removeAttribute('src');t.el.load();}catch{}});delete crowdTracks[k];});crowdPend=null;crowdCur=null;}
+function crowdSetup(){
+  const tm=teamConfig.teams.find(t=>t.id===chosenHomeId)||{},c=tm.crowd||{};
+  const key=chosenHomeId+'|'+JSON.stringify(CROWD.kinds.map(k=>c[k]||''));
+  if(key===crowdKey)return;crowdKey=key;crowdDispose();
+  CROWD.kinds.forEach(k=>{const urls=[...new Set(crowdList(c[k]))];if(!urls.length)return;
+    crowdTracks[k]=urls.map(url=>{const el=new Audio();el.preload='auto';el.loop=false;el.volume=CROWD.vol;const t={el,bad:false,url};
+      el.addEventListener('error',()=>{t.bad=true;console.warn('觀眾音效檔無法載入，略過：'+url);});el.src=url;return t;});});
+}
+function crowd(kind){   // 事件發生時呼叫；只登記，稍後由 crowdTick 合併後播放
+  if(practiceMode||!soundOn||!SND.crowd||!CROWD.pri[kind])return;
+  if(kind==='strikeout'){if(mode!=='pit')return;}   // 三振：只有主場投手三振對手（主場守備）才算
+  else if(kind!=='win'&&mode!=='bat')return;        // 其餘尖叫聲只在主場（玩家隊）打擊時才算；贏球是整場結束的事件，不受此限
+  if(!crowdPend||CROWD.pri[kind]>CROWD.pri[crowdPend.kind])crowdPend={kind,t:CROWD.merge};
+}
+function crowdTick(dt){
+  if(!crowdPend&&!crowdCur)return;
+  if(crowdCur&&(crowdCur.t.el.ended||crowdCur.t.el.paused))crowdCur=null;
+  if(crowdCur&&(!soundOn||!SND.crowd)){try{crowdCur.t.el.pause();}catch{}crowdCur=null;crowdPend=null;return;}
+  if(!crowdPend)return;
+  crowdPend.t-=dt;if(crowdPend.t>0)return;
+  const kind=crowdPend.kind;crowdPend=null;
+  crowdSetup();
+  const list=(crowdTracks[kind]||[]).filter(t=>!t.bad);if(!list.length)return;   // 沒定義或全部讀不到＝沒有聲音
+  if(crowdCur&&CROWD.pri[kind]<crowdCur.pri)return;                              // 低優先權不打斷正在播的
+  if(crowdCur){try{crowdCur.t.el.pause();}catch{}crowdCur=null;}
+  const t=list[Math.floor(Math.random()*list.length)];
+  try{t.el.currentTime=0;t.el.volume=CROWD.vol;const p=t.el.play();if(p&&p.catch)p.catch(e=>{if(e&&e.name!=='NotAllowedError'&&e.name!=='AbortError')t.bad=true;});crowdCur={t,pri:CROWD.pri[kind]};}catch{}
+}
+
 // ================= audio =================
 let AC=null,soundOn=true;
+const SND={music:true,sfx:true,crowd:true};   // 設定內的三類開關：音樂（應援曲）／音效（揮棒擊球）／觀眾音效（尖叫聲、歡呼）；soundOn 仍是 HUD 的總靜音
 function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch{AC=null;}}
   if(AC&&AC.state==='suspended'){try{AC.resume();}catch{}}return AC;}
-function burst(o){if(!soundOn)return;const a=ac();if(!a)return;
+function burst(o){if(!soundOn||!SND[o.cat||'sfx'])return;const a=ac();if(!a)return;
   const n=Math.max(1,a.sampleRate*o.dur|0),buf=a.createBuffer(1,n,a.sampleRate),d=buf.getChannelData(0);
   for(let i=0;i<n;i++)d[i]=Math.random()*2-1;
   const s=a.createBufferSource();s.buffer=buf;
@@ -3158,7 +3207,7 @@ function burst(o){if(!soundOn)return;const a=ac();if(!a)return;
   const g=a.createGain(),t=a.currentTime;
   g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(o.g,t+(o.att||0.004));g.gain.exponentialRampToValueAtTime(0.0001,t+o.dur);
   s.connect(f);f.connect(g);g.connect(a.destination);s.start(t);}
-function tone(f0,f1,dur,g0){if(!soundOn)return;const a=ac();if(!a)return;
+function tone(f0,f1,dur,g0){if(!soundOn||!SND.sfx)return;const a=ac();if(!a)return;
   const o=a.createOscillator(),g=a.createGain(),t=a.currentTime;
   o.type='sine';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);
   g.gain.setValueAtTime(g0,t);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
@@ -3167,8 +3216,8 @@ const sfx={
   swing(){burst({dur:0.2,f:700,q:0.7,g:0.12,att:0.06});},
   crack(){burst({dur:0.09,f:2600,q:0.9,g:0.9});tone(190,60,0.14,0.55);},
   pop(){burst({dur:0.07,f:800,q:1,g:0.5});tone(240,90,0.1,0.35);},
-  cheer(){burst({dur:2.4,f:1200,q:0.35,g:0.28,att:0.35});},
-  groan(){burst({dur:0.9,f:500,q:0.5,g:0.12,att:0.2});}
+  cheer(){burst({dur:2.4,f:1200,q:0.35,g:0.28,att:0.35,cat:'crowd'});},
+  groan(){burst({dur:0.9,f:500,q:0.5,g:0.12,att:0.2,cat:'crowd'});}
 };
 
 // ================= HUD =================
@@ -3314,7 +3363,7 @@ function showInningScoreFlash(){
 function hideInningScoreFlash(){const panel=$('inningScoreFlash');if(panel){panel.classList.remove('show');panel.setAttribute('aria-hidden','true');}if(inningFlashTimer){clearTimeout(inningFlashTimer);inningFlashTimer=null;}}
 function timingText(dt){return Math.abs(dt)<0.02?'完美時機':(dt<0?'偏早 ':'偏晚 ')+Math.round(Math.abs(dt)*1000)+' ms';}
 function showTiming(dt){el.tm.style.left=(50+clamp(dt/0.12,-1,1)*50)+'%';el.tbar.className='tbar show';}
-function addRuns(n){if(n>0){lastRuns+=n;const t=mode==='bat'?'me':'cpu';score[t]+=n;LS[t][inn-1]=(LS[t][inn-1]||0)+n;}}
+function addRuns(n){if(n>0){if(mode==='bat')crowd('score');lastRuns+=n;const t=mode==='bat'?'me':'cpu';score[t]+=n;LS[t][inn-1]=(LS[t][inn-1]||0)+n;}}
 function advHit(n){
   // 壘包推進採確定規則，不再用隨機結果決定跑者是否得分／停在哪一壘。
   const old=bases.slice(),next=[0,0,0];let runs=0;
@@ -3343,7 +3392,7 @@ function buildTypes(){const pt=$('ptypes');TYPES.forEach((t,i)=>{const b=documen
 function selUI(){[].forEach.call($('ptypes').children,(b,i)=>b.classList.toggle('on',i===selT));}
 function switchSides(){clearExiters();bases=[0,0,0];balls=strikes=0;
   if(mode==='bat')mode='pit';
-  else{mode='bat';if(inn>=INNINGS&&score.me!==score.cpu){gameOver=true;return;}inn++;}
+  else{mode='bat';if(inn>=INNINGS&&score.me!==score.cpu){gameOver=true;if(score.me>score.cpu)crowd('win');return;}inn++;}
   currentPitcher().pitching.inningPitches=0;
   setMode();hud();
   hideInningScoreFlash();}
@@ -5207,13 +5256,14 @@ function resolveFieldingPlay(){
   if(ballCaughtBy){r.txt='場內球';r.sub='';r.k=1;}
 }
 function showFlightResult(){
+  if(FL&&FL.sim&&FL.sim.apex>=15)crowd('fly');   // 高飛球（含界外；是否播放由 crowd() 判斷，只有主場打擊才算）
   resolveFieldingPlay();
   const r=FL.res;
   const tt=timingText(FL.dt)+(FL.dist<0.07?' ・ 正中':'')+(FL.ev?' ・ '+FL.ev+' km/h '+FL.la+'°':'')+(FL.bk<0.995?' ・ 框 '+Math.round(FL.bk*100)+'%':''),me=mode==='bat';
   if(r.foul){if(strikes<2)strikes++;announce(r.tip?'擦棒 界外':'界外球','',tt);}
   else{
     balls=0;strikes=0;
-    if(r.hr){if(me){hits++;hrs++;best=Math.max(best,r.d);}advHit(4);announce('HOME RUN','hr','落點距離：'+Math.round(Number(r.d)||0)+' m');sfx.cheer();}
+    if(r.hr){if(me){hits++;hrs++;best=Math.max(best,r.d);crowd('homerun');}advHit(4);announce('HOME RUN','hr','落點距離：'+Math.round(Number(r.d)||0)+' m');sfx.cheer();}
     else if(r.deadBallAward){
       const before=bases.slice(),rbi=(before[1]?1:0)+(before[2]?1:0),award=r.deadBallAward;
       advHit(award);
@@ -5791,7 +5841,7 @@ scene.onBeforeRenderObservable.add(()=>{
   if(land.isEnabled())land.scaling.setAll(1+0.15*Math.sin(performance.now()/150));
   // 打者雙手後拉：投手動作時往捕手方向收，球投出後維持
   if(st==='windup')ld=Math.max(ld,ss((pclock+W)/W/0.7));else if(st==='pitch')ld=1;else ld=Math.max(0,ld-dt*3);
-  musicTick(dt);
+  musicTick(dt);crowdTick(dt);
   boxK=boxScale({x:aimX,y:aimY});   // 框大小由球棒（甜蜜點）目前所在位置決定，隨滑鼠移動即時改變；揮棒時 aimLock 鎖住，判定與畫面一致
   // 打者身體傾角：依擊球點橫向位置（打擊＝準心；投球＝CPU 打者看球的預測過板位置）
   {// 近身球閃躲：出手後 DODGE.react 秒才反應；只能依「當下球的位置與速度」線性外推到過板面，不知道變化球之後的走向（變化球可能預判錯誤而被打到）
@@ -6542,6 +6592,9 @@ $('menuBtn').addEventListener('click',()=>{$('settings').hidden=false;});
 $('closeSettings').addEventListener('click',()=>{$('settings').hidden=true;});
 $('settings').addEventListener('click',e=>{if(e.target===$('settings'))$('settings').hidden=true;});
 document.querySelectorAll('[data-shadow-mode]').forEach(btn=>btn.addEventListener('click',()=>applyShadowMode(btn.dataset.shadowMode)));
+function syncSndButtons(){document.querySelectorAll('[data-snd-cat]').forEach(b=>{const on=(b.dataset.on==='1')===!!SND[b.dataset.sndCat];b.classList.toggle('active',on);b.setAttribute('aria-pressed',on?'true':'false');});}
+document.querySelectorAll('[data-snd-cat]').forEach(b=>b.addEventListener('click',()=>{SND[b.dataset.sndCat]=b.dataset.on==='1';if(SND[b.dataset.sndCat])ac();syncSndButtons();}));
+syncSndButtons();
 function setViewDeg(d){viewDeg=d;document.querySelectorAll('[data-view-deg]').forEach(b=>{const on=+b.dataset.viewDeg===d;b.classList.toggle('active',on);b.setAttribute('aria-pressed',on?'true':'false');});}
 document.querySelectorAll('[data-view-deg]').forEach(btn=>btn.addEventListener('click',()=>setViewDeg(+btn.dataset.viewDeg)));
 setViewDeg(45);

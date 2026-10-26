@@ -5,6 +5,10 @@
       "id": "RED",
       "name": "四川熊貓隊",
       "logo": "./baseball/panda.webp",
+      "music": {
+        "chance": "music/chance.mp3",
+        "cheer": ""
+      },
       "uniforms": {
         "home": {
           "helmet": "#1c1c1c",
@@ -98,6 +102,10 @@
       "id": "BLUE",
       "name": "北海道山雀隊",
       "logo": "./baseball/tit.webp",
+      "music": {
+        "chance": "music/chance.mp3",
+        "cheer": ""
+      },
       "uniforms": {
         "home": {
           "helmet": "#c49a6c",
@@ -191,6 +199,10 @@
       "id": "GREY",
       "name": "台中消波塊隊",
       "logo": "./baseball/tetra.webp",
+      "music": {
+        "chance": "music/chance.mp3",
+        "cheer": ""
+      },
       "uniforms": {
         "home": {
           "helmet": "#708090",
@@ -284,6 +296,10 @@
       "id": "ORANGE",
       "name": "苗栗貓隊",
       "logo": "./baseball/leocat.webp",
+      "music": {
+        "chance": "music/chance.mp3",
+        "cheer": ""
+      },
       "uniforms": {
         "home": {
           "helmet": "#e67e22",
@@ -377,6 +393,10 @@
       "id": "GREEN",
       "name": "黃金海岸無尾熊隊",
       "logo": "./baseball/koala.webp",
+      "music": {
+        "chance": "music/chance.mp3",
+        "cheer": ""
+      },
       "uniforms": {
         "home": {
           "helmet": "#27ae60",
@@ -470,6 +490,10 @@
       "id": "BUSAN",
       "name": "釜山海鷗隊",
       "logo": "./baseball/gull.webp",
+      "music": {
+        "chance": "music/chance.mp3",
+        "cheer": ""
+      },
       "uniforms": {
         "home": {
           "helmet": "#1b365d",
@@ -563,6 +587,10 @@
       "id": "TURKEY",
       "name": "土耳其火雞隊",
       "logo": "./baseball/turkey.webp",
+      "music": {
+        "chance": "music/chance.mp3",
+        "cheer": ""
+      },
       "uniforms": {
         "home": {
           "helmet": "#e74c3c",

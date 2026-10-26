@@ -9,6 +9,7 @@
  *   · 外野看台（6 區、4 階）外側：高高矮矮、前後兩排的巨大棒棒糖（漩渦糖面＋糖果紋棒身＋蝴蝶結），
  *     腳邊散落軟糖，天上飄著棉花糖雲。
  *   · 記分板：夢幻電子記分板——紫色漸層底、LED 點陣格線、霓虹發光數字、粉色邊框＋閃爍彩燈泡，立在中外野看台後方。
+ *   · 球場外：佔地範圍外另鋪一整片紫色地形（平地 → 紫色山丘，最高約 58 m），山丘上有糖果樹；不是球場草皮的延伸。
  *   · 本檔「不」設定天空／霧／光源——那些由主程式的天氣系統決定。
  */
 (function(){
@@ -31,6 +32,7 @@ const star4=(g,x,y,r)=>{g.beginPath();g.moveTo(x,y-r);g.quadraticCurveTo(x,y,x+r
 const heart=(g,x,y,s)=>{g.beginPath();g.moveTo(x,y+s*0.9);g.bezierCurveTo(x-s*1.6,y-s*0.2,x-s*0.7,y-s*1.2,x,y-s*0.4);g.bezierCurveTo(x+s*0.7,y-s*1.2,x+s*1.6,y-s*0.2,x,y+s*0.9);g.closePath();g.fill();};
 
 const PASTEL=['#ff9ccb','#9de8cf','#c3a8ff','#ffe08a','#9ed8ff'];
+const WALLC=['#ff2f94','#00d39a','#7a4dff','#ffbe0b','#1f9bff'];   // 外牆用的高飽和糖果色
 
 // 一段牆＝一個長方盒（旋轉後的長方盒碰撞很準，也只佔一個碰撞物件）
 function wallSeg(ax,az,bx,bz,h,th,mat,fence,outfield,capMat,ext){
@@ -53,17 +55,17 @@ function grassTexture(name,seed,base,band,blades){
   fillNoise(g,S,rnd,base[0],base[1],base[2],0.05);
   const w=S/8;g.fillStyle=band;
   for(let k=0;k<16;k+=2){g.beginPath();g.moveTo(k*w,0);g.lineTo((k+1)*w,0);g.lineTo((k+1)*w-S,S);g.lineTo(k*w-S,S);g.closePath();g.fill();}
-  const blobs=['rgba(255,255,255,0.07)','rgba(255,110,175,0.06)','rgba(190,150,255,0.06)','rgba(150,235,215,0.05)'];
+  const blobs=['rgba(255,255,255,0.03)','rgba(255,60,150,0.08)','rgba(170,110,255,0.07)','rgba(120,225,200,0.04)'];
   for(let n=0;n<260;n++){const x=rnd()*S,y=rnd()*S,r=25+rnd()*90,col=blobs[(rnd()*blobs.length)|0];
     tile(S,x,y,r,(dx,dy)=>{g.fillStyle=col;g.beginPath();g.arc(x+dx,y+dy,r,0,TAU);g.fill();});}
-  const bl=['rgba(255,120,175,0.5)','rgba(255,170,205,0.5)','rgba(255,205,225,0.5)','rgba(224,100,160,0.45)','rgba(255,255,255,0.35)'];
+  const bl=['rgba(255,70,150,0.5)','rgba(235,100,175,0.5)','rgba(255,140,195,0.45)','rgba(200,50,125,0.5)','rgba(255,215,235,0.22)'];
   for(let n=0;n<blades;n++){const x=rnd()*S,y=rnd()*S,len=5+rnd()*9,a=-1.57+(rnd()-0.5)*1.3;
     tile(S,x,y,14,(dx,dy)=>{g.strokeStyle=bl[(rnd()*bl.length)|0];g.lineWidth=0.8+rnd()*1.0;g.beginPath();g.moveTo(x+dx,y+dy);g.lineTo(x+dx+Math.cos(a)*len,y+dy+Math.sin(a)*len);g.stroke();});}
   const conf=['#ffffff','#7fe3ff','#ffe45e','#9ff0c8','#c3a8ff'];
   for(let n=0;n<240;n++){const x=rnd()*S,y=rnd()*S,col=conf[n%conf.length],r=1.3+rnd()*1.8;
     tile(S,x,y,5,(dx,dy)=>{g.fillStyle=col;g.globalAlpha=0.7;g.beginPath();g.arc(x+dx,y+dy,r,0,TAU);g.fill();g.globalAlpha=1;});}
   for(let n=0;n<34;n++){const x=rnd()*S,y=rnd()*S,s=3+rnd()*3;
-    tile(S,x,y,10,(dx,dy)=>{g.fillStyle=n%2?'rgba(255,255,255,0.40)':'rgba(255,90,160,0.32)';heart(g,x+dx,y+dy,s);});}
+    tile(S,x,y,10,(dx,dy)=>{g.fillStyle=n%2?'rgba(255,255,255,0.30)':'rgba(255,60,140,0.38)';heart(g,x+dx,y+dy,s);});}
   for(let n=0;n<110;n++){const x=rnd()*S,y=rnd()*S,r=3+rnd()*5;
     tile(S,x,y,12,(dx,dy)=>{g.fillStyle='rgba(255,255,255,0.85)';star4(g,x+dx,y+dy,r);});}
   t.update();return t;
@@ -71,23 +73,23 @@ function grassTexture(name,seed,base,band,blades){
 // 內野土區：奶油蜜桃色的「餅乾土」，撒滿彩色糖針。512px 貼圖鋪 10 m。
 function dirtTexture(){
   const S=512,t=newTex('xxDirt',S,S),g=t.getContext(),rnd=rng(23);
-  fillNoise(g,S,rnd,248,216,182,0.06);
+  fillNoise(g,S,rnd,190,116,80,0.07);
   for(let n=0;n<120;n++){const x=rnd()*S,y=rnd()*S,r=14+rnd()*46,lt=rnd()<0.5;
-    tile(S,x,y,r,(dx,dy)=>{g.fillStyle=lt?'rgba(255,255,255,0.10)':'rgba(236,170,140,0.08)';g.beginPath();g.arc(x+dx,y+dy,r,0,TAU);g.fill();});}
+    tile(S,x,y,r,(dx,dy)=>{g.fillStyle=lt?'rgba(240,180,140,0.10)':'rgba(120,56,40,0.14)';g.beginPath();g.arc(x+dx,y+dy,r,0,TAU);g.fill();});}
   for(let n=0;n<420;n++){const x=rnd()*S,y=rnd()*S,rx=1.5+rnd()*3.5;
-    tile(S,x,y,8,(dx,dy)=>{g.fillStyle='rgba(214,170,134,0.45)';g.beginPath();g.ellipse(x+dx,y+dy,rx,rx*0.7,rnd()*3.14,0,TAU);g.fill();});}
+    tile(S,x,y,8,(dx,dy)=>{g.fillStyle='rgba(130,76,52,0.45)';g.beginPath();g.ellipse(x+dx,y+dy,rx,rx*0.7,rnd()*3.14,0,TAU);g.fill();});}
   const sp=['#ff6fae','#5fd0ff','#ffe45e','#7be8b0','#b794ff','#ffffff','#ff9a5c'];
   for(let n=0;n<300;n++){const x=rnd()*S,y=rnd()*S,rot=rnd()*3.14,len=5+rnd()*3,col=sp[n%sp.length];
     tile(S,x,y,10,(dx,dy)=>{g.save();g.translate(x+dx,y+dy);g.rotate(rot);g.fillStyle=col;g.fillRect(-len/2,-1.1,len,2.2);g.restore();});}
-  g.lineWidth=1;for(let n=0;n<50;n++){const y=rnd()*S;g.strokeStyle='rgba(190,140,110,0.10)';g.beginPath();g.moveTo(0,y);g.lineTo(S,y);g.stroke();}
+  g.lineWidth=1;for(let n=0;n<50;n++){const y=rnd()*S;g.strokeStyle='rgba(110,60,42,0.14)';g.beginPath();g.moveTo(0,y);g.lineTo(S,y);g.stroke();}
   t.update();return t;
 }
 // 外野牆：底色＋頂部白色波浪花邊＋圓點／愛心／星星交錯。768×232（約等於 13 m × 4 m 的比例）。
 function wallMat(base){
   const W=768,H=232,t=newTex('xxWallTex',W,H),g=t.getContext();
   g.fillStyle=base;g.fillRect(0,0,W,H);
-  g.fillStyle='rgba(255,255,255,0.20)';g.fillRect(0,62,W,H-62-26);              // 中段略亮
-  g.fillStyle='rgba(0,0,0,0.10)';g.fillRect(0,H-26,W,26);                       // 底邊略深
+  g.fillStyle='rgba(255,255,255,0.05)';g.fillRect(0,62,W,H-62-26);              // 中段略亮
+  g.fillStyle='rgba(0,0,0,0.18)';g.fillRect(0,H-26,W,26);                       // 底邊略深
   g.fillStyle='#ffffff';g.fillRect(0,0,W,30);
   for(let i=0;i<12;i++){g.beginPath();g.arc(i*64+32,30,32,0,Math.PI);g.fill();}      // 波浪花邊
   g.strokeStyle='rgba(255,255,255,0.8)';g.lineWidth=5;g.beginPath();
@@ -95,6 +97,37 @@ function wallMat(base){
   g.fillStyle='rgba(255,255,255,0.80)';
   for(let r=0;r<3;r++)for(let c=0;c<12;c++){const x=c*64+(r%2?64:32)-(r%2?0:0),y=104+r*38,k=(r+c)%3;if(x>W-8)continue;
     if(k===0){g.beginPath();g.arc(x,y,8,0,TAU);g.fill();}else if(k===1)heart(g,x,y,7);else star4(g,x,y,10);}
+  t.update();return texMat(t,1);
+}
+// 本壘後方彩繪牆：粉藍漸層天空＋彩虹／雲朵／兔兔／貓咪／棒棒糖／愛心星星（不放文字，所以左右鏡像也沒關係）。
+function muralMat(W,H,seed,slots){
+  const t=newTex('xxMural',W,H),g=t.getContext(),rnd=rng(seed),U=H*0.34;
+  const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#ff5fb0');bg.addColorStop(0.55,'#8f7bff');bg.addColorStop(1,'#2f9bff');g.fillStyle=bg;g.fillRect(0,0,W,H);
+  const face=(x,y,s,col)=>{g.fillStyle='#5a3a6a';g.beginPath();g.arc(x-s*0.2,y,s*0.07,0,TAU);g.arc(x+s*0.2,y,s*0.07,0,TAU);g.fill();
+    g.fillStyle=col||'rgba(255,110,160,0.5)';g.beginPath();g.arc(x-s*0.36,y+s*0.12,s*0.1,0,TAU);g.arc(x+s*0.36,y+s*0.12,s*0.1,0,TAU);g.fill();
+    g.strokeStyle='#5a3a6a';g.lineWidth=Math.max(1.5,s*0.04);g.beginPath();g.arc(x,y+s*0.08,s*0.1,0.15,Math.PI-0.15);g.stroke();};
+  const cloud=(x,y,s,withFace)=>{g.fillStyle='#ffffff';g.beginPath();g.arc(x-s*0.5,y+s*0.1,s*0.38,0,TAU);g.arc(x,y-s*0.1,s*0.5,0,TAU);g.arc(x+s*0.52,y+s*0.1,s*0.36,0,TAU);g.rect(x-s*0.5,y+s*0.1,s*1.02,s*0.38);g.fill();if(withFace)face(x,y+s*0.12,s*0.9);};
+  const rainbow=(x,y,r)=>{['#ff6f9f','#ffb45e','#ffe45e','#7be8b0','#6fcfff','#b794ff'].forEach((c,i)=>{g.strokeStyle=c;g.lineWidth=r*0.11;g.beginPath();g.arc(x,y,r*(1-i*0.11),Math.PI,TAU);g.stroke();});};
+  const lolly=(x,y,s,c)=>{g.strokeStyle='#ffffff';g.lineWidth=s*0.12;g.beginPath();g.moveTo(x,y+s*0.5);g.lineTo(x,y+s*1.5);g.stroke();
+    g.fillStyle=c;g.beginPath();g.arc(x,y,s*0.5,0,TAU);g.fill();g.strokeStyle='#ffffff';g.lineWidth=s*0.09;g.beginPath();g.arc(x,y,s*0.32,0.4,5.0);g.stroke();g.beginPath();g.arc(x,y,s*0.15,3.6,8.2);g.stroke();g.beginPath();g.arc(x,y,s*0.5,0,TAU);g.stroke();};
+  const bunny=(x,y,s)=>{[-1,1].forEach(k=>{g.fillStyle='#ffffff';g.beginPath();g.ellipse(x+k*s*0.22,y-s*0.75,s*0.13,s*0.38,k*0.15,0,TAU);g.fill();g.fillStyle='#ffb3d1';g.beginPath();g.ellipse(x+k*s*0.22,y-s*0.72,s*0.06,s*0.26,k*0.15,0,TAU);g.fill();});
+    g.fillStyle='#ffffff';g.beginPath();g.arc(x,y,s*0.55,0,TAU);g.fill();face(x,y,s*1.0);g.fillStyle='#ff8fb5';g.beginPath();g.arc(x,y+s*0.04,s*0.05,0,TAU);g.fill();};
+  const cat=(x,y,s)=>{g.fillStyle='#ffe08a';[-1,1].forEach(k=>{g.beginPath();g.moveTo(x+k*s*0.52,y-s*0.1);g.lineTo(x+k*s*0.5,y-s*0.8);g.lineTo(x+k*s*0.1,y-s*0.45);g.closePath();g.fill();});
+    g.beginPath();g.arc(x,y,s*0.55,0,TAU);g.fill();face(x,y,s*1.0);g.strokeStyle='#b08a30';g.lineWidth=1.5;[-1,1].forEach(k=>[-0.05,0.1].forEach(dy=>{g.beginPath();g.moveTo(x+k*s*0.42,y+s*(0.1+dy));g.lineTo(x+k*s*0.85,y+s*(0.05+dy*2));g.stroke();}));};
+  // 底部：薄荷色小山丘與草地
+  g.fillStyle='#00d39a';g.beginPath();g.moveTo(0,H);for(let x=0;x<=W;x+=8)g.lineTo(x,H*0.84+Math.sin(x/W*TAU*slots*1.5)*H*0.045);g.lineTo(W,H);g.closePath();g.fill();
+  g.strokeStyle='#00a878';g.lineWidth=3;g.beginPath();for(let x=0;x<=W;x+=8){const y=H*0.84+Math.sin(x/W*TAU*slots*1.5)*H*0.045;x?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();
+  // 隨機閃亮星星與小愛心
+  for(let n=0;n<Math.round(W/22);n++){const x=rnd()*W,y=rnd()*H*0.78;g.fillStyle=n%3?'rgba(255,255,255,0.9)':'rgba(255,120,175,0.8)';if(n%3===2)heart(g,x,y,3+rnd()*3);else star4(g,x,y,3+rnd()*5);}
+  // 主角：每個格子放一組
+  const sw=W/slots,cols=['#ff7eb6','#7be0c3','#b794ff','#ffd84d','#7cc8ff'];
+  for(let i=0;i<slots;i++){const cx=sw*(i+0.5),k=i%5,gy=H*0.86;
+    if(k===0){bunny(cx,gy-U*0.58,U*0.95);cloud(cx-sw*0.28,H*0.2,U*0.7,false);}
+    else if(k===1){rainbow(cx,H*0.74,U*1.5);cloud(cx-U*1.25,H*0.72,U*0.7,true);cloud(cx+U*1.25,H*0.72,U*0.7,false);}
+    else if(k===2){lolly(cx-U*0.5,H*0.34,U*0.95,cols[i%5]);lolly(cx+U*0.5,H*0.28,U*0.75,cols[(i+2)%5]);}
+    else if(k===3){cat(cx,gy-U*0.58,U*0.95);g.fillStyle='#ff6fae';heart(g,cx+sw*0.3,H*0.3,U*0.45);g.fillStyle='#ffffff';heart(g,cx-sw*0.3,H*0.42,U*0.28);}
+    else{cloud(cx,H*0.34,U*1.0,true);g.fillStyle='#ffe45e';star4(g,cx+sw*0.3,H*0.62,U*0.4);g.fillStyle='#ffffff';star4(g,cx-sw*0.32,H*0.58,U*0.3);lolly(cx+sw*0.3,H*0.3,U*0.5,cols[(i+1)%5]);}}
+  g.strokeStyle='rgba(255,255,255,0.9)';g.lineWidth=Math.max(4,H*0.04);g.strokeRect(0,0,W,H);   // 畫框白邊
   t.update();return texMat(t,1);
 }
 // 觀眾：粉嫩色系的衣服，偶爾戴派對帽；front＝座位立面，top＝座位平面（俯視看到頭頂）。
@@ -130,11 +163,11 @@ function stripeMat(c1,c2){
 }
 
 // ═════════ ③ 地面與外野牆（圓弧）═════════
-const grassTex=grassTexture('xxGrass',11,[248,160,200],'rgba(255,255,255,0.10)',20000);
-const infTex=grassTexture('xxInfield',31,[244,128,184],'rgba(255,255,255,0.12)',16000);
+const grassTex=grassTexture('xxGrass',11,[232,100,166],'rgba(255,255,255,0.05)',20000);
+const infTex=grassTexture('xxInfield',31,[222,72,146],'rgba(255,255,255,0.06)',16000);
 const dirtTex=dirtTexture();
-ctx.makeGround(texMat(grassTex,1));
-ctx.setFieldMats({infield:texMat(infTex,1),dirt:texMat(dirtTex,1),home:texMat(dirtTex,0.96),mound:texMat(dirtTex,1.05)});
+ctx.makeGround(texMat(grassTex,0.96));
+ctx.setFieldMats({infield:texMat(infTex,0.96),dirt:texMat(dirtTex,1),home:texMat(dirtTex,0.96),mound:texMat(dirtTex,1.05)});
 
 const R=102,N=12,WALL_H=4.0,FENCE_TOP=WALL_H+0.3;       // 牆半徑 102 m；圓弧切成 12 段（每段 7.5°）
 const OF=[];for(let i=0;i<=N;i++){const a=(-45+i*90/N)*Math.PI/180;OF.push([R*Math.sin(a),R*Math.cos(a)]);}
@@ -144,15 +177,15 @@ function fenceAt(deg){                                  // 與實體牆一致：
     const t=(A[0]*ez-A[1]*ex)/den,u=(A[0]*dz-A[1]*dx)/den;if(t>0&&u>=-1e-6&&u<=1+1e-6)return t;}
   return R;
 }
-const wallMats=PASTEL.map(wallMat),capMat=M('#ffffff',{em:'#ffd9ee'});
-const bumpGroups=PASTEL.map(()=>[]);                    // 牆頂棉花糖小圓球（依顏色分組後合併）
+const wallMats=WALLC.map(wallMat),capMat=M('#ffffff',{em:'#ffd9ee'});
+const bumpGroups=WALLC.map(()=>[]);                    // 牆頂棉花糖小圓球（依顏色分組後合併）
 for(let i=0;i<N;i++){
   const A=OF[i],B=OF[i+1],ci=i%5,len=Math.hypot(B[0]-A[0],B[1]-A[1]);
   wallSeg(A[0],A[1],B[0],B[1],WALL_H,0.6,wallMats[ci],true,true,capMat,0.7);
   const nb=Math.round(len/2.2);
   for(let k=0;k<nb;k++){const f=(k+0.5)/nb,b=MB.CreateSphere('xxBump',{diameter:1.15,segments:6},scene);b.position.set(A[0]+(B[0]-A[0])*f,WALL_H+0.5,A[1]+(B[1]-A[1])*f);bumpGroups[ci].push(b);}
 }
-bumpGroups.forEach((arr,i)=>{const m=merge(arr,'xxBumps');if(m)m.material=candy(PASTEL[i],0.7);});
+bumpGroups.forEach((arr,i)=>{const m=merge(arr,'xxBumps');if(m)m.material=candy(WALLC[i],0.55);});
 // 界外極柱：糖果紋＋頂端粉紅球（只是外觀）
 const poleMat=stripeMat('#ff5fa8','#ffffff'),poleTop=candy('#ff5fa8',0.8);
 [-1,1].forEach(s=>{
@@ -165,7 +198,7 @@ const crowd=crowdTextures();
 const cf=M('#000000');cf.emissiveTexture=crowd.front;cf.disableLighting=true;cf.backFaceCulling=false;
 const ct=M('#000000');ct.emissiveTexture=crowd.top;ct.disableLighting=true;ct.backFaceCulling=false;
 const crowdMat=new BABYLON.MultiMaterial('xxCrowd',scene);crowdMat.subMaterials=[cf,ct];
-const concrete=candy('#f1e3f7',0.6);
+const concrete=candy('#a77bff',0.45);
 // 階梯式看台（立面貼一排人、踏面貼俯視人頭）。碰撞方盒每座只用 2 個（前半低、後半高）＋1 面後牆。
 function stand(ax,az,bx,bz,tiers,gap,top0,ext){
   const dx=bx-ax,dz=bz-az,L0=Math.hypot(dx,dz),ux=dx/L0,uz=dz/L0;
@@ -194,12 +227,13 @@ for(let i=0;i<6;i++)stand(OF[2*i][0],OF[2*i][1],OF[2*i+2][0],OF[2*i+2][1],4,1.8,
 
 // ═════════ ⑤ 界外牆、擋球牆、球員休息區 ═════════
 const FOUL_OFF=19,homeBackZ=-20;
-const foulMat=candy('#ffb3d9',0.5),foulMat2=candy('#c9b3ff',0.5),trim=M('#ffffff',{em:'#ffd9ee'});
-wallSeg(-12,homeBackZ,12,homeBackZ,3.4,0.6,foulMat2,true,false,trim,0.6);
+const foulMat=candy('#ff2f94',0.45),foulMat2=candy('#7a4dff',0.45),trim=M('#ffffff',{em:'#ffd9ee'});
+const muralBack=muralMat(1024,145,314,6),muralSide=muralMat(512,220,271,3);
+wallSeg(-12,homeBackZ,12,homeBackZ,3.4,0.6,muralBack,true,false,trim,0.6);          // 本壘後方擋球牆：彩繪
 const sides=[-1,1];
 sides.forEach(s=>{
   const a=lpt(s,0,FOUL_OFF),b=lpt(s,R,FOUL_OFF),pole=lpt(s,R,0);
-  wallSeg(s*12,homeBackZ,a.x,a.z,3.0,0.6,foulMat2,true,false,trim,0.6);
+  wallSeg(s*12,homeBackZ,a.x,a.z,3.0,0.6,muralSide,true,false,trim,0.6);              // 兩側斜牆：彩繪
   wallSeg(a.x,a.z,b.x,b.z,2.8,0.6,foulMat,true,false,trim,0.6);
   wallSeg(pole.x,pole.z,b.x,b.z,2.8,0.6,foulMat,true,false,trim,0.6);
   const sa=lpt(s,8,FOUL_OFF),sb=lpt(s,70,FOUL_OFF);stand(sa.x,sa.z,sb.x,sb.z,4,1.4,3.6,0);
@@ -207,7 +241,7 @@ sides.forEach(s=>{
 stand(-12,homeBackZ,12,homeBackZ,5,1.4,4.0,2);
 
 // 球員休息區：凹在界外牆前的薄荷色小棚子
-const DUG_R=19,DUG_FRONT=12.5,benchMat=candy('#fff0c9',0.5),roofMat=candy('#9de8cf',0.6),slab=candy('#e6d7f5',0.5);
+const DUG_R=19,DUG_FRONT=12.5,benchMat=candy('#fff0c9',0.5),roofMat=candy('#00d39a',0.5),slab=candy('#e6d7f5',0.5);
 sides.forEach(s=>{
   const ang=Math.atan2(-SQ,s*SQ),c=lpt(s,DUG_R,(DUG_FRONT+FOUL_OFF)/2);
   const floor=put(MB.CreateBox('xxDugFloor',{width:14,height:0.06,depth:FOUL_OFF-DUG_FRONT}),c.x,0.04,c.z,slab);floor.rotation.y=ang;
@@ -342,6 +376,73 @@ function drawBoard(g,s,W,H){
   if(ledPat){g.fillStyle=ledPat;g.fillRect(0,0,W,H);}
 }
 ctx.setScoreboardRenderer(drawBoard);
+
+// ═════════ ⑦-2 球場外的世界：紫色山丘 ═════════
+// 球場外面的土地「不是球場草皮的延伸」：以球場佔地範圍（看台後牆／界外看台／休息區外緣）為邊界，
+// 邊界以內仍是原本的粉色草地；邊界以外另外鋪一整片紫色地形（一圈平地 → 漸漸隆起的紫色山丘），
+// 地形略高於原地面(8 cm)，所以不會與球場內任何東西打架。純外觀，不參與碰撞。
+{
+  const CX=0,CZ=40,NA=216,K=44,ROUT=700,Y0=0.08;
+  const sst=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t);},lerp=(a,b,t)=>a+(b-a)*t;
+  // 球場佔地多邊形（從本壘後方開始，順著右側界外看台 → 外野看台外緣 → 左側）
+  const poly=[[0,-33]];
+  const hf=sd=>{const o=[[sd*17,-33]];[[8,29.5],[70,29.5],[76,22],[106,22]].forEach(([r,off])=>{const q=lpt(sd,r,off);o.push([q.x,q.z]);});return o;};
+  poly.push(...hf(1));
+  for(let d=45;d>=-45;d-=7.5){const a=d*Math.PI/180;poly.push([112.5*Math.sin(a),112.5*Math.cos(a)]);}
+  poly.push(...hf(-1).reverse());
+  // 從中心點(CX,CZ)往每個方向射線，量出佔地邊界的距離 rho[i]
+  const rho=new Array(NA);
+  for(let i=0;i<NA;i++){const th=i*TAU/NA,dx=Math.cos(th),dz=Math.sin(th);let best=1e9;
+    for(let j=0;j<poly.length;j++){const A=poly[j],B=poly[(j+1)%poly.length],ex=B[0]-A[0],ez=B[1]-A[1],den=dx*ez-dz*ex;if(Math.abs(den)<1e-9)continue;
+      const ax=A[0]-CX,az=A[1]-CZ,t=(ax*ez-az*ex)/den,u=(ax*dz-az*dx)/den;if(t>0&&u>=0&&u<=1&&t<best)best=t;}
+    rho[i]=best;}
+  const rhoAt=th=>{th=((th%TAU)+TAU)%TAU;const f=th/TAU*NA,i0=Math.floor(f)%NA,i1=(i0+1)%NA,w=f-Math.floor(f);return rho[i0]*(1-w)+rho[i1]*w;};
+  // 地形高度：離佔地邊界 40 m 內是平地，之後慢慢隆起，越遠越高（最高約 58 m）
+  function hAt(x,z){
+    const dx=x-CX,dz=z-CZ,D=Math.hypot(dx,dz)-rhoAt(Math.atan2(dz,dx));if(D<=0)return Y0;
+    const n=0.5*Math.sin(x*0.016+1.7)*Math.sin(z*0.019+0.4)+0.3*Math.sin(x*0.037+z*0.029+2.1)+0.2*Math.sin(z*0.052-x*0.041+0.7);
+    const sh=Math.pow(Math.max(0,0.5+0.575*n),1.25);
+    return Y0+sst(40,160,D)*(14+44*sst(60,320,D))*sh;
+  }
+  // 紫色草地貼圖（淡色，與頂點顏色相乘）：深淺色塊＋草葉＋小花＋星芒。512px 鋪 32 m。
+  const hillTex=(()=>{
+    const S=512,t=newTex('xxHillTex',S,S),g=t.getContext(),rnd=rng(404);
+    fillNoise(g,S,rnd,238,232,252,0.05);
+    for(let n=0;n<110;n++){const x=rnd()*S,y=rnd()*S,r=14+rnd()*46,dk=rnd()<0.55;
+      tile(S,x,y,r,(dx,dy)=>{g.fillStyle=dk?'rgba(110,60,200,0.10)':'rgba(255,255,255,0.10)';g.beginPath();g.arc(x+dx,y+dy,r,0,TAU);g.fill();});}
+    const bl=['rgba(100,50,190,0.30)','rgba(150,90,230,0.30)','rgba(255,255,255,0.28)','rgba(70,30,150,0.25)'];
+    for(let n=0;n<9000;n++){const x=rnd()*S,y=rnd()*S,len=3+rnd()*6,a=-1.57+(rnd()-0.5)*1.3;
+      tile(S,x,y,10,(dx,dy)=>{g.strokeStyle=bl[(rnd()*4)|0];g.lineWidth=0.8+rnd();g.beginPath();g.moveTo(x+dx,y+dy);g.lineTo(x+dx+Math.cos(a)*len,y+dy+Math.sin(a)*len);g.stroke();});}
+    const fl=['#ff7ac0','#ffe45e','#7fe3ff','#ffffff'];
+    for(let n=0;n<150;n++){const x=rnd()*S,y=rnd()*S;tile(S,x,y,4,(dx,dy)=>{g.fillStyle=fl[n%4];g.globalAlpha=0.85;g.beginPath();g.arc(x+dx,y+dy,1.5+rnd()*1.3,0,TAU);g.fill();g.globalAlpha=1;});}
+    for(let n=0;n<40;n++){const x=rnd()*S,y=rnd()*S;tile(S,x,y,9,(dx,dy)=>{g.fillStyle='rgba(255,255,255,0.9)';star4(g,x+dx,y+dy,3+rnd()*3);});}
+    t.update();return t;})();
+  const hillMat=M('#000000');hillMat.emissiveTexture=hillTex;hillMat.disableLighting=true;hillMat.backFaceCulling=false;   // 顏色＝貼圖×頂點色（頂點色已含光影）
+  // 產生極座標網格：每個方向 K+1 個點，從佔地邊界一路排到 700 m 外
+  const pos=[],uv=[],idx=[],cnt=NA*(K+1);
+  for(let i=0;i<NA;i++){const th=i*TAU/NA,c=Math.cos(th),sn=Math.sin(th);
+    for(let k=0;k<=K;k++){const r=rho[i]+(ROUT-rho[i])*Math.pow(k/K,1.7),x=CX+r*c,z=CZ+r*sn;pos.push(x,hAt(x,z),z);uv.push(x/32,z/32);}}
+  for(let i=0;i<NA;i++)for(let k=0;k<K;k++){const a=i*(K+1)+k,b=((i+1)%NA)*(K+1)+k;idx.push(a,b,a+1,b,b+1,a+1);}
+  let nor=[];BABYLON.VertexData.ComputeNormals(pos,idx,nor);
+  let ny=0;for(let v=0;v<cnt;v++)ny+=nor[3*v+1];
+  if(ny<0){for(let q=0;q<idx.length;q+=3){const t=idx[q+1];idx[q+1]=idx[q+2];idx[q+2]=t;}nor=[];BABYLON.VertexData.ComputeNormals(pos,idx,nor);}   // 確保朝上
+  // 頂點色：平地淡紫 → 山腰紫 → 山頂深紫，再乘上太陽方向的明暗與一點色塊變化
+  const sun=(()=>{const v=[0.42,0.78,-0.46],l=Math.hypot(...v);return v.map(a=>a/l);})(),col=[];
+  for(let v=0;v<cnt;v++){const x=pos[3*v],y=pos[3*v+1],z=pos[3*v+2],tt=sst(0,0.6,Math.min(1,(y-Y0)/50));
+    const sh=0.58+0.55*Math.max(0,nor[3*v]*sun[0]+nor[3*v+1]*sun[1]+nor[3*v+2]*sun[2]),nv=1+0.07*Math.sin(x*0.09)*Math.cos(z*0.083)+0.04*Math.sin(x*0.31+z*0.27),f=sh*nv/255;
+    col.push(Math.min(1,lerp(176,110,tt)*f),Math.min(1,lerp(120,56,tt)*f),Math.min(1,lerp(250,200,tt)*f),1);}
+  const hills=new BABYLON.Mesh('xxHills',scene),vd=new BABYLON.VertexData();
+  vd.positions=pos;vd.indices=idx;vd.normals=nor;vd.uvs=uv;vd.colors=col;vd.applyToMesh(hills);hills.material=hillMat;hills.isPickable=false;
+  // 山丘上的糖果樹：白色樹幹＋兩顆彩色棉花糖樹冠（依顏色合併）
+  const tc=['#ff7ac0','#59e0c0','#6fb8ff','#ffd35a','#e9a6ff'],can=tc.map(()=>[]),trunk=[],rt=rng(31337);
+  for(let n=0;n<70;n++){
+    const th=rt()*TAU,D=42+rt()*rt()*320,r=rhoAt(th)+D,x=CX+r*Math.cos(th),z=CZ+r*Math.sin(th),y=hAt(x,z),f=1+D/160,ci=n%5;
+    const tr=MB.CreateCylinder('xxTreeT',{diameter:0.7*f,height:6*f,tessellation:8},scene);tr.position.set(x,y+3*f,z);trunk.push(tr);
+    const c1=MB.CreateSphere('xxTreeC',{diameter:(6+rt()*3)*f,segments:8},scene);c1.position.set(x,y+7*f,z);can[ci].push(c1);
+    const c2=MB.CreateSphere('xxTreeC',{diameter:(3.5+rt()*2)*f,segments:8},scene);c2.position.set(x+0.8*f,y+10.4*f,z-0.6*f);can[ci].push(c2);}
+  const tm=merge(trunk,'xxTreeTrunks');if(tm)tm.material=candy('#ffffff',0.7);
+  can.forEach((arr,i)=>{const m=merge(arr,'xxTreeCanopies');if(m)m.material=candy(tc[i],0.65);});
+}
 
 // ═════════ ⑧ 封閉球員休息室（x=240，遠離球場）═════════
 {

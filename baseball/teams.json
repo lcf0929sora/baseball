@@ -6,7 +6,7 @@
       "name": "四川熊貓隊",
       "logo": "./baseball/panda.webp",
       "music": {
-        "chance": "music/chance.mp3",
+        "chance": "chance.mp3",
         "cheer": ""
       },
       "uniforms": {
@@ -103,7 +103,7 @@
       "name": "北海道山雀隊",
       "logo": "./baseball/tit.webp",
       "music": {
-        "chance": "music/chance.mp3",
+        "chance": "chance.mp3",
         "cheer": ""
       },
       "uniforms": {
@@ -200,7 +200,7 @@
       "name": "台中消波塊隊",
       "logo": "./baseball/tetra.webp",
       "music": {
-        "chance": "music/chance.mp3",
+        "chance": "chance.mp3",
         "cheer": ""
       },
       "uniforms": {
@@ -297,7 +297,7 @@
       "name": "苗栗貓隊",
       "logo": "./baseball/leocat.webp",
       "music": {
-        "chance": "music/chance.mp3",
+        "chance": "chance.mp3",
         "cheer": ""
       },
       "uniforms": {
@@ -394,7 +394,7 @@
       "name": "黃金海岸無尾熊隊",
       "logo": "./baseball/koala.webp",
       "music": {
-        "chance": "music/chance.mp3",
+        "chance": "chance.mp3",
         "cheer": ""
       },
       "uniforms": {
@@ -491,7 +491,7 @@
       "name": "釜山海鷗隊",
       "logo": "./baseball/gull.webp",
       "music": {
-        "chance": "music/chance.mp3",
+        "chance": "chance.mp3",
         "cheer": ""
       },
       "uniforms": {
@@ -588,7 +588,7 @@
       "name": "土耳其火雞隊",
       "logo": "./baseball/turkey.webp",
       "music": {
-        "chance": "music/chance.mp3",
+        "chance": "chance.mp3",
         "cheer": ""
       },
       "uniforms": {

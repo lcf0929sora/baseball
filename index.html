@@ -1042,21 +1042,41 @@ function updPitArms(){[pitcher,pBody,armTilt,armPivot].forEach(n=>n.computeWorld
   if(BABYLON.Vector3.Distance(gsh,gAbs)>ARM_MAX*1.001)gAbs=setGloveWorld(pitcherDef,gAbs,gsh);   // 保險：任何來源讓手套離肩超過臂長，一律拉回
   arm2(pArmL,gsh,gAbs,V(1,0.25,0));}
 const BX=-1.15;let swingY=0.85,ld=0,swLd=0,fromP=null;
+// 身體前傾／後仰：擊球點離打者越遠（外角）軀幹以髖關節為軸向前傾、手臂前伸；內角則向後仰。leanCur 為目前傾角(rad，+前傾)
+const LEAN={fwd:0.36,back:0.28,reach:0.10,hipY:0.45,xRef:0.35,footF:0.22,footB:0.12};let leanCur=0,leanAim=0,leanDod=0,dodgeDrop=0,footOffL=0,footOffR=0,leanDirty=false;
+// 把打者的傾斜／下蹲／前腳位移全部還原（保送、三振動畫與被球撞倒爬起後使用）。被球撞擊的飛行／倒地期間不可呼叫：
+// 手臂是跟著當下姿勢凍結的網格，身體若先被還原直立，手臂就會和身體分離。
+function resetBatterLean(){if(!leanDirty)return;leanDirty=false;leanCur=leanAim=leanDod=dodgeDrop=0;dodgeTgt=0;dodgeDropTgt=0;
+  batter.rotation.x=0;batter.rotation.z=0;batter.position.set(BX,0,0);bSh[0].position.x-=footOffL;bSh[1].position.x-=footOffR;footOffL=footOffR=0;applyPose(curP,0);}   // 重新依直立姿勢排好手臂／手／球棒
+// 近身球閃躲：看到球出手 DODGE.react 秒後才反應；球將經過身體前方(板側)→向後退(-x)並後仰，經過身體後方(頭後)→向前跨(+x)並前傾
+const DODGE={react:0.2,zoneX:0.62,yLo:0.15,yHi:1.9,headY:1.05,lean:0.5,fallLean:1.05,fallDrop:0.30,wMax:6,wBack:3,dropV:1.6,riseV:0.8};   // wMax：軀幹最大傾角速度 rad/s(≈340°/s)；dropV/riseV：下蹲/起身速度 m/s
+let dodgeX=0,dodgeTgt=0,dodgeDropTgt=0,dodgeFor=null;
+// 打者視覺預測：取目前球位置與速度（有限差分），假設等速直線飛行外推到過板面 z=0，並加入約 4 cm 的視覺誤差
+function perceivePlate(fc){try{const u=clamp(fc/P.T,0,1),h=0.01/P.T,a=pathAt(P,Math.max(0,u-h)),b=pathAt(P,Math.min(1.1,u+h)),dtt=(Math.min(1.1,u+h)-Math.max(0,u-h))*P.T;
+  if(!(dtt>0))return null;const c=pathAt(P,u),vx=(b.x-a.x)/dtt,vy=(b.y-a.y)/dtt,vz=(b.z-a.z)/dtt;if(!(vz<-3)||!(c.z>0))return null;
+  const tau=c.z/-vz;return {x:c.x+vx*tau+gs(0.04),y:c.y+vy*tau+gs(0.04),tau:tau};}catch(e){return null;}}
 const ssm=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);};
 const lerpA=(a,b,k)=>a.map((v,i)=>v+(b[i]-v)*k);
 // 姿勢參數 [手繞行角, 手距離, 手高, 棒角, 身體轉角, 棒仰角]；l=後拉程度(0~1)，f=揮棒進度(0~1)
 function swingParams(f,l,sy){
   const hp=ssm(f/0.7),bp=ssm((f-0.06)/0.94),yy=ssm(f*4);        // 手先動，棒子稍晚被拉過來
   // 揮棒結束時握把移到打者左側，棒身也朝左側延伸。
-  return [1.75+0.25*l-(1.75+Math.PI*0.75+0.25*l)*hp, 0.57-0.05*hp, 0.72+DY*1.5+(sy-0.72-DY*1.5)*yy-0.08*hp,
+  return [1.75+0.25*l-(1.75+Math.PI*0.75+0.25*l)*hp, 0.57-0.05*hp+LEAN.reach*clamp(leanCur/(leanCur>=0?LEAN.fwd:LEAN.back),-1,1), 0.72+DY*1.5+(sy-0.72-DY*1.5)*yy-0.08*hp,
           2.95+0.3*l-(3.85+Math.PI/4+0.3*l)*bp, 0.2*l-(Math.PI*0.75+0.2*l)*ssm(f), -0.95*(1-ssm((f-0.04)/0.5))];   // 軀幹向左轉 135°（面向三壘），球棒揮過身體後落在左側
 }
 let curP=swingParams(0,0,0.85);
 function applyPose(p,release=0,releaseL=0){curP=p;
-  batPivot.position.set(BX+p[1]*Math.sin(p[0]),p[2],p[1]*Math.cos(p[0]));
-  batPivot.rotation.x=p[5];batPivot.rotation.y=p[3];batter.rotation.y=Math.PI/2+p[4];
-  const h=batPivot.position;batter.position.set(BX,0,0);
+  batPivot.position.set(BX+dodgeX+p[1]*Math.sin(p[0]),p[2]-dodgeDrop,p[1]*Math.cos(p[0]));
+  batPivot.rotation.x=p[5];batPivot.rotation.y=p[3];const psi=Math.PI/2+p[4];batter.rotation.y=psi;
+  // 傾斜軸固定為世界 z 軸（朝本壘板前傾／朝後仰），換算成隨軀幹轉動的局部 x/z 傾角
+  leanDirty=leanCur!==0||leanAim!==0||dodgeDrop>0;batter.rotation.x=leanCur*Math.sin(psi);batter.rotation.z=-leanCur*Math.cos(psi);
+  const h=batPivot.position;batter.position.set(BX+dodgeX,-dodgeDrop,0);
+  if(leanCur!==0){const H=V(0,LEAN.hipY,0),a=new BABYLON.Vector3(),b=new BABYLON.Vector3();   // 以髖為軸：傾斜後把髖拉回原位，雙腳不離身
+    H.rotateByQuaternionToRef(BABYLON.Quaternion.RotationYawPitchRoll(psi,0,0),a);H.rotateByQuaternionToRef(BABYLON.Quaternion.RotationYawPitchRoll(psi,batter.rotation.x,batter.rotation.z),b);batter.position.addInPlace(a.subtractInPlace(b));}
   for(let i=0;i<2;i++){let w=null,mx=0;[SZ,-SZ].forEach(z=>{const S=wp(batter,SHF,SY,z),v=h.subtract(S),e=v.length()-9;if(e>mx){mx=e;w=v;}});if(!w)break;w.y=0;if(w.length()>1e-4)batter.position.addInPlace(w.normalize().scale(Math.min(mx,0.4)));}
+  // 前腳(左腳 bSh[0])隨傾斜前後滑動以穩住重心；閃躲時兩腳一起平移。相對位移累加，避免與跑壘／倒地動畫的腳位衝突。
+  {const wl=(leanAim>=0?leanAim/LEAN.fwd*LEAN.footF:leanAim/LEAN.back*LEAN.footB),wr=0;
+   bSh[0].position.x+=wl-footOffL;bSh[1].position.x+=wr-footOffR;footOffL=wl;footOffR=wr;}
   // 雙腳已獨立於 batter 並固定在世界座標，不隨揮棒的軀幹旋轉或位移。
   // 握把沿球棒軸向分開：右打者左手在下方，右手在上方。雙手位置都依球棒世界矩陣計算。
   const gripL0=wp(batPivot,0,0,0.035),gripR=wp(batPivot,0,0,0.135);
@@ -1100,7 +1120,7 @@ function applyTeamConfig(c){
  const a=teamConfig.teams.find(t=>t.id===chosenHomeId)||teamConfig.teams[0],b=teamConfig.teams.find(t=>t.id===chosenAwayId&&t.id!==a.id)||teamConfig.teams.find(t=>t.id!==a.id);
  chosenHomeId=a.id;chosenAwayId=b.id;
  [['RED',a],['BLUE',b]].forEach(([slot,t])=>{
-   const list=t.players.map((p,i)=>{const q=makePlayer(slot,String(p.name||('球員 '+(i+1))),i);q.id=slot+'-'+(p.id||i+1);q.name=String(p.name||('球員 '+(i+1)));q.number=Number(p.number)||i+1;q.cfgId=String(p.id||'');q.hair=p.hair||null;q.face=p.face||null;q.pos=p.position||POS_ORDER[i]||'替補';return q;});
+   const list=t.players.map((p,i)=>{const q=makePlayer(slot,String(p.name||('球員 '+(i+1))),i);q.id=slot+'-'+(p.id||i+1);q.name=String(p.name||('球員 '+(i+1)));q.number=Number(p.number)||i+1;q.cfgId=String(p.id||'');q.hair=p.hair||null;q.face=p.face||null;q.bats=String(p.bats||p.bat||'R').toUpperCase().startsWith('L')?'L':'R';q.pos=p.position||POS_ORDER[i]||'替補';return q;});
    rosters[slot].splice(0,rosters[slot].length,...list);
  });
  const col=t=>(t.uniforms&&t.uniforms.home)||{};
@@ -1595,7 +1615,7 @@ function knockApply(k){   // 世界座標 = R·(rest) + t，其中 t = p − R·
   const R=qrot(k.q,k.c0);batterRig.rotationQuaternion.copyFromFloats(k.q[0],k.q[1],k.q[2],k.q[3]);
   batterRig.position.set(k.p[0]-R[0],k.p[1]-R[1],k.p[2]-R[2]);
 }
-function knockReset(){knock=null;batterRig.position.set(0,0,0);batterRig.rotationQuaternion.copyFromFloats(0,0,0,1);}
+function knockReset(){knock=null;batterRig.position.set(0,0,0);batterRig.rotationQuaternion.copyFromFloats(0,0,0,1);resetBatterLean();}
 function updateKnock(dt){
   const k=knock;if(!k||!(dt>0))return;
   if(k.phase==='fly'){
@@ -2968,6 +2988,27 @@ const aim=put(MB.CreateTorus('aim',{diameter:AIM_R*2,thickness:0.014,tessellatio
 aim.rotation.x=Math.PI/2;
 const aimDot=put(MB.CreateSphere('aimdot',{diameter:0.035,segments:6}),0,0,0,M('#000000',{em:'#ffb43a'}));aimDot.parent=aim;
 aim.setEnabled(false);aim.renderingGroupId=1;aimDot.renderingGroupId=1;
+const BZ={Lb:0.86,ls:0.70,b:0.16,hx:0.62,hy:0.95,gain:0.85,maxDeg:50,N:48};   // Lb 棒長(m)；ls 甜蜜點距棒尾(m，約 27.5 吋＝距棒頭 6.5 吋)；準心=甜蜜點
+BZ.a=BZ.Lb/2;BZ.uc=BZ.Lb/2-BZ.ls;   // 橢圓半長、橢圓中心相對甜蜜點的軸向偏移
+const bzWidth=t=>0.65+0.7*clamp((t+1)/2,0,1);
+function batOutlinePath(Z){const p=[];for(let k=0;k<=BZ.N;k++){const g=k/BZ.N*Math.PI*2,t=Math.cos(g),u=Z.uc+Z.a*t,v=Z.b*bzWidth(t)*Math.sin(g);p.push(V(Z.cx+Z.ux*u-Z.uy*v,Z.cy+Z.uy*u+Z.ux*v,0));}return p;}
+function batHandlePath(Z){const kx=Z.cx+Z.ux*(Z.uc-Z.a),ky=Z.cy+Z.uy*(Z.uc-Z.a),p=[];for(let k=0;k<=5;k++){const f=k/5;p.push(V(kx+(Z.hx-kx)*f,ky+(Z.hy-ky)*f,0));}return p;}
+const BZ0={cx:0.05,cy:0.95,ux:1,uy:0,uc:BZ.uc,a:BZ.a,b:BZ.b,hx:-BZ.hx,hy:BZ.hy};
+const batAimMesh=MB.CreateTube('batAim',{path:batOutlinePath(BZ0),radius:0.008,tessellation:6,updatable:true},scene);
+const batAimHandle=MB.CreateTube('batAimHandle',{path:batHandlePath(BZ0),radius:0.004,tessellation:5,updatable:true},scene);
+const batDot=MB.CreateSphere('batAimDot',{diameter:0.035,segments:6},scene);
+batAimMesh.material=M('#000000',{em:'#ffb43a',alpha:0.9});
+batAimHandle.material=M('#000000',{em:'#ffb43a',alpha:0.4});
+batDot.material=M('#000000',{em:'#ffb43a'});
+[batAimMesh,batAimHandle,batDot].forEach(m=>{m.isPickable=false;m.renderingGroupId=1;m.setEnabled(false);});
+let batAimShown=false,aimWasOn=false;
+function batterHand(){const p=currentBatter();return p&&p.bats==='L'?-1:1;}
+function batZone(ax,ay){const s=batterHand(),hx=-s*BZ.hx,dx=Math.max(0.35,s*(ax-hx)),dy=ay-BZ.hy,mx=BZ.maxDeg*Math.PI/180;const th=clamp(Math.atan2(dy,dx)*BZ.gain,-mx,mx);return {cx:ax,cy:ay,ux:s*Math.cos(th),uy:Math.sin(th),uc:BZ.uc,a:BZ.a,b:BZ.b,hx:hx,hy:BZ.hy,s:s};}
+function batContact(px,py,Z){Z=Z||batZone(aimX,aimY);const rx=px-Z.cx,ry=py-Z.cy,s=Z.s||1,u=rx*Z.ux+ry*Z.uy,v=s*(-rx*Z.uy+ry*Z.ux),t=(u-Z.uc)/Z.a,vn=v/(Z.b*bzWidth(t));return {u:u,v:v,t:t,vn:vn,r:Math.hypot(t,vn)};}   // u：離甜蜜點的軸向距離(+往棒頭)；vn：垂直主軸偏移(正=球在軸線上方)
+function batZoneR(px,py,Z){return batContact(px,py,Z).r;}
+function updateBatAim(){const Z=batZone(aimX,aimY);MB.CreateTube(null,{path:batOutlinePath(Z),radius:0.008,instance:batAimMesh});MB.CreateTube(null,{path:batHandlePath(Z),radius:0.004,instance:batAimHandle});batDot.position.set(Z.cx,Z.cy,0);}
+function setBatAimShown(on){if(on===batAimShown)return;batAimShown=on;[batAimMesh,batAimHandle,batDot].forEach(m=>m.setEnabled(on));}
+
 const mark=put(MB.CreateSphere('mark',{diameter:0.1,segments:12}),0,1,0,M('#000000',{em:'#ff1f1f'}));   // 實心醒目紅點
 mark.setEnabled(false);mark.renderingGroupId=1;
 const endMk=put(MB.CreateTorus('end',{diameter:0.09,thickness:0.01,tessellation:20}),0,0,0,M('#000000',{em:'#6fb3ff',alpha:0.8}));endMk.rotation.x=Math.PI/2;endMk.renderingGroupId=1;endMk.setEnabled(false);
@@ -3040,7 +3081,41 @@ function updateActorShadows(){
 const sparkMat=M('#ffd36a',{em:'#ffd36a'});
 const sparks=[];for(let i=0;i<14;i++){const s=put(MB.CreateSphere('sp',{diameter:0.06,segments:4}),0,0,0,sparkMat);s.isVisible=false;sparks.push({m:s,v:V(0,0,0),t:0});}
 const land=put(MB.CreateTorus('land',{diameter:6,thickness:0.7,tessellation:32}),0,0.15,0,M('#000000',{em:'#ff4d3d'}));land.setEnabled(false);
-const shadowExcluded=new Set([diamond,shadow,aim,aimDot,mark,endMk,land,brkLn]);
+const shadowExcluded=new Set([diamond,shadow,aim,aimDot,mark,endMk,land,brkLn,batAimMesh,batAimHandle,batDot]);
+
+// ================= 外掛音樂（由球隊 JSON 指定）=================
+// teams.json 的球隊物件可加：  "music": { "chance": "music/chance.mp3", "cheer": "music/cheer.mp3" }
+// 路徑相對於 ./baseball/（也可寫 http(s):// 或 ./ ../ / 開頭的完整路徑）。沒寫該項目或檔案讀不到＝該項不播放。
+// 主場（玩家隊）打擊時：得點圈有人 → chance 曲漸入（一般加油曲同時漸出）；得點圈無人 → chance 漸出停止、加油曲漸入。其他時間（守備／換場／結束）全部漸出。
+const MUSIC={vol:0.55,fadeIn:2.5,fadeOut:2.0,kinds:['chance','cheer']};
+const musicTracks={};let musicKey='',musicWant='none',musicRetryT=0;
+function musicUrl(p){p=String(p||'').trim();if(!p)return '';return /^(https?:|\/|\.\/|\.\.\/|data:|blob:)/i.test(p)?p:STADIUM_BASE+p;}
+function musicDispose(){MUSIC.kinds.forEach(k=>{const t=musicTracks[k];if(t&&t.el){try{t.el.pause();t.el.removeAttribute('src');t.el.load();}catch{}}delete musicTracks[k];});}
+function musicSetup(){
+  const tm=teamConfig.teams.find(t=>t.id===chosenHomeId)||{},m=tm.music||{};
+  const key=chosenHomeId+'|'+MUSIC.kinds.map(k=>m[k]||'').join('|');
+  if(key===musicKey)return;musicKey=key;musicDispose();
+  MUSIC.kinds.forEach(k=>{const url=musicUrl(m[k]);if(!url)return;
+    const el=new Audio();el.loop=true;el.preload='auto';el.volume=0;const t={el,vol:0,bad:false,url};
+    el.addEventListener('error',()=>{t.bad=true;console.warn('音樂檔無法載入，略過：'+url);});
+    el.src=url;musicTracks[k]=t;});
+}
+function musicTick(dt){
+  musicSetup();
+  // 目前應播放哪一首：只在投球循環中更新（打出去後跑壘期間維持原狀，避免跑者移動時來回切換）
+  const live=!practiceMode&&!gameOver&&soundOn&&mode==='bat';
+  if(!live||!['ready','windup','pitch','flight','result'].includes(st))musicWant='none';
+  else if(st==='ready'||st==='windup'||st==='pitch')musicWant=(bases[1]||bases[2])?'chance':'cheer';
+  else if(musicWant==='none')musicWant=(bases[1]||bases[2])?'chance':'cheer';
+  musicRetryT-=dt;
+  MUSIC.kinds.forEach(k=>{const t=musicTracks[k];if(!t||t.bad)return;
+    const tgt=musicWant===k?MUSIC.vol:0,rate=MUSIC.vol/(tgt>t.vol?MUSIC.fadeIn:MUSIC.fadeOut)*dt;
+    t.vol=t.vol<tgt?Math.min(tgt,t.vol+rate):Math.max(tgt,t.vol-rate);
+    try{t.el.volume=clamp(t.vol,0,1);}catch{}
+    if(tgt>0&&t.el.paused&&musicRetryT<=0){const p=t.el.play();if(p&&p.catch)p.catch(e=>{if(e&&e.name!=='NotAllowedError'&&e.name!=='AbortError')t.bad=true;});}   // 瀏覽器需先有使用者操作才能播放；被擋就稍後重試
+    if(tgt===0&&t.vol===0&&!t.el.paused){t.el.pause();if(k==='chance')try{t.el.currentTime=0;}catch{}}});
+  if(musicRetryT<=0)musicRetryT=1;
+}
 
 // ================= audio =================
 let AC=null,soundOn=true;
@@ -3414,7 +3489,7 @@ const hist=[];let AI0=null;
 function hs(t){for(let i=hist.length-1;i>0;i--){if(hist[i-1][0]<=t){const a=hist[i-1],b=hist[i],f=clamp((t-a[0])/Math.max(1e-6,b[0]-a[0]),0,1);
   return [a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f,a[3]+(b[3]-a[3])*f];}}return hist[0]?hist[0].slice(1):null;}
 function aiNew(){return {d:AIP.d+gs(AIP.dJ),eS:gs(AIP.spd),eVx:gs(AIP.vel),eVy:gs(AIP.vel),eZ:gs(AIP.zE),bx:gs(AIP.bias),by:gs(AIP.bias),eM:gs(AIP.mot),dec:false,go:false};}
-function aiBat(dt){const a=AI0,to=flightClock-a.d;if(!a||to<0.1||swingT>=0||aimLock)return;
+function aiBat(dt){const a=AI0,to=flightClock-a.d;if(!a||to<0.1||swingT>=0||aimLock||dodgeTgt!==0)return;
   const p=hs(to),q=hs(to-0.1);if(!p||!q)return;
   const vz=Math.max(5,(q[2]-p[2])/0.1),spd=(1-AIP.beta)*vz*(1+a.eS)+AIP.beta*AIP.prior;   // 速度估計含期望值偏差
   const tauO=Math.max(0.01,(p[2]+a.eZ)/spd),tau=tauO-a.d;                                  // 估計剩餘時間
@@ -5020,30 +5095,66 @@ function finish(txt,cls,sub,hold){announce(txt,cls,sub);st='result';stT=0;holdT=
 
 function swing(){                                              // 揮棒不受限：任何時間都能連續揮，只有球到本壘瞬間才判定
   if(st==='title'||st==='flight'||st==='result')return;
+  if(dodgeTgt!==0)return;                               // 閃躲中不能揮棒
   if(swingT>=0&&swingT<0.3)return;
   fromP=curP.slice();swLd=ld;swingT=0;contactDone=false;sfx.swing();
   clickClock=flightClock;aimLock=true;swingY=clamp(aimY,0.6,0.95);
 }
+
+// ===== 球棒–球碰撞物理（近似解）=====
+// 1) 軸向：離甜蜜點距離 d 決定「有效質量比 r」與「恢復係數 e」→ 第一組威力值（越遠越弱；棒頭側衰減比棒尾側陡）
+//    棒速 vb(ℓ)=Vb·(ℓ+piv)/(ls+piv)（離支點越遠越快）。
+// 2) 垂直主軸：球心偏離棒軸量 vn → 接觸法線相對揮棒方向偏轉 φ（球在軸線上方→打球下緣→仰角大）。
+// 3) 揮棒方向 d＝水平前進＋攻角 α；α 隨擊球高度上升（高球易飛球、低球易滾/平飛）。
+// 4) 球–棒一維彈性公式（沿法線 n）：v' = v_in − (1+e)/(1+r)·(v_rel·n)·n，切線方向以摩擦係數拉向棒面速度。
+// 5) 左右方向＝揮棒時機（球越過本壘面的深度）與棒上位置（離支點半徑 Rx）→ ψ=atan(g·v_p·Δt/Rx)，只旋轉結果向量，不影響初速。
+const BAT={Vb:32.8,piv:0.15,e0:0.50,r0:0.18,wK:0.25,wB:0.14,fric:0.15,phiMax:32,atk0:9,atkK:45,atkY:0.80,hGain:0.35};
+function batHitPhysics(px,py,Z,vin,dt){
+  const c=batContact(px,py,Z),s=Z.s||1,d=c.u;
+  const wd=d<0?BAT.wK:BAT.wB,r=BAT.r0*(1+(d/wd)*(d/wd));
+  const e=BAT.e0*(1-0.35*Math.min(1,(d/0.45)*(d/0.45)));
+  const vb=BAT.Vb*((BZ.ls+d)+BAT.piv)/(BZ.ls+BAT.piv);
+  const al=clamp(BAT.atk0+BAT.atkK*(py-BAT.atkY)+rnd(-1.5,1.5),-10,35)*Math.PI/180;
+  const dv={x:0,y:Math.sin(al),z:Math.cos(al)};
+  const phi=clamp(c.vn,-1,1)*BAT.phiMax*Math.PI/180;
+  // 法線：沿揮棒方向 d 轉 φ，轉動方向取「垂直棒軸」的 e2（含棒軸傾斜）
+  let ex=-s*Z.uy,ey=s*Z.ux,ez=0;const k0=ex*dv.x+ey*dv.y+ez*dv.z;ex-=k0*dv.x;ey-=k0*dv.y;ez-=k0*dv.z;
+  const en=Math.hypot(ex,ey,ez)||1;ex/=en;ey/=en;ez/=en;
+  const cp=Math.cos(phi),sp=Math.sin(phi),n={x:dv.x*cp+ex*sp,y:dv.y*cp+ey*sp,z:dv.z*cp+ez*sp};
+  const rel={x:vin.x-vb*dv.x,y:vin.y-vb*dv.y,z:vin.z-vb*dv.z};
+  let un=rel.x*n.x+rel.y*n.y+rel.z*n.z;if(un>-1)un=-1;
+  const kk=(1+e)/(1+r);
+  let o={x:vin.x-kk*un*n.x,y:vin.y-kk*un*n.y,z:vin.z-kk*un*n.z};
+  const t={x:rel.x-un*n.x,y:rel.y-un*n.y,z:rel.z-un*n.z};
+  o.x-=BAT.fric*t.x;o.y-=BAT.fric*t.y;o.z-=BAT.fric*t.z;
+  // 左右方向：揮棒時機＋棒上位置（半徑）
+  const vp=Math.max(10,-vin.z),Rx=Math.max(0.3,s*(px-(Z.hx-s*0.25)));
+  const psi=s*Math.atan2(BAT.hGain*vp*dt,Rx);
+  const cs=Math.cos(psi),sn=Math.sin(psi);
+  const ox=o.x*cs+o.z*sn,oz=-o.x*sn+o.z*cs;
+  const sp3=Math.hypot(o.x,o.y,o.z),hh=Math.hypot(ox,oz);
+  return {v0:sp3,L:Math.atan2(o.y,hh)*180/Math.PI,ang:Math.atan2(ox,oz)*180/Math.PI,d:d,vn:c.vn,vb:vb,r:r,e:e,al:al*180/Math.PI,phi:phi*180/Math.PI,psi:psi*180/Math.PI};
+}
+function ballVelAtPlate(f){const h=0.004/P.T,a=pathAt(P,Math.max(0,f-h)),b=pathAt(P,f+h),dtt=(f+h-Math.max(0,f-h))*P.T||1e-3;
+  const v={x:(b.x-a.x)/dtt,y:(b.y-a.y)/dtt,z:(b.z-a.z)/dtt};const vp=P.kmh/3.6*0.93;
+  if(!(v.z<-5)){v.x=0;v.y=0;v.z=-vp;}return v;}
 function doContact(){
   lastDt=flightClock-P.T;
   if(st!=='pitch'||Math.abs(lastDt)>0.07)return;
   const dt=lastDt,bp=pathAt(P,flightClock/P.T);
   const dx=bp.x-aimX,dy=bp.y-aimY,dist=Math.hypot(dx,dy);
-  if(dist>AIM_R){missInfo='準心偏'+(Math.abs(dy)>Math.abs(dx)?(dy>0?'低':'高'):(dx>0?'內':'外'))+' '+Math.round(dist*100)+' cm';return;}
-  let q=Math.pow(1-Math.abs(dt)/0.07,0.6);
-  if(Math.abs(dt)<0.012)q=1;
-  q*=1-0.45*(dist/AIM_R);
-  q=clamp(q,0.05,1);
-  let v0=16+32*q+rnd(0,1.2);
-  let ang=clamp(dt/0.07,-1.4,1.4)*52+bp.x*12+dx/AIM_R*10+rnd(-3,3);          // 時機偏差大→拉/推成界外
-  let L=clamp(12+dy/AIM_R*40+rnd(-4,4)+(1-q)*rnd(-12,12),-12,78);            // 仰角：平均約 15°（MLB 實測 10–15°）→ 模擬分布約 滾地46%／平飛22%／飛球25%／高飛6%；準心在球下方→仰角大
-  const rr=dist/AIM_R,tip=Math.random()<Math.pow(clamp((rr-0.7)/0.3,0,1),1.2)*0.5;   // 打到準心邊緣＝擦棒
+  const zr=batZoneR(bp.x,bp.y);
+  if(zr>1){missInfo='準心偏'+(Math.abs(dy)>Math.abs(dx)?(dy>0?'低':'高'):(dx>0?'內':'外'))+' '+Math.round(dist*100)+' cm';return;}
+  const bz=batZone(aimX,aimY),ph=batHitPhysics(bp.x,bp.y,bz,ballVelAtPlate(clamp(flightClock/P.T,0,1.1)),dt);
+  let v0=clamp(ph.v0,8,56);
+  let ang=ph.ang,L=clamp(ph.L,-15,80);            // 擊球方向／仰角由 batHitPhysics 的碰撞向量決定
+  const rr=Math.min(1,zr),tip=Math.random()<Math.pow(clamp((rr-0.7)/0.3,0,1),1.2)*0.5;   // 打到準心邊緣＝擦棒
   if(tip){v0=rnd(12,26);ang=(dt>=0?1:-1)*rnd(48,95);L=dy>0?rnd(45,70):rnd(-8,12);}
   const x0=clamp(bp.x,-0.3,0.3),y0=clamp(bp.y,0.4,1.5);
   const sim=simHit(v0,L,ang,x0,y0,false);
   const res=tip?{foul:true,tip:true,tShow:sim.landed?sim.landed.t:1.2}:classify(sim,L,v0,x0,y0,ang);
   const b=ang*Math.PI/180;
-  FL={sim:sim,res:res,hd:V(Math.sin(b),0,Math.cos(b)),shown:false,dt:dt,dist:dist,
+  FL={sim:sim,res:res,hd:V(Math.sin(b),0,Math.cos(b)),shown:false,dt:dt,dist:dist,ev:Math.round(v0*3.6),la:Math.round(L),
       tShow:(res.tShow!==undefined?res.tShow:1.5)};
   const lp=res.lp||sim.landed||(sim.cross?{x:sim.cross.x,z:sim.cross.z}:null);if(lp){land.position.set(lp.x,0.15,lp.z);land.setEnabled(true);}
   ft=0;st='flight';chase=true;hitStop=0.07;
@@ -5069,7 +5180,7 @@ function resolveFieldingPlay(){
 function showFlightResult(){
   resolveFieldingPlay();
   const r=FL.res;
-  const tt=timingText(FL.dt)+(FL.dist<0.07?' ・ 正中':''),me=mode==='bat';
+  const tt=timingText(FL.dt)+(FL.dist<0.07?' ・ 正中':'')+(FL.ev?' ・ '+FL.ev+' km/h '+FL.la+'°':''),me=mode==='bat';
   if(r.foul){if(strikes<2)strikes++;announce(r.tip?'擦棒 界外':'界外球','',tt);}
   else{
     balls=0;strikes=0;
@@ -5651,8 +5762,30 @@ scene.onBeforeRenderObservable.add(()=>{
   if(land.isEnabled())land.scaling.setAll(1+0.15*Math.sin(performance.now()/150));
   // 打者雙手後拉：投手動作時往捕手方向收，球投出後維持
   if(st==='windup')ld=Math.max(ld,ss((pclock+W)/W/0.7));else if(st==='pitch')ld=1;else ld=Math.max(0,ld-dt*3);
+  musicTick(dt);
+  // 打者身體傾角：依擊球點橫向位置（打擊＝準心；投球＝CPU 打者看球的預測過板位置）
+  {// 近身球閃躲：出手後 DODGE.react 秒才反應；只能依「當下球的位置與速度」線性外推到過板面，不知道變化球之後的走向（變化球可能預判錯誤而被打到）
+   if(st==='pitch'&&P){
+     if(dodgeFor!==P&&flightClock>=DODGE.react){dodgeFor=P;dodgeTgt=0;dodgeDropTgt=0;
+       const pc=perceivePlate(flightClock);
+       if(pc&&swingT<0&&!aimLock){const dx=pc.x-BX;
+         if(Math.abs(dx)<DODGE.zoneX&&pc.y>DODGE.yLo&&pc.y<DODGE.yHi){
+           const dir=dx>=0?-1:1;   // 球在身體前方(板側)→往後仰；在身體後方→往前傾
+           if(pc.y>=DODGE.headY){dodgeTgt=dir*DODGE.fallLean;dodgeDropTgt=DODGE.fallDrop;}   // 逼近頭部：整個人往後／往前跌倒躲避
+           else dodgeTgt=dir*DODGE.lean;}}}
+     if(dodgeFor===P&&dodgeTgt!==0&&flightClock>P.T+0.12){dodgeTgt=0;dodgeDropTgt=0;}
+   }else{dodgeTgt=0;dodgeDropTgt=0;if(st!=='windup')dodgeFor=null;}
+   // 人體速度限制：傾角角速度、下蹲速度皆有上限（站姿不平移、雙腳不動）
+   {const w=(dodgeTgt!==0?DODGE.wMax:DODGE.wBack)*dt,e=clamp((dodgeTgt-leanDod)*12*dt,-w,w);leanDod+=e;if(Math.abs(leanDod)<1e-4&&dodgeTgt===0)leanDod=0;
+    const wd=(dodgeDropTgt>0?DODGE.dropV:DODGE.riseV)*dt;dodgeDrop+=clamp(dodgeDropTgt-dodgeDrop,-wd,wd);if(dodgeDrop<1e-4&&dodgeDropTgt===0)dodgeDrop=0;}}
+  {let tx=0;if(mode==='bat')tx=aimX;else if(P&&st==='pitch'&&flightClock>0.1){const pc=perceivePlate(flightClock);tx=pc?pc.x:0;}
+   const xn=clamp(tx/LEAN.xRef,-1,1);let tgt=xn>=0?xn*LEAN.fwd:xn*LEAN.back;
+   if(swingT>0.3)tgt*=1-ssm((swingT-0.3)/0.3);          // 揮完後身體回正
+   if(dodgeTgt!==0||dodgeDrop>0)tgt=leanAim;               // 閃躲時前腳與瞄準傾角保持不動，只疊加閃躲傾角
+   leanAim+=(tgt-leanAim)*Math.min(1,dt*10);if(Math.abs(leanAim)<1e-4)leanAim=0;
+   leanCur=leanAim+leanDod;}
   // bat swing
-  if((walkSeq&&walkSeq.phase==='drop')||kWalk||knock){/* 保送放棒／三振提棒姿勢由 updateWalk / updateKWalk 控制 */}else if(swingT>=0&&!runnerActive){
+  if((walkSeq&&walkSeq.phase==='drop')||kWalk||knock){if(!knock)resetBatterLean();/* 被球撞倒期間姿勢（含傾斜、手臂）必須原樣凍結；保送放棒／三振提棒姿勢由 updateWalk / updateKWalk 控制 */}else if(swingT>=0&&!runnerActive){
     swingT+=dt;const f=clamp(swingT/0.26,0,1);
     let pp=swingParams(f,swLd,swingY);
     if(fromP)pp=lerpA(fromP,pp,ssm(swingT/0.06));               // 接續目前姿勢，不跳動
@@ -5710,9 +5843,9 @@ scene.onBeforeRenderObservable.add(()=>{
   if((st==='ready'||st==='windup')&&!(pk&&pk.ballFree)){catchHold=false;catchRef=null;const hp=pah.getAbsolutePosition();ball.position.set(hp.x,hp.y+0.02,hp.z);ball.scaling.setAll(1);ball.isVisible=true;}   // 出手前球握在投球手上
   // aim cursor
   const aimOn=mode==='bat'?(st==='ready'||st==='windup'||st==='pitch'):(st==='ready'&&!pk&&!pkHoverCan());
-  if(aimOn!==aim.isEnabled()){aim.setEnabled(aimOn);canvas.style.cursor=aimOn?'none':'default';}
+  const torusOn=aimOn&&mode==='pit',batOn=aimOn&&mode==='bat';if(torusOn!==aim.isEnabled())aim.setEnabled(torusOn);setBatAimShown(batOn);if(aimOn!==aimWasOn){aimWasOn=aimOn;canvas.style.cursor=aimOn?'none':'default';}
   if(aimOn&&(mode==='pit'||!aimLock)&&ptrX!==null)updateAim(ptrX,ptrY);
-  aim.position.x=aimX;aim.position.y=aimY;
+  aim.position.x=aimX;aim.position.y=aimY;if(batOn)updateBatAim();
   {const pr=mode==='pit'&&st==='ready'&&!pkHoverCan();if(pr!==endMk.isEnabled()){endMk.setEnabled(pr);brkLn.setEnabled(pr);}
    if(pr){const b=TYPES[selT].brk();endMk.position.set(aimX+b.x,aimY+b.y,0);brkLn=MB.CreateLines(null,{points:[V(aimX,aimY,0),V(aimX+b.x,aimY+b.y,0)],instance:brkLn});}}
   const mk=(st==='pitch'||(st==='windup'&&pclock>-0.2));

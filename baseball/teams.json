@@ -10,6 +10,14 @@
         "cheer": "",
         "out": "out.mp3"
       },
+      "crowd": {
+        "fly": "normal_scream.m4a",
+        "strikeout": "middle_scream.m4a",
+        "score": "long_scream.m4a",
+        "hit": "middle_scream2.m4a",
+        "homerun": "long_scream2.m4a",
+        "win": "long_scream4.m4a"
+      },
       "uniforms": {
         "home": {
           "helmet": "#1c1c1c",
@@ -107,6 +115,14 @@
         "chance": "chance.mp3",
         "cheer": "",
         "out": "out.mp3"
+      },
+      "crowd": {
+        "fly": "normal_scream.m4a",
+        "strikeout": "middle_scream.m4a",
+        "score": "long_scream.m4a",
+        "hit": "middle_scream2.m4a",
+        "homerun": "long_scream2.m4a",
+        "win": "long_scream4.m4a"
       },
       "uniforms": {
         "home": {
@@ -206,6 +222,14 @@
         "cheer": "",
         "out": "out.mp3"
       },
+      "crowd": {
+        "fly": "normal_scream.m4a",
+        "strikeout": "middle_scream.m4a",
+        "score": "long_scream.m4a",
+        "hit": "middle_scream2.m4a",
+        "homerun": "long_scream2.m4a",
+        "win": "long_scream4.m4a"
+      },
       "uniforms": {
         "home": {
           "helmet": "#708090",
@@ -303,6 +327,14 @@
         "chance": "chance.mp3",
         "cheer": "",
         "out": "out.mp3"
+      },
+      "crowd": {
+        "fly": "normal_scream.m4a",
+        "strikeout": "middle_scream.m4a",
+        "score": "long_scream.m4a",
+        "hit": "middle_scream2.m4a",
+        "homerun": "long_scream2.m4a",
+        "win": "long_scream4.m4a"
       },
       "uniforms": {
         "home": {
@@ -402,6 +434,14 @@
         "cheer": "",
         "out": "out.mp3"
       },
+      "crowd": {
+        "fly": "normal_scream.m4a",
+        "strikeout": "middle_scream.m4a",
+        "score": "long_scream.m4a",
+        "hit": "middle_scream2.m4a",
+        "homerun": "long_scream2.m4a",
+        "win": "long_scream4.m4a"
+      },
       "uniforms": {
         "home": {
           "helmet": "#27ae60",
@@ -500,6 +540,14 @@
         "cheer": "",
         "out": "out.mp3"
       },
+      "crowd": {
+        "fly": "normal_scream.m4a",
+        "strikeout": "middle_scream.m4a",
+        "score": "long_scream.m4a",
+        "hit": "middle_scream2.m4a",
+        "homerun": "long_scream2.m4a",
+        "win": "long_scream4.m4a"
+      },
       "uniforms": {
         "home": {
           "helmet": "#1b365d",
@@ -597,6 +645,14 @@
         "chance": "chance.mp3",
         "cheer": "",
         "out": "out.mp3"
+      },
+      "crowd": {
+        "fly": "normal_scream.m4a",
+        "strikeout": "middle_scream.m4a",
+        "score": "long_scream.m4a",
+        "hit": "middle_scream2.m4a",
+        "homerun": "long_scream2.m4a",
+        "win": "long_scream4.m4a"
       },
       "uniforms": {
         "home": {

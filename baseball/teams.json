@@ -7,7 +7,7 @@
       "logo": "./baseball/panda.webp",
       "music": {
         "chance": "chance.mp3",
-        "cheer": "",
+        "cheer": "cheer.mp3",
         "out": "out.mp3"
       },
       "crowd": {
@@ -113,7 +113,7 @@
       "logo": "./baseball/tit.webp",
       "music": {
         "chance": "chance.mp3",
-        "cheer": "",
+        "cheer": "cheer.mp3",
         "out": "out.mp3"
       },
       "crowd": {
@@ -219,7 +219,7 @@
       "logo": "./baseball/tetra.webp",
       "music": {
         "chance": "chance.mp3",
-        "cheer": "",
+        "cheer": "cheer.mp3",
         "out": "out.mp3"
       },
       "crowd": {
@@ -325,7 +325,7 @@
       "logo": "./baseball/leocat.webp",
       "music": {
         "chance": "chance.mp3",
-        "cheer": "",
+        "cheer": "cheer.mp3",
         "out": "out.mp3"
       },
       "crowd": {
@@ -431,7 +431,7 @@
       "logo": "./baseball/koala.webp",
       "music": {
         "chance": "chance.mp3",
-        "cheer": "",
+        "cheer": "cheer.mp3",
         "out": "out.mp3"
       },
       "crowd": {
@@ -537,7 +537,7 @@
       "logo": "./baseball/gull.webp",
       "music": {
         "chance": "chance.mp3",
-        "cheer": "",
+        "cheer": "cheer.mp3",
         "out": "out.mp3"
       },
       "crowd": {
@@ -643,7 +643,7 @@
       "logo": "./baseball/turkey.webp",
       "music": {
         "chance": "chance.mp3",
-        "cheer": "",
+        "cheer": "cheer.mp3",
         "out": "out.mp3"
       },
       "crowd": {

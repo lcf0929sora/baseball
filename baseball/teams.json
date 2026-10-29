@@ -742,6 +742,218 @@
           "position": "替補"
         }
       ]
+    },
+    {
+      "id": "PERSIMMON",
+      "name": "新竹柿子隊",
+      "logo": "./baseball/pesimmon.webp",
+      "music": {
+        "chance": "chance.mp3",
+        "cheer": "cheer.mp3",
+        "out": "out.mp3"
+      },
+      "crowd": {
+        "fly": "normal_scream.m4a",
+        "strikeout": "middle_scream.m4a",
+        "score": "long_scream.m4a",
+        "hit": "middle_scream2.m4a",
+        "homerun": "long_scream2.m4a",
+        "win": "long_scream4.m4a"
+      },
+      "uniforms": {
+        "home": {
+          "helmet": "#d35400",
+          "body": "#d35400",
+          "arms": "#d35400",
+          "shoes": "#f2f2f2"
+        },
+        "away": {
+          "helmet": "#d35400",
+          "body": "#d35400",
+          "arms": "#d35400",
+          "shoes": "#f2f2f2"
+        }
+      },
+      "players": [
+        {
+          "id": "PERSIMMON-01",
+          "name": "朱果強",
+          "number": 1,
+          "position": "投手"
+        },
+        {
+          "id": "PERSIMMON-02",
+          "name": "柿大郎",
+          "number": 2,
+          "position": "捕手"
+        },
+        {
+          "id": "PERSIMMON-03",
+          "name": "羅果實",
+          "number": 3,
+          "position": "一壘手"
+        },
+        {
+          "id": "PERSIMMON-04",
+          "name": "風乾毅",
+          "number": 4,
+          "position": "二壘手"
+        },
+        {
+          "id": "PERSIMMON-05",
+          "name": "金脆宇",
+          "number": 5,
+          "position": "游擊手"
+        },
+        {
+          "id": "PERSIMMON-06",
+          "name": "蜜糖安",
+          "number": 6,
+          "position": "三壘手"
+        },
+        {
+          "id": "PERSIMMON-07",
+          "name": "筆柿翔",
+          "number": 7,
+          "position": "左外野手"
+        },
+        {
+          "id": "PERSIMMON-08",
+          "name": "九降風",
+          "number": 8,
+          "position": "中外野手"
+        },
+        {
+          "id": "PERSIMMON-09",
+          "name": "紅面豐",
+          "number": 9,
+          "position": "右外野手"
+        },
+        {
+          "id": "PERSIMMON-10",
+          "name": "甜柿傑",
+          "number": 10,
+          "position": "替補"
+        },
+        {
+          "id": "PERSIMMON-11",
+          "name": "水柿凱",
+          "number": 11,
+          "position": "替補"
+        },
+        {
+          "id": "PERSIMMON-12",
+          "name": "冬藏安",
+          "number": 12,
+          "position": "替補"
+        }
+      ]
+    },
+    {
+      "id": "BOY",
+      "name": "布魯塞爾小童隊",
+      "logo": "./baseball/boy.webp",
+      "music": {
+        "chance": "chance.mp3",
+        "cheer": "cheer.mp3",
+        "out": "out.mp3"
+      },
+      "crowd": {
+        "fly": "normal_scream.m4a",
+        "strikeout": "middle_scream.m4a",
+        "score": "long_scream.m4a",
+        "hit": "middle_scream2.m4a",
+        "homerun": "long_scream2.m4a",
+        "win": "long_scream4.m4a"
+      },
+      "uniforms": {
+        "home": {
+          "helmet": "#2980b9",
+          "body": "#2980b9",
+          "arms": "#2980b9",
+          "shoes": "#f2f2f2"
+        },
+        "away": {
+          "helmet": "#2980b9",
+          "body": "#2980b9",
+          "arms": "#2980b9",
+          "shoes": "#f2f2f2"
+        }
+      },
+      "players": [
+        {
+          "id": "BOY-01",
+          "name": "于勒斯",
+          "number": 1,
+          "position": "投手"
+        },
+        {
+          "id": "BOY-02",
+          "name": "皮特森",
+          "number": 2,
+          "position": "捕手"
+        },
+        {
+          "id": "BOY-03",
+          "name": "弗蘭克",
+          "number": 3,
+          "position": "一壘手"
+        },
+        {
+          "id": "BOY-04",
+          "name": "小漢斯",
+          "number": 4,
+          "position": "二壘手"
+        },
+        {
+          "id": "BOY-05",
+          "name": "馬修斯",
+          "number": 5,
+          "position": "游擊手"
+        },
+        {
+          "id": "BOY-06",
+          "name": "查理斯",
+          "number": 6,
+          "position": "三壘手"
+        },
+        {
+          "id": "BOY-07",
+          "name": "噴泉翔",
+          "number": 7,
+          "position": "左外野手"
+        },
+        {
+          "id": "BOY-08",
+          "name": "比利時",
+          "number": 8,
+          "position": "中外野手"
+        },
+        {
+          "id": "BOY-09",
+          "name": "布魯克",
+          "number": 9,
+          "position": "右外野手"
+        },
+        {
+          "id": "BOY-10",
+          "name": "盧卡斯",
+          "number": 10,
+          "position": "替補"
+        },
+        {
+          "id": "BOY-11",
+          "name": "湯姆生",
+          "number": 11,
+          "position": "替補"
+        },
+        {
+          "id": "BOY-12",
+          "name": "戴維斯",
+          "number": 12,
+          "position": "替補"
+        }
+      ]
     }
   ]
 }

@@ -15,6 +15,7 @@
  *   · 左外野高牆後是 52 m 寬的廣場，再來是「濱海公路」（雙向四線道，路燈、車燈、棕櫚樹），接著是步道、沙灘、海岸線。
  *   · 海岸線外是大海：由淺青綠漸層到深藍，浪紋、白色浪花；海上有貨輪、油輪、渡輪、帆船、漁船、浮標與燈塔。
  *   · 球場獨佔一個大街廓（旋轉成與海岸平行），四周是馬路；街廓外是整片內陸街區與亮燈的大樓，靠海一側的大樓較矮。
+ *  球落入海中：海面不是碰撞物件；球落到海岸線外就下沉、濺起水花並消失（見「球落入海中」一節）。
  *  本檔「不」設定天空／霧／光源。
  */
 (function(){
@@ -207,13 +208,14 @@ ctx.setDugouts({
     return {x:p.x,y:i%3===0?0.55:0,z:p.z,ry:s===-1?Math.PI/4:-Math.PI/4,scale:i%3===0?[0.82,0.72,0.82]:null};}
 });
 
-// ═════════ ⑥ 記分板：掛在高牆上的深藍「手動」風格大板 ═════════
+// ═════════ ⑥ 記分板：掛在高牆上的深藍「手動」風格大板（36×12 m，與乙子園同級；白框、白底分數格，遠看也清楚）═════════
 {
-  const BW=21,BH=7,t=0.72,cx=JL[0]+(FW[1][0]-JL[0])*t-(-dM[1])*(-0.68)*0,cz=JL[1]+(FW[1][1]-JL[1])*t,nx=-dM[1],nz=dM[0];
+  const BW=36,BH=12,BY=6.2,LM=Math.hypot(FW[1][0]-JL[0],FW[1][1]-JL[1]),sc=LM*0.62,cx=JL[0]+dM[0]*sc,cz=JL[1]+dM[1]*sc,nx=-dM[1],nz=dM[0],yawM=Math.atan2(-dM[1],dM[0]);
   const boardTex=sbTexInit();
   const fm=M('#000000');fm.emissiveTexture=boardTex;fm.disableLighting=true;fm.backFaceCulling=false;
-  const bd=put(MB.CreatePlane('xxBoardFace',{width:BW,height:BH,sideOrientation:BABYLON.Mesh.DOUBLESIDE},scene),cx-nx*0.68,6.6,cz-nz*0.68,fm);bd.rotation.y=Math.atan2(-dM[1],dM[0]);
-  const fr=put(MB.CreateBox('xxBoardFrame',{width:BW+0.9,height:BH+0.9,depth:0.12}),cx-nx*0.64,6.6,cz-nz*0.64,candy('#e8f1ff',0.6));fr.rotation.y=bd.rotation.y;
+  put(MB.CreatePlane('xxBoardFace',{width:BW,height:BH,sideOrientation:BABYLON.Mesh.DOUBLESIDE},scene),cx-nx*0.78,BY,cz-nz*0.78,fm).rotation.y=yawM;   // 平面預設朝 -local z＝朝向球場
+  put(MB.CreateBox('xxBoardFrame',{width:BW+1.0,height:BH+1.0,depth:1.4}),cx,BY,cz,candy('#e8f1ff',0.7)).rotation.y=yawM;
+  const top=BY+BH/2+0.5;ghostBox(cx,(MONSTER_H+top)/2,cz,BW+1.0,top-MONSTER_H,1.4,yawM,'scoreboard');          // 高出牆頂的那一截框架是實體
   function drawBoard(g,s,W,H){
     const FONT='"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif',NUM='"Arial Rounded MT Bold","Arial Narrow",Arial,sans-serif';
     const rr=(x,y,w,h,r)=>{g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();};
@@ -339,6 +341,7 @@ Object.keys(acc).forEach(key=>{const a=acc[key],m=new BABYLON.Mesh('xxGround_'+k
   vd.positions=a.pos;vd.normals=nor;vd.uvs=a.uv;vd.indices=a.idx;vd.applyToMesh(m);m.material=gMat[key];m.isPickable=false;});
 
 // ── 大海：從海岸線(w=0)往外，淺青綠 → 深藍；貼圖提供浪紋（與頂點色相乘），岸邊白色浪花
+let seaMesh=null;
 {const S=512,t=newTex('xxSeaTex',S,S),g=t.getContext(),r=rng(77);
  g.fillStyle='#d8e6f6';g.fillRect(0,0,S,S);speck(g,S,r,4000,'rgba(255,255,255,0.10)','rgba(0,40,100,0.08)');
  for(let L=0;L<26;L++){const y0=L*S/26+r()*6,k=2+((r()*3)|0),ph=r()*TAU,amp=3+r()*5;
@@ -351,7 +354,7 @@ Object.keys(acc).forEach(key=>{const a=acc[key],m=new BABYLON.Mesh('xxGround_'+k
  stops.forEach(([w,c])=>[UA,UB].forEach(u=>{const p=toW(u,w);pos.push(p[0],SEA_Y,p[1]);uv.push(p[0]/64,p[1]/64);col.push(c[0],c[1],c[2],1);}));
  for(let i=0;i<stops.length-1;i++){const a=i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2);}
  const nor=[];for(let q=0;q<pos.length/3;q++)nor.push(0,1,0);
- const sea=new BABYLON.Mesh('xxSea',scene),vd=new BABYLON.VertexData();vd.positions=pos;vd.normals=nor;vd.uvs=uv;vd.colors=col;vd.indices=idx;vd.applyToMesh(sea);sea.material=sm;sea.isPickable=false;}
+ const sea=new BABYLON.Mesh('xxSea',scene),vd=new BABYLON.VertexData();vd.positions=pos;vd.normals=nor;vd.uvs=uv;vd.colors=col;vd.indices=idx;vd.applyToMesh(sea);sea.material=sm;sea.isPickable=false;seaMesh=sea;}
 
 // ── 船：自訂船殼（五邊形甲板＋收窄的船底）＋艙房、貨櫃、桅桿、帆
 const shipG={};   // 材質 → mesh 陣列，最後依材質合併
@@ -423,6 +426,35 @@ Object.values(shipG).forEach(o=>merge(o.arr,o.mat,'xxShips'));
  for(const W of WL)for(let i=0;i<UL.length-1;i++)seg(false,W,UL[i]+RW/2,UL[i+1]-RW/2);
  merge(poles,M('#1a1f2b'),'xxPoles');merge(heads,M('#ffd9a0',{em:'#ffd9a0'}),'xxLamps');
  merge(carsR,M('#ff2a2a',{em:'#ff2a2a'}),'xxCarsR');merge(carsW,M('#fff1d0',{em:'#fff1d0'}),'xxCarsW');merge(carsA,M('#ffb000',{em:'#ffb000'}),'xxCarsA');}
+
+
+// ── 球落入海中：海面不是碰撞物件（沒有登錄任何碰撞），球一落到海面（海岸線外）就下沉並濺起水花，沉到海面下後被海面遮住、再整個隱藏；
+//    下一球（球回到海以外）自動恢復。外掛介面沒有水面物理，所以這裡用「每幀監看球的位置」實作；監看器會在球場被換掉（海 mesh 被 dispose）時自行移除。
+{
+  const SINK_V=1.1,DEEP=-6,wOf=(x,z)=>x*nV[0]+z*nV[1]-c0;
+  let ball=null,st=null,findT=0;const splashes=[];
+  const findBall=()=>scene.meshes.find(m=>/^ball$/i.test(m.name))||scene.meshes.find(m=>/^(base)?ball/i.test(m.name)&&!/^xx|shadow/i.test(m.name));
+  const splash=(x,z)=>{
+    const mat=M('#dff3ff',{em:'#9fd4ff',alpha:0.8}),ring=MB.CreateTorus('xxSplashRing',{diameter:1,thickness:0.14,tessellation:28},scene);ring.position.set(x,SEA_Y+0.04,z);ring.material=mat;ring.isPickable=false;
+    const drops=[];for(let i=0;i<9;i++){const d=MB.CreateSphere('xxSplashDrop',{diameter:0.2,segments:4},scene),a=i/9*TAU,sp=1.5+((i*37)%10)/10*1.6;d.material=mat;d.isPickable=false;d.position.set(x,SEA_Y,z);drops.push({m:d,vx:Math.cos(a)*sp,vz:Math.sin(a)*sp,vy:3.2+((i*53)%10)/10*2});}
+    splashes.push({t:0,ring,drops,mat});
+  };
+  const killSplash=sp=>{sp.ring.dispose();sp.drops.forEach(d=>d.m.dispose());sp.mat.dispose();};
+  const obs=scene.onBeforeRenderObservable.add(()=>{
+    if(!seaMesh||seaMesh.isDisposed()){scene.onBeforeRenderObservable.remove(obs);splashes.splice(0).forEach(killSplash);return;}
+    const dt=Math.min(0.05,(scene.getEngine().getDeltaTime()/1000)||0.016);
+    for(let i=splashes.length-1;i>=0;i--){const sp=splashes[i];sp.t+=dt;
+      if(sp.t>1.0){killSplash(sp);splashes.splice(i,1);continue;}
+      const k=1+sp.t*9;sp.ring.scaling.set(k,1,k);sp.mat.alpha=0.8*(1-sp.t);
+      sp.drops.forEach(d=>{d.vy-=9.8*dt;d.m.position.x+=d.vx*dt;d.m.position.z+=d.vz*dt;d.m.position.y=Math.max(SEA_Y,d.m.position.y+d.vy*dt);});}
+    if(!ball||ball.isDisposed()){if(--findT<=0){ball=findBall();findT=30;}if(!ball)return;}
+    const p=ball.position,inSea=wOf(p.x,p.z)>0.5;
+    if(!st){if(inSea&&p.y<=0.35&&ball.isVisible&&ball.isEnabled()){st={t:0,hidden:false};splash(p.x,p.z);}return;}
+    if(!inSea){if(st.hidden)ball.isVisible=true;st=null;return;}          // 球回到海以外（新的一球）→ 恢復
+    st.t+=dt;const y=SEA_Y-0.1-SINK_V*st.t;
+    if(y<DEEP){ball.isVisible=false;st.hidden=true;}else ball.position.y=Math.min(p.y,y);
+  });
+}
 
 // ── 內陸大樓：街廓（人行道以內）依大小切成約 30 m 的地塊；靠海一側較矮、越內陸越高
 function winTex(style,seed){

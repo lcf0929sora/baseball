@@ -15,6 +15,7 @@
  *   · 左外野高牆後是 52 m 寬的廣場，再來是「濱海公路」（雙向四線道，路燈、車燈、棕櫚樹），接著是步道、沙灘、海岸線。
  *   · 海岸線外是大海：由淺青綠漸層到深藍，浪紋、白色浪花；海上有貨輪、油輪、渡輪、帆船、漁船、浮標與燈塔。
  *   · 球場獨佔一個大街廓（旋轉成與海岸平行），四周是馬路；街廓外是整片內陸街區與亮燈的大樓，靠海一側的大樓較矮。
+ *  啦啦隊專區：一壘／三壘側觀眾席前方各有一座懸挑的大平台（18×7 m，各 15 個站位，球員尺寸），站位座標見 BaseballStadiums.ocean.cheerSlots。
  *  球落入海中：海面不是碰撞物件；球落到海岸線外就下沉、濺起水花並消失（見「球落入海中」一節）。
  *  本檔「不」設定天空／霧／光源。
  */
@@ -207,6 +208,57 @@ ctx.setDugouts({
   seat:(s,i)=>{const p=lpt(s,DUG_R-5+(i%9)*1.25,i%3===0?FOUL_OFF-1.2:(i%3===1?FOUL_OFF-2.8:FOUL_OFF-4.0));
     return {x:p.x,y:i%3===0?0.55:0,z:p.z,ry:s===-1?Math.PI/4:-Math.PI/4,scale:i%3===0?[0.82,0.72,0.82]:null};}
 });
+
+// ═════════ ⑤-2 啦啦隊專區：一壘／三壘兩側、觀眾席前方的延伸大平台 ═════════
+// 平台是「懸挑的舞台」：台面高 4.5 m（剛好與第二階看台等高，兩端可直接走進看台），前緣挑出到離界外線 11.5 m（在界外牆上方，
+// 下方 4.2 m 淨空，不影響野手接界外球）；後緣接上第三階看台。長 18 m × 深 7.1 m，台面上畫了 15 個站位圈（前排 8、後排 7，間距 2 m），
+// 人物尺寸以球員為準（身高約 1.8 m）：前排站位離護欄 1.7 m、護欄高 1.1 m，所以站在台上的人看得到場內。
+// ★ 這裡只建「平台」，人物不在球場檔裡。站位資料放在 window.BaseballStadiums.ocean.cheerSlots（每筆 {side,row,x,y,z,ry}，
+//   y＝台面高度、ry＝面向場內的弧度，與休息區 seat() 的 ry 同一個約定），之後要放啦啦隊員（自己造的人偶或主程式的人物）直接讀它。
+const cheerSlots=[],cheerZones=[];
+{
+  const CH={r0:32,r1:50,oF:11.5,oB:18.6,top:4.5,th:0.3},L=CH.r1-CH.r0,WD=CH.oB-CH.oF,RC=(CH.r0+CH.r1)/2,OC=(CH.oF+CH.oB)/2;
+  const ROWS=[[13.2,[-7,-5,-3,-1,1,3,5,7]],[16.9,[-6,-4,-2,0,2,4,6]]];
+  const star5=(g,cx,cy,R,fill)=>{g.fillStyle=fill;g.beginPath();for(let k=0;k<10;k++){const a=-Math.PI/2+k*Math.PI/5,r=k%2?R*0.42:R;g.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);}g.closePath();g.fill();};
+  const floorT=(()=>{const W=1024,H=Math.round(W*WD/L),t=newTex('xxCheerFloorTex',W,H),g=t.getContext();
+    const bg=g.createLinearGradient(0,0,W,0);bg.addColorStop(0,'#0b2a70');bg.addColorStop(0.5,'#12409a');bg.addColorStop(1,'#0b2a70');g.fillStyle=bg;g.fillRect(0,0,W,H);
+    g.fillStyle='rgba(255,255,255,0.08)';for(let i=-H;i<W;i+=64){g.beginPath();g.moveTo(i,0);g.lineTo(i+32,0);g.lineTo(i+32+H,H);g.lineTo(i+H,H);g.closePath();g.fill();}
+    g.strokeStyle='#e8f1ff';g.lineWidth=8;g.strokeRect(14,14,W-28,H-28);g.lineWidth=3;g.strokeRect(30,30,W-60,H-60);
+    star5(g,W/2,H/2,H*0.17,'rgba(255,255,255,0.9)');
+    g.strokeStyle='#ffd23a';g.lineWidth=5;g.fillStyle='rgba(255,210,58,0.22)';
+    ROWS.forEach(([o,drs])=>drs.forEach(dr=>{const x=(0.5+dr/L)*W,y=(o-CH.oF)/WD*H;g.beginPath();g.arc(x,y,H*0.075,0,TAU);g.fill();g.stroke();g.fillStyle='#ffd23a';g.beginPath();g.arc(x,y,4,0,TAU);g.fill();g.fillStyle='rgba(255,210,58,0.22)';}));
+    t.update();return t;})();
+  const bannerT=(()=>{const W=1536,H=128,t=newTex('xxCheerBannerTex',W,H),g=t.getContext();
+    g.fillStyle='#0a2260';g.fillRect(0,0,W,H);g.fillStyle='#e8f1ff';g.fillRect(0,0,W,8);g.fillRect(0,H-8,W,8);
+    [70,W/2,W-70].forEach(x=>star5(g,x,H/2,26,'#ffd23a'));
+    g.font='bold 60px Arial,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillStyle='#ffffff';[0.27,0.73].forEach(f=>g.fillText('OCEAN CHEERS',W*f,H/2+3));
+    t.update();return t;})();
+  const flagT=(()=>{const W=256,H=160,t=newTex('xxCheerFlagTex',W,H),g=t.getContext();g.fillStyle='#0d2f7d';g.fillRect(0,0,W,H);g.fillStyle='#e8f1ff';g.fillRect(0,0,W,10);g.fillRect(0,H-10,W,10);
+    g.beginPath();g.moveTo(0,H*0.62);for(let x=0;x<=W;x+=8)g.lineTo(x,H*0.62+Math.sin(x/22)*7);g.lineTo(W,H);g.lineTo(0,H);g.closePath();g.fillStyle='#1f6fd6';g.fill();star5(g,W/2,H*0.36,34,'#ffd23a');t.update();return t;})();
+  const floorMat=texMat(floorT,1),bannerMat=texMat(bannerT,1),flagMat=texMat(flagT,1),deckMat=candy('#0d2a68',0.5),railMat=candy('#e8f1ff',0.7),ledMat=M('#7fd0ff',{em:'#7fd0ff'}),lampMat=M('#ffffff',{em:'#ffffff'});
+  sides.forEach(s=>{
+    const ang=-s*Math.PI/4,P=(r,o)=>lpt(s,r,o),c=P(RC,OC);   // 台座的 +x 沿界外線、+z 朝場內
+    const slab=put(MB.CreateBox('xxCheerSlab',{width:L,height:CH.th,depth:WD}),c.x,CH.top-CH.th/2,c.z,deckMat);slab.rotation.y=ang;registerBallSolid(slab,'spectator');
+    const floor=put(MB.CreateGround('xxCheerFloor',{width:L,height:WD},scene),c.x,CH.top+0.012,c.z,floorMat);floor.rotation.y=ang;floor.isPickable=false;
+    const sk=P(RC,15.65);put(MB.CreateBox('xxCheerSkirt',{width:L+0.6,height:4.2,depth:0.3}),sk.x,2.1,sk.z,concrete).rotation.y=ang;   // 台座後方的裙牆（擋住看台前緣的觀眾）
+    const f=P(RC,CH.oF-0.12);put(MB.CreateBox('xxCheerFascia',{width:L+0.2,height:1.3,depth:0.25}),f.x,CH.top-0.55,f.z,bannerMat).rotation.y=ang;     // 前緣橫幅
+    const led=P(RC,CH.oF-0.13);put(MB.CreateBox('xxCheerLed',{width:L+0.2,height:0.07,depth:0.28}),led.x,CH.top-1.25,led.z,ledMat).rotation.y=ang;      // 燈帶
+    for(let i=0;i<5;i++){const p=P(RC+(i-2)*(L/4.6),13.7),b=put(MB.CreateBox('xxCheerBrace',{width:0.3,height:0.3,depth:3.9}),p.x,3.45,p.z,deckMat);b.rotation.set(-0.395,ang,0);}   // 懸挑的斜撐
+    const rails=[],rb=(w,h,d,r,o,y)=>{const p=P(r,o),m=MB.CreateBox('xxCheerRail',{width:w,height:h,depth:d},scene);m.position.set(p.x,y,p.z);m.rotation.y=ang;rails.push(m);};
+    rb(L,0.07,0.07,RC,CH.oF+0.12,CH.top+1.1);rb(L,0.05,0.05,RC,CH.oF+0.12,CH.top+0.55);                                   // 前緣欄杆（高 1.1 m）
+    for(let r=CH.r0;r<=CH.r1+0.01;r+=2)rb(0.07,1.1,0.07,r,CH.oF+0.12,CH.top+0.55);
+    for(const r of [CH.r0+0.12,CH.r1-0.12]){rb(0.07,0.07,4.6,r,(CH.oF+0.12+16.2)/2,CH.top+1.1);rb(0.05,0.05,4.6,r,(CH.oF+0.12+16.2)/2,CH.top+0.55);for(const o of[CH.oF+0.12,13.5,15.4,16.2])rb(0.07,1.1,0.07,r,o,CH.top+0.55);}   // 兩端欄杆
+    merge(rails,railMat,'xxCheerRails');
+    for(const r of [CH.r0+1.0,CH.r1-1.0]){   // 兩支旗桿（附投光燈）與旗幟
+      const pp=P(r,17.7);put(MB.CreateCylinder('xxCheerPole',{diameter:0.14,height:6.2,tessellation:8},scene),pp.x,CH.top+3.1,pp.z,railMat);
+      const lp=put(MB.CreateBox('xxCheerLamp',{width:1.4,height:0.7,depth:0.25}),pp.x,CH.top+6.4,pp.z,lampMat);lp.rotation.y=ang;
+      const fp=P(r+(r<RC?1.25:-1.25),17.7),fl=put(MB.CreatePlane('xxCheerFlag',{width:2.2,height:1.4,sideOrientation:BABYLON.Mesh.DOUBLESIDE},scene),fp.x,CH.top+4.9,fp.z,flagMat);fl.rotation.y=ang;}
+    // 站位（世界座標、面向場內）
+    ROWS.forEach(([o,drs],row)=>drs.forEach(dr=>{const p=P(RC+dr,o);cheerSlots.push({side:s,row,x:p.x,y:CH.top,z:p.z,ry:-s*Math.PI/4});}));
+    cheerZones.push({side:s,center:{x:c.x,z:c.z},y:CH.top,length:L,depth:WD,slots:ROWS.reduce((n,[,d])=>n+d.length,0)});
+  });
+  const reg=(window.BaseballStadiums||{}).ocean;if(reg){reg.cheerSlots=cheerSlots;reg.cheerZones=cheerZones;}
+}
 
 // ═════════ ⑥ 記分板：掛在高牆上的深藍「手動」風格大板（36×12 m，與乙子園同級；白框、白底分數格，遠看也清楚）═════════
 {

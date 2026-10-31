@@ -954,6 +954,643 @@
           "position": "替補"
         }
       ]
+    },
+    {
+      "id": "WOLF",
+      "name": "羅馬母狼隊",
+      "logo": "./baseball/wolf.webp",
+      "music": {
+        "chance": "chance.mp3",
+        "cheer": "cheer.mp3",
+        "out": "out.mp3"
+      },
+      "crowd": {
+        "fly": "normal_scream.m4a",
+        "strikeout": "middle_scream.m4a",
+        "score": "long_scream.m4a",
+        "hit": "middle_scream2.m4a",
+        "homerun": "long_scream2.m4a",
+        "win": "long_scream4.m4a"
+      },
+      "uniforms": {
+        "home": {
+          "helmet": "#6b1424",
+          "body": "#6b1424",
+          "arms": "#6b1424",
+          "shoes": "#f2f2f2"
+        },
+        "away": {
+          "helmet": "#f5ebd6",
+          "body": "#f5ebd6",
+          "arms": "#f5ebd6",
+          "shoes": "#1c1c1c"
+        }
+      },
+      "players": [
+        {
+          "id": "WOLF-01",
+          "name": "羅慕路斯",
+          "number": 1,
+          "position": "投手"
+        },
+        {
+          "id": "WOLF-02",
+          "name": "雷穆斯",
+          "number": 2,
+          "position": "捕手"
+        },
+        {
+          "id": "WOLF-03",
+          "name": "布魯圖",
+          "number": 3,
+          "position": "一壘手"
+        },
+        {
+          "id": "WOLF-04",
+          "name": "尤利烏斯",
+          "number": 4,
+          "position": "二壘手"
+        },
+        {
+          "id": "WOLF-05",
+          "name": "奧古斯都",
+          "number": 5,
+          "position": "游擊手"
+        },
+        {
+          "id": "WOLF-06",
+          "name": "圖拉真",
+          "number": 6,
+          "position": "三壘手"
+        },
+        {
+          "id": "WOLF-07",
+          "name": "哈德良",
+          "number": 7,
+          "position": "左外野手"
+        },
+        {
+          "id": "WOLF-08",
+          "name": "西塞羅",
+          "number": 8,
+          "position": "中外野手"
+        },
+        {
+          "id": "WOLF-09",
+          "name": "維吉爾",
+          "number": 9,
+          "position": "右外野手"
+        },
+        {
+          "id": "WOLF-10",
+          "name": "尼祿",
+          "number": 10,
+          "position": "替補"
+        },
+        {
+          "id": "WOLF-11",
+          "name": "康茂德",
+          "number": 11,
+          "position": "替補"
+        },
+        {
+          "id": "WOLF-12",
+          "name": "斯巴達克",
+          "number": 12,
+          "position": "替補"
+        }
+      ]
+    },
+    {
+      "id": "MONKEY",
+      "name": "高雄獼猴隊",
+      "logo": "./baseball/monkey.webp",
+      "music": {
+        "chance": "chance.mp3",
+        "cheer": "cheer.mp3",
+        "out": "out.mp3"
+      },
+      "crowd": {
+        "fly": "normal_scream.m4a",
+        "strikeout": "middle_scream.m4a",
+        "score": "long_scream.m4a",
+        "hit": "middle_scream2.m4a",
+        "homerun": "long_scream2.m4a",
+        "win": "long_scream4.m4a"
+      },
+      "uniforms": {
+        "home": {
+          "helmet": "#1b4332",
+          "body": "#1b4332",
+          "arms": "#1b4332",
+          "shoes": "#f2f2f2"
+        },
+        "away": {
+          "helmet": "#1b4332",
+          "body": "#1b4332",
+          "arms": "#1b4332",
+          "shoes": "#f2f2f2"
+        }
+      },
+      "players": [
+        {
+          "id": "MONKEY-01",
+          "name": "柴山王",
+          "number": 1,
+          "position": "投手"
+        },
+        {
+          "id": "MONKEY-02",
+          "name": "壽山明",
+          "number": 2,
+          "position": "捕手"
+        },
+        {
+          "id": "MONKEY-03",
+          "name": "搶食強",
+          "number": 3,
+          "position": "一壘手"
+        },
+        {
+          "id": "MONKEY-04",
+          "name": "攀岩捷",
+          "number": 4,
+          "position": "二壘手"
+        },
+        {
+          "id": "MONKEY-05",
+          "name": "樹冠翔",
+          "number": 5,
+          "position": "游擊手"
+        },
+        {
+          "id": "MONKEY-06",
+          "name": "獼猴安",
+          "number": 6,
+          "position": "三壘手"
+        },
+        {
+          "id": "MONKEY-07",
+          "name": "旗後風",
+          "number": 7,
+          "position": "左外野手"
+        },
+        {
+          "id": "MONKEY-08",
+          "name": "愛河潮",
+          "number": 8,
+          "position": "中外野手"
+        },
+        {
+          "id": "MONKEY-09",
+          "name": "港都威",
+          "number": 9,
+          "position": "右外野手"
+        },
+        {
+          "id": "MONKEY-10",
+          "name": "西子灣",
+          "number": 10,
+          "position": "替補"
+        },
+        {
+          "id": "MONKEY-11",
+          "name": "巨蛋凱",
+          "number": 11,
+          "position": "替補"
+        },
+        {
+          "id": "MONKEY-12",
+          "name": "莲池潭",
+          "number": 12,
+          "position": "替補"
+        }
+      ]
+    },
+    {
+      "id": "KING",
+      "name": "拉斯維加斯老千隊",
+      "logo": "./baseball/king.webp",
+      "music": {
+        "chance": "chance.mp3",
+        "cheer": "cheer.mp3",
+        "out": "out.mp3"
+      },
+      "crowd": {
+        "fly": "normal_scream.m4a",
+        "strikeout": "middle_scream.m4a",
+        "score": "long_scream.m4a",
+        "hit": "middle_scream2.m4a",
+        "homerun": "long_scream2.m4a",
+        "win": "long_scream4.m4a"
+      },
+      "uniforms": {
+        "home": {
+          "helmet": "#900c3f",
+          "body": "#900c3f",
+          "arms": "#900c3f",
+          "shoes": "#f2f2f2"
+        },
+        "away": {
+          "helmet": "#111111",
+          "body": "#111111",
+          "arms": "#111111",
+          "shoes": "#f2f2f2"
+        }
+      },
+      "players": [
+        {
+          "id": "KING-01",
+          "name": "黑桃傑",
+          "number": 1,
+          "position": "投手"
+        },
+        {
+          "id": "KING-02",
+          "name": "紅心Q",
+          "number": 2,
+          "position": "捕手"
+        },
+        {
+          "id": "KING-03",
+          "name": "方塊K",
+          "number": 3,
+          "position": "一壘手"
+        },
+        {
+          "id": "KING-04",
+          "name": "梅花A",
+          "number": 4,
+          "position": "二壘手"
+        },
+        {
+          "id": "KING-05",
+          "name": "牌局生",
+          "number": 5,
+          "position": "游擊手"
+        },
+        {
+          "id": "KING-06",
+          "name": "老千豪",
+          "number": 6,
+          "position": "三壘手"
+        },
+        {
+          "id": "KING-07",
+          "name": "賭城翔",
+          "number": 7,
+          "position": "左外野手"
+        },
+        {
+          "id": "KING-08",
+          "name": "決勝點",
+          "number": 8,
+          "position": "中外野手"
+        },
+        {
+          "id": "KING-09",
+          "name": "全押威",
+          "number": 9,
+          "position": "右外野手"
+        },
+        {
+          "id": "KING-10",
+          "name": "幸運星",
+          "number": 10,
+          "position": "替補"
+        },
+        {
+          "id": "KING-11",
+          "name": "夜幕凱",
+          "number": 11,
+          "position": "替補"
+        },
+        {
+          "id": "KING-12",
+          "name": "條碼安",
+          "number": 12,
+          "position": "替補"
+        }
+      ]
+    },
+    {
+      "id": "BEAN",
+      "name": "嘉義綠豆人隊",
+      "logo": "./baseball/bean.webp",
+      "music": {
+        "chance": "chance.mp3",
+        "cheer": "cheer.mp3",
+        "out": "out.mp3"
+      },
+      "crowd": {
+        "fly": "normal_scream.m4a",
+        "strikeout": "middle_scream.m4a",
+        "score": "long_scream.m4a",
+        "hit": "middle_scream2.m4a",
+        "homerun": "long_scream2.m4a",
+        "win": "long_scream4.m4a"
+      },
+      "uniforms": {
+        "home": {
+          "helmet": "#196f3d",
+          "body": "#196f3d",
+          "arms": "#196f3d",
+          "shoes": "#f2f2f2"
+        },
+        "away": {
+          "helmet": "#196f3d",
+          "body": "#196f3d",
+          "arms": "#196f3d",
+          "shoes": "#f2f2f2"
+        }
+      },
+      "players": [
+        {
+          "id": "BEAN-01",
+          "name": "綠豆強",
+          "number": 1,
+          "position": "投手"
+        },
+        {
+          "id": "BEAN-02",
+          "name": "豆沙安",
+          "number": 2,
+          "position": "捕手"
+        },
+        {
+          "id": "BEAN-03",
+          "name": "粉圓傑",
+          "number": 3,
+          "position": "一壘手"
+        },
+        {
+          "id": "BEAN-04",
+          "name": "剉冰峰",
+          "number": 4,
+          "position": "二壘手"
+        },
+        {
+          "id": "BEAN-05",
+          "name": "噴水池",
+          "number": 5,
+          "position": "游擊手"
+        },
+        {
+          "id": "BEAN-06",
+          "name": "阿里山",
+          "number": 6,
+          "position": "三壘手"
+        },
+        {
+          "id": "BEAN-07",
+          "name": "北回翔",
+          "number": 7,
+          "position": "左外野手"
+        },
+        {
+          "id": "BEAN-08",
+          "name": "嘉義風",
+          "number": 8,
+          "position": "中外野手"
+        },
+        {
+          "id": "BEAN-09",
+          "name": "管樂奔",
+          "number": 9,
+          "position": "右外野手"
+        },
+        {
+          "id": "BEAN-10",
+          "name": "火雞肉",
+          "number": 10,
+          "position": "替補"
+        },
+        {
+          "id": "BEAN-11",
+          "name": "方塊酥",
+          "number": 11,
+          "position": "替補"
+        },
+        {
+          "id": "BEAN-12",
+          "name": "神木安",
+          "number": 12,
+          "position": "替補"
+        }
+      ]
+    },
+    {
+      "id": "DRAGON",
+      "name": "台北天龍隊",
+      "logo": "./baseball/dragon.webp",
+      "music": {
+        "chance": "chance.mp3",
+        "cheer": "cheer.mp3",
+        "out": "out.mp3"
+      },
+      "crowd": {
+        "fly": "normal_scream.m4a",
+        "strikeout": "middle_scream.m4a",
+        "score": "long_scream.m4a",
+        "hit": "middle_scream2.m4a",
+        "homerun": "long_scream2.m4a",
+        "win": "long_scream4.m4a"
+      },
+      "uniforms": {
+        "home": {
+          "helmet": "#154360",
+          "body": "#154360",
+          "arms": "#154360",
+          "shoes": "#f2f2f2"
+        },
+        "away": {
+          "helmet": "#f39c12",
+          "body": "#f39c12",
+          "arms": "#f39c12",
+          "shoes": "#f2f2f2"
+        }
+      },
+      "players": [
+        {
+          "id": "DRAGON-01",
+          "name": "蒼龍王",
+          "number": 1,
+          "position": "投手"
+        },
+        {
+          "id": "DRAGON-02",
+          "name": "天龍安",
+          "number": 2,
+          "position": "捕手"
+        },
+        {
+          "id": "DRAGON-03",
+          "name": "雲端翔",
+          "number": 3,
+          "position": "一壘手"
+        },
+        {
+          "id": "DRAGON-04",
+          "name": "金鱗傑",
+          "number": 4,
+          "position": "二壘手"
+        },
+        {
+          "id": "DRAGON-05",
+          "name": "雷霆勁",
+          "number": 5,
+          "position": "游擊手"
+        },
+        {
+          "id": "DRAGON-06",
+          "name": "烈火豪",
+          "number": 6,
+          "position": "三壘手"
+        },
+        {
+          "id": "DRAGON-07",
+          "name": "九霄風",
+          "number": 7,
+          "position": "左外野手"
+        },
+        {
+          "id": "DRAGON-08",
+          "name": "百川潮",
+          "number": 8,
+          "position": "中外野手"
+        },
+        {
+          "id": "DRAGON-09",
+          "name": "神爪威",
+          "number": 9,
+          "position": "右外野手"
+        },
+        {
+          "id": "DRAGON-10",
+          "name": "玉山凱",
+          "number": 10,
+          "position": "替補"
+        },
+        {
+          "id": "DRAGON-11",
+          "name": "大安宇",
+          "number": 11,
+          "position": "替補"
+        },
+        {
+          "id": "DRAGON-12",
+          "name": "信義安",
+          "number": 12,
+          "position": "替補"
+        }
+      ]
+    },
+    {
+      "id": "POPE",
+      "name": "凡蒂岡教皇隊",
+      "logo": "./baseball/pope.webp",
+      "music": {
+        "chance": "chance.mp3",
+        "cheer": "cheer.mp3",
+        "out": "out.mp3"
+      },
+      "crowd": {
+        "fly": "normal_scream.m4a",
+        "strikeout": "middle_scream.m4a",
+        "score": "long_scream.m4a",
+        "hit": "middle_scream2.m4a",
+        "homerun": "long_scream2.m4a",
+        "win": "long_scream4.m4a"
+      },
+      "uniforms": {
+        "home": {
+          "helmet": "#78281f",
+          "body": "#78281f",
+          "arms": "#78281f",
+          "shoes": "#f2f2f2"
+        },
+        "away": {
+          "helmet": "#fdfefe",
+          "body": "#fdfefe",
+          "arms": "#fdfefe",
+          "shoes": "#1c1c1c"
+        }
+      },
+      "players": [
+        {
+          "id": "POPE-01",
+          "name": "庇護安",
+          "number": 1,
+          "position": "投手"
+        },
+        {
+          "id": "POPE-02",
+          "name": "十字傑",
+          "number": 2,
+          "position": "捕手"
+        },
+        {
+          "id": "POPE-03",
+          "name": "若望保",
+          "number": 3,
+          "position": "一壘手"
+        },
+        {
+          "id": "POPE-04",
+          "name": "本篤凱",
+          "number": 4,
+          "position": "二壘手"
+        },
+        {
+          "id": "POPE-05",
+          "name": "方濟各",
+          "number": 5,
+          "position": "游擊手"
+        },
+        {
+          "id": "POPE-06",
+          "name": "伯多祿",
+          "number": 6,
+          "position": "三壘手"
+        },
+        {
+          "id": "POPE-07",
+          "name": "聖座翔",
+          "number": 7,
+          "position": "左外野手"
+        },
+        {
+          "id": "POPE-08",
+          "name": "聖殿風",
+          "number": 8,
+          "position": "中外野手"
+        },
+        {
+          "id": "POPE-09",
+          "name": "天國威",
+          "number": 9,
+          "position": "右外野手"
+        },
+        {
+          "id": "POPE-10",
+          "name": "福音宇",
+          "number": 10,
+          "position": "替補"
+        },
+        {
+          "id": "POPE-11",
+          "name": "聖歌安",
+          "number": 11,
+          "position": "替補"
+        },
+        {
+          "id": "POPE-12",
+          "name": "梵蒂岡",
+          "number": 12,
+          "position": "替補"
+        }
+      ]
     }
   ]
 }
+```[cite: 1, 2, 3, 4, 5, 6]

@@ -241,7 +241,9 @@ const cheerSlots=[],cheerZones=[];
     const slab=put(MB.CreateBox('xxCheerSlab',{width:L,height:CH.th,depth:WD}),c.x,CH.top-CH.th/2,c.z,deckMat);slab.rotation.y=ang;registerBallSolid(slab,'spectator');
     const floor=put(MB.CreateGround('xxCheerFloor',{width:L,height:WD},scene),c.x,CH.top+0.012,c.z,floorMat);floor.rotation.y=ang;floor.isPickable=false;
     const sk=P(RC,15.65);put(MB.CreateBox('xxCheerSkirt',{width:L+0.6,height:4.2,depth:0.3}),sk.x,2.1,sk.z,concrete).rotation.y=ang;   // 台座後方的裙牆（擋住看台前緣的觀眾）
-    const f=P(RC,CH.oF-0.12);put(MB.CreateBox('xxCheerFascia',{width:L+0.2,height:1.3,depth:0.25}),f.x,CH.top-0.55,f.z,bannerMat).rotation.y=ang;     // 前緣橫幅
+    const f=P(RC,CH.oF-0.12);put(MB.CreateBox('xxCheerFascia',{width:L+0.2,height:1.3,depth:0.25}),f.x,CH.top-0.55,f.z,deckMat).rotation.y=ang;     // 前緣底板
+    // 橫幅文字用「平面」貼（不用長方盒的面：盒子朝場內那一面的貼圖會整張轉 180°）；平面的正面是 -z，所以轉 ang+π 讓正面朝向場內
+    const bp=P(RC,CH.oF-0.27);put(MB.CreatePlane('xxCheerBanner',{width:L+0.1,height:1.2,sideOrientation:BABYLON.Mesh.DOUBLESIDE},scene),bp.x,CH.top-0.55,bp.z,bannerMat).rotation.y=ang+Math.PI;
     const led=P(RC,CH.oF-0.13);put(MB.CreateBox('xxCheerLed',{width:L+0.2,height:0.07,depth:0.28}),led.x,CH.top-1.25,led.z,ledMat).rotation.y=ang;      // 燈帶
     for(let i=0;i<5;i++){const p=P(RC+(i-2)*(L/4.6),13.7),b=put(MB.CreateBox('xxCheerBrace',{width:0.3,height:0.3,depth:3.9}),p.x,3.45,p.z,deckMat);b.rotation.set(-0.395,ang,0);}   // 懸挑的斜撐
     const rails=[],rb=(w,h,d,r,o,y)=>{const p=P(r,o),m=MB.CreateBox('xxCheerRail',{width:w,height:h,depth:d},scene);m.position.set(p.x,y,p.z);m.rotation.y=ang;rails.push(m);};
@@ -252,7 +254,7 @@ const cheerSlots=[],cheerZones=[];
     for(const r of [CH.r0+1.0,CH.r1-1.0]){   // 兩支旗桿（附投光燈）與旗幟
       const pp=P(r,17.7);put(MB.CreateCylinder('xxCheerPole',{diameter:0.14,height:6.2,tessellation:8},scene),pp.x,CH.top+3.1,pp.z,railMat);
       const lp=put(MB.CreateBox('xxCheerLamp',{width:1.4,height:0.7,depth:0.25}),pp.x,CH.top+6.4,pp.z,lampMat);lp.rotation.y=ang;
-      const fp=P(r+(r<RC?1.25:-1.25),17.7),fl=put(MB.CreatePlane('xxCheerFlag',{width:2.2,height:1.4,sideOrientation:BABYLON.Mesh.DOUBLESIDE},scene),fp.x,CH.top+4.9,fp.z,flagMat);fl.rotation.y=ang;}
+      const fp=P(r+(r<RC?1.25:-1.25),17.7),fl=put(MB.CreatePlane('xxCheerFlag',{width:2.2,height:1.4,sideOrientation:BABYLON.Mesh.DOUBLESIDE},scene),fp.x,CH.top+4.9,fp.z,flagMat);fl.rotation.y=ang+Math.PI;}
     // 站位（世界座標、面向場內）
     ROWS.forEach(([o,drs],row)=>drs.forEach(dr=>{const p=P(RC+dr,o);cheerSlots.push({side:s,row,x:p.x,y:CH.top,z:p.z,ry:-s*Math.PI/4});}));
     cheerZones.push({side:s,center:{x:c.x,z:c.z},y:CH.top,length:L,depth:WD,slots:ROWS.reduce((n,[,d])=>n+d.length,0)});

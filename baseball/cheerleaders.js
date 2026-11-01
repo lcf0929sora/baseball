@@ -135,13 +135,17 @@ function attach(BABYLON,scene,slots,opts){
   f.pony.rotation.x=0.28+0.2*Math.sin(b*TAU-0.8)+p[K.hop]*2;f.pony.rotation.z=-p[K.roll]*1.5-p[K.tilt]*0.6+0.25*Math.sin(p[K.turn]);
   f.mouth.scaling.y=0.025+0.045*p[K.mouth]*(0.5+0.5*Math.sin(b*TAU*2));
  }
+ // 供主程式取鏡頭用：每一側一個區塊 {side,cx,cz,y,ry}（平台中心、台面高度、面向場內的角度）
+ const zones=[...new Set(slots.map(s=>s.side))].map(sd=>{const g=slots.filter(s=>s.side===sd);
+  return {side:sd,cx:g.reduce((a,s)=>a+s.x,0)/g.length,cz:g.reduce((a,s)=>a+s.z,0)/g.length,y:g[0].y,ry:g[0].ry};});
  const H={
+  zones,
   setColor,
   update(dt){
    boost=Math.max(0,boost-dt*0.5);const tempo=1+0.12*Math.min(1,boost);t+=dt*tempo;
    const b=t*BPM/60;for(const f of figs)pose(f,poseAt(b,f,Math.min(1,boost)),b);
   },
-  excite(sec){boost=Math.max(boost,Math.min(1,sec/2)*1);boost=Math.max(boost,sec);if(boost>2)boost=2;},
+  excite(sec){boost=Math.min(2,Math.max(boost,sec));},   // sec＝激動持續的大約秒數（上限 2 秒，之後 0.5/秒 衰減）
   setEnabled(on){nodes.forEach(n=>n.setEnabled(!!on));},
   dispose(){figs.length=0;all.forEach(m=>{try{m.dispose(false,false);}catch(e){}});nodes.forEach(n=>{try{n.dispose(false,false);}catch(e){}});Object.values(mats).forEach(m=>m.dispose());all.length=0;nodes.length=0;},
   count:figs.length

@@ -10,5 +10,6 @@ window.BaseballStadiumList=[
   {id:'night',name:'中央球場',file:'stadium-night.js'},
   {id:'otsu',name:'乙子園球場',file:'stadium-otsu.js'},
   {id:'dream',name:'夢幻球場',file:'stadium-dream.js'},
-  {id:'ocean',name:'海洋球場',file:'stadium-ocean.js'}
+  {id:'ocean',name:'海洋球場',file:'stadium-ocean.js'},
+  {id:'colosseum',name:'羅馬競技場球場',file:'stadium-colosseum.js'}
 ];

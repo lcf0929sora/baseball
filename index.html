@@ -1941,7 +1941,7 @@ function checkHitByPitch(from,to,dt){
     const inZone=(inBox(p.x,p.y)&&p.z<=0.25&&p.z>=-0.45)||crossIn;
     if(swingP===P||buntActive()||inZone){   // 揮棒／觸擊時被投球擊中，或在好球帶內被擊中＝好球（死球，不判觸身、不送上壘、跑者不進壘）
       strikes++;const k3=strikes>=3;swingT=-1;fromP=null;aimLock=false;rcClear();
-      kb.after=()=>{if(k3){strikes=0;balls=0;startK();finish('三振','bad',lampsAfterOut('揮棒被球擊中'),2.0);hud();}else enterReady();};knock=kb;
+      kb.after=()=>{if(k3){strikes=0;balls=0;startK();finish('三振','bad',lampsAfterOut('揮棒被球擊中',{batterOut:true,strikeout:true,noWildPitch:true}),2.0);hud();}else enterReady();};knock=kb;
       sfx.pop();finish(k3?'三振':'好球','',(swingP===P||buntActive()?'揮棒／觸擊時被球擊中':'好球帶內被球擊中')+' ・ 死球 ・ 擊中'+mat.label,60);hud();
       return true;}
     const oldB=bases.slice(),hbpRbi=(oldB[0]&&oldB[1]&&oldB[2])?1:0;balls=0;strikes=0;swingT=-1;fromP=null;aimLock=false;
@@ -2475,7 +2475,6 @@ function trackIncomingBall(d,sim,t,dt,o={}){
 }
 let defenseCo=[],defenseStopped=new Set(),defenseIc=new Map();
 let bestEffortN=0;const BEST_EFFORT_CHASE=4,BEST_EFFORT_MAX=2;   // 保底處置（沒有任何球比人快、也追不上時）：自由跑者在 4 m 內（約一步伸手加衝刺）才硬追；更遠＝把球傳給負責該壘的補位者讓他守住；每個 play 最多額外傳 2 次（避免來回傳）
-let defenseFumble=null,defenseFumbleChecked=false;   // 傳球到達時接球者漏接：球掉落、撿回的過程（期間 fieldingStage 仍維持 throw）
 let defenseActive=false,defenseChaser=null,defenseTarget=null,defenseThrowT=-1,defenseThrowFrom=null,defenseThrowTo=null,defenseThrower=null,defenseReceiver=null,ballCaughtBy=null;
 // 守備接球流程：追球 -> 球進左手手套 -> 右手取球 -> 立即傳球。
 let fieldingStage='idle',fieldingStageT=0,defenseCatchExtra=0;   // defenseCatchExtra＝這次接球因接球點偏離胸口而多出的出手前時間（catch／regrip 階段共用）
@@ -2488,10 +2487,10 @@ function resetDefense(){
   [pitcherDef,catcherDef,...defenders].forEach(f=>{if(f)f.trajAim=null;});
   pkClear();
   defenders.forEach(d=>fielderVis(d,true));fielderVis(pitcherDef,true);
-  catcherDef.fielding=false;catcherDef.touching=null;catcherDef.walking=false;catcherDef.hyaw=0;catcherDef.hpit=0;catcherDef.aim=null;catcher.rotation.y=0;cSh.hd.rotation.set(0,0,0);defenders.forEach(d=>{d.touching=null;});pitcherDef.touching=null;
+  catcherDef.fielding=false;catcherDef.touching=null;catcherDef.walking=false;catcherDef.hyaw=0;catcherDef.hpit=0;catcherDef.aim=null;catcher.rotation.y=0;cSh.hd.rotation.set(0,0,0);defenders.forEach(d=>{d.touching=null;d.faceSpot=null;});pitcherDef.touching=null;
   [...defenders,pitcherDef,catcherDef].forEach(f=>{f.tag=null;f.tagChase=null;f.handBall=false;f.noTagRunner=null;f.tagCool=0;f.pkGlove=null;f.pkU=0;});   // 清除觸殺狀態與接球後手套回胸前的姿勢
   defenseCatchExtra=0;
-  resetCatcherPose();prevBall=null;baseCover={};cVis(mode==='pit');playClock=0;pitcherDef.walking=false;pitcherDef.throwing=0;defenseActive=false;defenseChaser=null;defenseCo=[];defenseStopped=new Set();defenseIc=new Map();defenseTarget=null;defenseThrowT=-1;defenseThrowFrom=null;defenseThrowTo=null;defenseThrow=null;defenseThrower=null;defenseReceiver=null;ballCaughtBy=null;defenseFumble=null;defenseFumbleChecked=false;ball.isVisible=false;fieldingStage='idle';fieldingStageT=0;
+  resetCatcherPose();prevBall=null;baseCover={};cVis(mode==='pit');playClock=0;pitcherDef.walking=false;pitcherDef.throwing=0;defenseActive=false;defenseChaser=null;defenseCo=[];defenseStopped=new Set();defenseIc=new Map();defenseTarget=null;defenseThrowT=-1;defenseThrowFrom=null;defenseThrowTo=null;defenseThrow=null;defenseThrower=null;defenseReceiver=null;ballCaughtBy=null;ball.isVisible=false;fieldingStage='idle';fieldingStageT=0;
   const restoreFielderVisual=f=>{f.knockedDown=0;f.knockdownAge=0;f.knockSide=1;f.gloveAim=null;f.fieldingLean=0;f.root.rotation.x=0;f.root.rotation.z=0;f.root.position.y=0;
     setPlayerVisualEnabled(f,true);
     if(f.isPitcher)gHand.position.set(0.3*pS,0.5+DY,-0.36);
@@ -2519,11 +2518,17 @@ function handPos(d,side,out){
   if(m&&m.position)return out?out.copyFrom(m.position):m.position.clone();
   const p=wp(d.root,side==='left'?-0.3:0.3,0.7,0.25);return out?out.copyFrom(p):p;
 }
+const HR_NO_CHASE_BEYOND=20;   // 全壘打落點超過牆外這個距離（m）野手才不追
+// 把目標點限制在全壘打牆內側（身體半徑＋一點餘裕），追球的野手只能跑到牆邊，不會撞進牆裡
+function fenceClampXZ(x,z,margin=1.0){const r=Math.hypot(x,z)||1,R=fenceRadius(x,z)-margin;return r>R?{x:x*R/r,z:z*R/r}:{x:x,z:z};}
 const INFIELD_NAMES=['投手','捕手','一壘手','二壘手','游擊手','三壘手'];
 const pitcherDef=registerPlayerVisual({name:'投手',root:pitcher,shoes:pSh,home:V(0,0,18.44),homeFeet:null,phase:0,walking:false,throwing:0,isPitcher:true,gloveAim:null,fieldingLean:0,knockedDown:0,knockdownAge:0,knockSide:1},pitcher,{hands:[pah],gloves:[gHand],arms:[pArmR,pArmL]});
 function startDefense(){
   resetDefense();
-  if(!FL||FL.res.hr)return;   // 全壘打＝死球；界外球仍由野手追球
+  if(!FL)return;
+  // 只有「越過全壘打牆 20 m 以上」的全壘打野手可以不追；其他情況（含剛好過牆的全壘打、地上規則二壘打、界外球）野手一定追球。
+  if(FL.res.hr){const q=FL.res.lp||FL.sim.landed||(FL.sim.cross?{x:FL.sim.cross.x,z:FL.sim.cross.z}:null);
+    if(!q||Math.hypot(q.x,q.z)-fenceRadius(q.x,q.z)>HR_NO_CHASE_BEYOND)return;}
   const lp=FL.res.lp||FL.sim.landed||(FL.sim.cross?{x:FL.sim.cross.x,z:FL.sim.cross.z}:null)||(()=>{const q=FL.sim.pts[FL.sim.pts.length-1];return {x:q[0],z:q[2]};})();
   if(!lp)return;
   defenseTarget=V(lp.x,0,lp.z);
@@ -2662,7 +2667,10 @@ function tgtBase(r){return (r.state==='back'||r.state==='lead'||r.state==='stop'
 // 「跑者根本不會去」的壘包永遠不選：目標壘之後的每個壘包，球到的那一刻，跑者必須已經跑過
 // 「該壘與上一壘距離的一半」（代表他確實衝向那個壘），否則不列入評估。
 // ===================================================================================================
-const COVER_READY_R=2.2;         // 補位者離補位點這麼近（m）＝已就位：優先傳給他
+const COVER_READY_R=2.2;         // 補位者離補位點這麼近（m）＝已就位。球只能傳給已就位的補位者；還沒就位就持球等（算進時間）
+const coverInPlace=(cv,b)=>onBase(cv,b)||Math.hypot(cv.root.position.x-coverSpot(b).x,cv.root.position.z-coverSpot(b).z)<=COVER_READY_R;
+const RD_HI=0.30,RD_LO=0.06;      // 夾殺傳球時機（秒）：球到壘比跑者到壘早的差距落在 [RD_LO, RD_HI] 才傳——太早傳跑者會回頭，太晚球來不及
+let rdFocus=null;                  // 夾殺／追殺的「唯一專注對象」：一次只處理一位自由跑者；只有「更接近本壘、且已離壘到殺得到」的跑者才能搶走
 const THROW_TAG_EXTRA=0.15;      // 觸殺（非封殺）：球到壘包後還要多一個觸殺動作的時間
 const HOME_TOL=0.5;              // 只有單一狙殺目標、而且是本壘時：球只比人慢這麼多（秒）以內仍會嘗試阻殺（跑者到本壘必須停，球晚到也還有機會觸殺）
 const RELAY_EXCHANGE=0.30;       // 中繼手接到球 → 把球傳出所需的時間（regrip 0.18 s＋換手）
@@ -2720,13 +2728,13 @@ function deliverTo(from,b,t0,speed){
   // A 持球者自己跑去踩壘／守壘（已經踩在壘上＝0）
   const selfT=onBase(from,b)?0:etaRun(from,Math.max(0,Math.hypot(fp.x-sp.x,fp.z-sp.z)-0.05));
   routes.push({kind:'self',receiver:from,t:t0+selfT});
-  // B 傳給補位者：球飛行時間與補位者趕到壘包的時間，取較晚者（等補位者／補位者等球）
+  // B 傳給補位者：補位者必須先就位才能傳球（沒就位就持球等）→ 抵達時間＝等補位者就位的時間（與球出手時間取較晚者）＋ 球飛行時間
   const cv=baseCover[b]||(b===4?catcherDef:null);
   if(cv&&cv!==from&&!(cv.knockedDown>0)){
-    const cs=coverSpot(b),cp=cv.root.position,tCover=onBase(cv,b)?0:etaRun(cv,Math.max(0,Math.hypot(cp.x-cs.x,cp.z-cs.z)-0.05));
-    const gy=handPos(cv,'left').y,fl=throwFlightInfo(Math.hypot(cs.x-hand.x,cs.z-hand.z),speed);
-    const ready=onBase(cv,b)||Math.hypot(cp.x-cs.x,cp.z-cs.z)<=COVER_READY_R;   // 補位者已踩壘或進入補位區：持球者優先傳球，不跟他競速、不自己帶球跑壘（v22 coverReady）
-    if(!fl.boost)routes.push({kind:'cover',receiver:cv,t:Math.max(t0+fl.T+CATCH_SETTLE,tCover),ready:ready});
+    const cs=coverSpot(b),cp=cv.root.position,dc=Math.hypot(cp.x-cs.x,cp.z-cs.z);
+    const ready=coverInPlace(cv,b),tReady=ready?0:etaRun(cv,Math.max(0,dc-COVER_READY_R));
+    const fl=throwFlightInfo(Math.hypot(cs.x-hand.x,cs.z-hand.z),speed);
+    if(!fl.boost)routes.push({kind:'cover',receiver:cv,t:Math.max(t0,tReady)+fl.T+CATCH_SETTLE,ready:ready});
   }
   return routes;
 }
@@ -2759,30 +2767,107 @@ function makePlanCtx(d){
   return {route(b){calc(b);return cache[b];},   // 優先方案
           fast(b){calc(b);return fastC[b];}};     // 純時間最快的（允許的）方案
 }
+// 狙殺餘裕（秒）：>tol 才算殺得到。q.t＝球（或持球者）到壘的時間；跑者還沒跑到一半（e.mid）的遠壘不算
+function killMarginOf(T,e,q,tol){
+  if(e.mid!=null&&T.r.s+runnerAdvance(T.r.v,q.t)<e.mid)return null;
+  const m=e.tRun-(q.t+(e.force?0:THROW_TAG_EXTRA));return m>tol?m:null;
+}
+// ---- 完整 play 預測（雙殺／三殺）----
+// 第一個出局成立後，接球的野手（站在壘上）換手→飛行→接球再殺下一位跑者；每一步都用「當下出局數」重新套用同一套取捨規則（policySelect），與實際遊戲中第二步的決策一致。
+// 期望值＝每一步成功機率連乘累加；第三個出局若是「非封殺」，它之前就踩到本壘的跑者得分算數（棒球規則：封殺或打者跑者未達一壘被殺的第三個出局，之前的得分無效）→ 扣 RUN_W。
+// 後位跑者被殺 → 前位跑者的強迫解除（改成要觸殺）；前位跑者被殺 → 後位強迫仍在。
+const PLAY_P=m=>m<=0?0:Math.min(0.97,0.55+m*1.1);
+const RUN_W=0.6;   // 一分失分相當於多少個出局的價值
+const nearHomeCmp=(a,b)=>(b.e.b-a.e.b)||(b.margin-a.margin);
+// 第三個出局時間 t 之前就能踩到本壘（且沒被殺）的跑者數（只計算正在往前跑、目標含本壘的狙殺目標）
+function runsBefore(targets,used,outR,t){let n=0;for(const T of targets){if(used.has(T.r)||T.r===outR)continue;const e4=T.bases.find(e=>e.b===4);if(e4&&e4.tRun<t)n++;}return n;}
+// 球在 fromB 壘、由 R 持有、tAt 秒後可再出手：還能殺到哪些人（每位跑者只取最近的可殺壘包）
+function gatherCands(targets,used,fromB,R,tAt){
+  const out=[],sp0=coverStepSpot(fromB),speed=throwProfile(R).speed;
+  for(const T2 of targets){
+    if(used.has(T2.r))continue;
+    for(const e2 of T2.bases){
+      if(e2.b===fromB)continue;
+      const cv=baseCover[e2.b]||(e2.b===4?catcherDef:null);
+      if(!cv||cv===R||cv.knockedDown>0)continue;
+      const cs=coverSpot(e2.b),fl=throwFlightInfo(Math.hypot(cs.x-sp0.x,cs.z-sp0.z),speed);if(fl.boost)continue;
+      const cp=cv.root.position,tReady=coverInPlace(cv,e2.b)?0:etaRun(cv,Math.max(0,Math.hypot(cp.x-cs.x,cp.z-cs.z)-COVER_READY_R));
+      const t2=Math.max(tAt+RELAY_EXCHANGE,tReady)+fl.T+CATCH_SETTLE;
+      const f2=e2.force&&![...used].some(u=>u.s<T2.r.s);   // 後位跑者已被殺 → 這位的強迫解除
+      const e2f=Object.assign({},e2,{force:f2}),m=killMarginOf(T2,e2f,{t:t2},0);
+      if(m===null)continue;
+      out.push({T:T2,e:e2f,margin:m,t:t2,R:cv});break;
+    }
+  }
+  return out;
+}
+// 評估一個出局方案（outsNow＝這個 play 之前已有的出局數）：val＝期望值；dp＝這個出局之後還能再殺到下一個
+function candEval(targets,used,outsNow,c){
+  const after=outsNow+1;let Vend=0,more=false;
+  if(after>=3)Vend=c.e.force?0:-RUN_W*runsBefore(targets,used,c.T.r,c.t);
+  else if(c.R){const r=chainNode(targets,new Set([...used,c.T.r]),c.e.b,c.R,c.t,after);if(r!==null){more=true;Vend=r;}}
+  c.val=PLAY_P(c.margin)*(1+Vend);c.dp=more;return c.val;
+}
+// 取捨規則（依「當下出局數」）：
+//   兩出局：封殺優先（沒有任何跑者能封殺才考慮觸殺，不管觸殺的餘裕）→ 取當下最容易處理（餘裕最大）的封殺；觸殺只取離本壘最近者
+//   無人出局且三壘跑者已無退路衝向本壘、本壘殺得到 → 先殺本壘
+//   一出局／無人出局：能雙殺 → 雙殺優先（期望值最高者）；不能 → 殺得到且離本壘最近者
+function policySelect(cands,outsNow,targets,used,commitFn){
+  if(outsNow>=2){
+    const f=cands.filter(c=>c.e.force),sel=f.length?f.sort((a,b)=>(b.margin-a.margin)||(b.e.b-a.e.b))[0]:cands.slice().sort(nearHomeCmp)[0];
+    candEval(targets,used,outsNow,sel);return sel;
+  }
+  let dpBest=null;
+  for(const c of cands){candEval(targets,used,outsNow,c);if(c.dp&&(!dpBest||c.val>dpBest.val||(c.val===dpBest.val&&nearHomeCmp(c,dpBest)<0)))dpBest=c;}
+  if(commitFn){const h=cands.filter(c=>c.e.b===4&&commitFn(c)).sort(nearHomeCmp)[0];if(h)return h;}
+  return dpBest||cands.slice().sort(nearHomeCmp)[0];
+}
+// 第一個出局之後的下一步：回傳依規則選中的方案的期望值（沒有任何可殺的人＝null）
+function chainNode(targets,used,fromB,R,tAt,outsNow){
+  if(outsNow>=3||!R)return null;
+  const cands=gatherCands(targets,used,fromB,R,tAt);if(!cands.length)return null;
+  return policySelect(cands,outsNow,targets,used,null).val;
+}
+
+// 三壘跑者已衝向本壘、離三壘夠遠（不可能順利轉頭回三壘）？
+// 判斷：假設現在先傳本壘，若跑者中途折返，球到本壘後還能由捕手轉傳三壘；只要「球回到三壘的時間」比「跑者折返回三壘的時間（折返反應 0.30 s ＋ 從 2 m/s 重新加速跑回）」早 0.1 s 以上，他就回不去 → 已無退路。
+const RD_TURN=0.30,COMMIT_MARGIN=0.10;
+function homeCommitted(d,pick){
+  const r=pick.T.r;
+  if(!(r.state==='run'&&r.to===4&&r.baseS&&r.baseS[3]!==undefined&&r.s>r.baseS[3]+0.3))return false;
+  const tBack=RD_TURN+runnerEtaV(r,3,2);
+  const R=pick.rt.kind==='cover'?pick.rt.receiver:d,cv3=baseCover[3];
+  if(!cv3||cv3===R||cv3.knockedDown>0)return true;   // 沒有人能補三壘＝無法威脅他折返，視為已無退路（也沒有雙殺可言）
+  const cs=coverSpot(3),h4=BASEP[4],fl=throwFlightInfo(Math.hypot(cs.x-h4.x,cs.z-h4.z),throwProfile(R).speed);
+  const cp=cv3.root.position,tReady=coverInPlace(cv3,3)?0:etaRun(cv3,Math.max(0,Math.hypot(cp.x-cs.x,cp.z-cs.z)-COVER_READY_R));
+  const t3=Math.max(pick.rt.t+RELAY_EXCHANGE,tReady)+fl.T+CATCH_SETTLE;
+  return fl.boost||tBack>t3+COMMIT_MARGIN;
+}
 // ---- 3) 狙殺選擇 ----
-// 每位跑者：依序檢查他「可能抵達的壘包」（近→遠），取第一個球比人快的壘包；
+// 每位跑者：依序檢查他「可能抵達的壘包」（近→遠），取第一個球比人快的壘包（封殺與觸殺的餘裕已含觸殺動作時間）；
 // 只有單一目標且是本壘時放寬 HOME_TOL 秒（球只慢一點仍會嘗試阻殺）；其他壘包球晚到＝跑者已衝過去，不算。
-// 多位跑者：取離本壘最近的壘包；兩出局時封殺優先。
+// 多位跑者的取捨（依出局數）：
+//   兩出局：封殺優先（殺一個就結束半局）→ 取「當下最容易處理」（餘裕最大）的跑者
+//   一出局：能雙殺 → 雙殺優先（期望出局數最高者）；不能雙殺 → 殺得到且離本壘最近的跑者
+//   無人出局：三壘跑者已衝向本壘且離三壘夠遠（回不去）、本壘殺得到 → 先殺本壘；否則能雙殺 → 雙殺優先；不能 → 殺得到且離本壘最近者
 function chooseKill(d,targets,ctx){
   const picks=[];
   for(const T of targets){
     for(const e of T.bases){
       let rt=ctx.route(e.b);if(!rt)continue;
       const tol=(targets.length===1&&e.b===4)?-HOME_TOL:0;
-      const test=q=>{if(e.mid!=null&&T.r.s+runnerAdvance(T.r.v,q.t)<e.mid)return null;   // 球到的時候跑者還沒跑到一半：他不會去這個壘，永遠不選
-        const m=e.tRun-(q.t+(e.force?0:THROW_TAG_EXTRA));return m>tol?m:null;};   // 封殺：球到壘就出局；觸殺：球到壘後還要一個觸殺動作
-      let margin=test(rt);
-      if(margin===null){const f=ctx.fast(e.b);if(f&&f!==rt){const m2=test(f);if(m2!==null){rt=f;margin=m2;}}}   // 優先方案（傳給已就位的補位者）來不及，才退回最快的方式
+      let margin=killMarginOf(T,e,rt,tol);
+      if(margin===null){const f=ctx.fast(e.b);if(f&&f!==rt){const m2=killMarginOf(T,e,f,tol);if(m2!==null){rt=f;margin=m2;}}}   // 優先方案（傳給已就位的補位者）來不及，才退回最快的方式
       if(margin!==null){picks.push({T,e,rt,margin});break;}
     }
   }
   if(!picks.length)return null;
-  let pool=picks;
-  if(killPriorityOuts()>=2){const f=picks.filter(p=>p.e.force);if(f.length)pool=f;}
-  pool.sort((a,b)=>(b.e.b-a.e.b)||(b.margin-a.margin));
-  return pool[0];
+  const outs=killPriorityOuts();
+  for(const p of picks){p.t=p.rt.t;p.R=p.rt.kind==='self'?d:p.rt.kind==='cover'?p.rt.receiver:null;}   // 轉傳中繼手的 play：不往後推演
+  if(picks.length===1)return picks[0];
+  return policySelect(picks,outs,targets,new Set(),outs===0?(c=>homeCommitted(d,c)):null);
 }
-const actionOfRoute=(rt,b)=>rt.kind==='self'?{kind:'self',base:b}:rt.kind==='cover'?{kind:'throw',receiver:rt.receiver,base:b}:{kind:'throw',receiver:rt.receiver,base:0};
+const actionOfRoute=(rt,b)=>rt.kind==='self'?{kind:'self',base:b}:rt.kind==='cover'?(rt.ready?{kind:'throw',receiver:rt.receiver,base:b}:{kind:'wait',receiver:rt.receiver,base:b}):{kind:'throw',receiver:rt.receiver,base:0};   // 補位者沒就位＝wait（持球等，就位後才傳）
 
 // 外野手沒有可殺的目標時的轉傳對象：優先離「最前面的跑者目標壘」近、離自己遠的內野手
 function pickRelay(d,targets){
@@ -2795,6 +2880,56 @@ function pickRelay(d,targets){
   return rc;
 }
 
+// ---- 夾殺（rundown）----
+// 對象：自由跑者（非封殺）已離壘。持球者逼近跑者，等到「球比跑者早到目標壘」的差距落在 [RD_LO, RD_HI] 才傳給該壘已就位的補位者
+// （太早傳 → 跑者回頭；太晚傳 → 球來不及）；沒殺到跑者回頭 → 接球者用同一套規則再逼近、再傳，直到跑者出局或安全回壘。
+// 一次只專心處理 rdFocus；只有更接近本壘（r.s 較大）、而且已離壘到殺得到（或追得到）的跑者才能搶走專注。
+const rdValid=r=>!!r&&canChase(r)&&!runnerAtBase(r)&&!isForceRunner(r)&&(r.state==='run'||r.state==='back'||r.state==='lead');
+const rdOffBase=r=>Math.abs(r.s-((r.baseS&&r.baseS[r.base])||0));
+function rdStart(h,r){   // 開始追一位自由跑者：記為專注對象，並讓其他人立刻補上持球者留下的壘包空位
+  if(!rdValid(r))return;
+  rdFocus=r;r.rdActive=true;if(simLive)assignCovers(h);
+}
+function rdKillable(d,q){
+  const T=killTargetOf(q);if(!T)return false;const ctx=makePlanCtx(d);
+  for(const e of T.bases){const rt=ctx.route(e.b);if(rt&&killMarginOf(T,e,rt,0)!==null)return true;}
+  return false;
+}
+function rdChallenger(d,focus){   // 比專注對象更接近本壘、且已離壘到可處理的跑者（取最接近本壘者）
+  let best=null;
+  for(const q of runners){
+    if(q===focus||!rdValid(q)||q.s<=focus.s+0.5||rdOffBase(q)<=1.5)continue;
+    const ok=q.state==='run'?rdKillable(d,q):!!tagIntercept(d,q);
+    if(ok&&(!best||q.s>best.s))best=q;
+  }
+  return best;
+}
+function rdFocusUpdate(d){
+  if(!rdValid(rdFocus))rdFocus=null;
+  if(rdFocus){const ch=rdChallenger(d,rdFocus);if(ch)rdFocus=ch;}
+  return rdFocus;
+}
+// 持球者 d 對專注對象的處置：傳球時機到 → throw；還沒到／太晚且追得到 → tag（逼近）；自己就是跑者要去的壘的補位者 → wait（等跑者進來觸殺）；否則 null（走一般判斷）
+function rdDecide(d){
+  const r=rdFocusUpdate(d);if(!r||!r.rdActive)return null;
+  const B=tgtBase(r),cv=baseCover[B]||(B===4?catcherDef:null),moving=(r.state==='run'||r.state==='back')&&(r.v||0)>0.8;
+  if(cv===d&&r.state==='run'&&!isForceRunner(r))return {kind:'wait'};
+  if(moving&&cv&&cv!==d&&!(cv.knockedDown>0)&&coverInPlace(cv,B)){
+    const hand=handPos(d,'right'),cs=coverSpot(B),fl=throwFlightInfo(Math.hypot(cs.x-hand.x,cs.z-hand.z),throwProfile(d).speed);
+    if(!fl.boost){const m=runnerEta(r,B)-(fl.T+CATCH_SETTLE+THROW_TAG_EXTRA);if(m<=RD_HI&&m>=RD_LO)return {kind:'throw',receiver:cv,base:B};}
+  }
+  return tagIntercept(d,r)?{kind:'tag',runner:r}:null;
+}
+// 追人途中每幀檢查：傳球時機到就出手；專注對象被更優先的跑者取代就放掉原目標（下一輪重新決策）
+function rdTick(hd){
+  const cr=hd.tagChase;if(!cr||isForceRunner(cr))return;
+  if(!rdValid(rdFocus)&&rdValid(cr))rdFocus=cr;
+  if(rdValid(cr)&&!cr.rdActive)cr.rdActive=true;
+  const act=rdDecide(hd);
+  if(rdFocus&&rdFocus!==cr){hd.tagChase=null;recheckT=0;return;}
+  if(act&&act.kind==='throw'){hd.tagChase=null;applyAction(hd,act,true);}
+}
+
 // ---- 觸殺判斷（上層第一關）----
 // 強迫（封殺）跑者：身邊 0.35 s 內就能觸殺才先觸殺；自由跑者：觸殺比最快的傳球／踩壘方案快（容許 0.3 s）就自己追人。
 // 同壘後位跑者：追得到就追。完全沒有傳球／踩壘方案時的保底：能追就追、14 m 內就追人。
@@ -2803,12 +2938,14 @@ function chooseTag(d,targets,ctx,kill){
   const cand=runners.filter(r=>canChase(r)&&(!runnerAtBase(r)||sharedBaseTrailing(r))).map(r=>({r,T:tmap.get(r),b:tgtBase(r)}));
   const order=cand.sort((x,y)=>y.b-x.b);
   if(killPriorityOuts()>=2)order.sort((x,y)=>(isForceRunner(y.r)-isForceRunner(x.r))||(y.b-x.b));
+  const fo=rdValid(rdFocus)?rdFocus:null,notFocus=c=>!!fo&&!isForceRunner(c.r)&&!sharedBaseTrailing(c.r)&&c.r!==fo;   // 夾殺專注：自由跑者只追專注對象，不隨意換目標
   const tagOf=c=>(d.noTagRunner===c.r&&isForceRunner(c.r))?null:tagIntercept(d,c.r);   // 剛觸殺失敗的強迫跑者不重複追
   // 兩出局（v22 順序）：已有可行的封殺方案 → 排在該封殺跑者之後的人（非封殺跑者、離本壘較遠的強迫跑者）不能用觸殺搶先；
   // 排在他前面（離本壘更近）的強迫跑者若就在身邊（0.35 s）仍先觸殺。
   const killFirst=killPriorityOuts()>=2&&kill&&kill.e.force,killB=killFirst?tgtBase(kill.T.r):0;
   for(const c of order){
     if(killFirst&&c.r!==kill.T.r&&(!isForceRunner(c.r)||c.b<=killB))continue;
+    if(notFocus(c))continue;
     const r=c.r,tagC=tagOf(c);if(!tagC)continue;
     if(sharedBaseTrailing(r))return {kind:'tag',runner:r};
     if(isForceRunner(r)){if(tagC.t<=0.35)return {kind:'tag',runner:r};continue;}
@@ -2816,9 +2953,9 @@ function chooseTag(d,targets,ctx,kill){
     if(tagC.t+0.15<=tBest+0.3)return {kind:'tag',runner:r};
   }
   if(!kill){   // 沒有任何球比人快的傳球方案：能追就追
-    for(const c of order){if(tagOf(c))return {kind:'tag',runner:c.r};}
+    for(const c of order){if(notFocus(c))continue;if(tagOf(c))return {kind:'tag',runner:c.r};}
     const dp=d.root.position;
-    for(const c of order){const r=c.r;if(isForceRunner(r)||!canTag(r)||!['run','back','lead'].includes(r.state)||d.noTagRunner===r)continue;
+    for(const c of order){const r=c.r;if(notFocus(c)||isForceRunner(r)||!canTag(r)||!['run','back','lead'].includes(r.state)||d.noTagRunner===r)continue;
       const q=tagPt(r);if(Math.hypot(q.x-dp.x,q.z-dp.z)<=BEST_EFFORT_CHASE)return {kind:'tag',runner:r};}
   }
   return null;
@@ -2836,6 +2973,7 @@ function chooseThrowAction(d,targets,ctx,kill){
       const b=tgtBase(c),cv=baseCover[b]||(b===4?catcherDef:null);
       if(!cv||cv===d||b<1||cv.knockedDown>0)continue;
       const tg=handPos(cv,'left');if(Math.hypot(tg.x-hand.x,tg.z-hand.z)<4)continue;   // 太近不必額外傳球
+      if(!coverInPlace(cv,b))continue;   // 補位者還沒就位：不傳
       return {kind:'throw',receiver:cv,base:b,effort:true};}
   }
   if(isOutfielder(d)){const q=pickRelay(d,targets);if(q)return {kind:'throw',receiver:q,base:0};}
@@ -2846,6 +2984,7 @@ function chooseThrowAction(d,targets,ctx,kill){
 function planAction(d){
   if(inningOver||!simLive)return null;
   if(d.touching||d.tagChase||d.tag)return {kind:'busy'};
+  const rd=rdDecide(d);if(rd)return rd;   // 夾殺中的專注跑者優先處理
   const targets=killTargets(),ctx=makePlanCtx(d),kill=chooseKill(d,targets,ctx);
   return chooseTag(d,targets,ctx,kill)||chooseThrowAction(d,targets,ctx,kill);
 }
@@ -2858,10 +2997,13 @@ function resolveTouching(hd){
 // 執行決策。fromDone＝持球者球在手套裡（done 階段）：要傳球就先走「換手」階段，換手結束的傳球瞬間會再完整重算一次。
 function applyAction(d,act,fromDone=false){
   if(!act||act.kind==='busy')return false;
+  if(act.kind==='wait'){   // 補位者還沒就位：球留在投球手上等，持球時每 0.12 s 重新評估一次，就位了才傳（球已在投球手上，就位後直接出手）
+    if(!fromDone)holdBall(d);
+    d.handBall=true;return true;}
   if(act.kind==='tag'||act.kind==='self'){
     if(!fromDone)holdBall(d);
     d.handBall=true;   // 衝刺踩壘／追人觸殺：球一開始就換到投球手，之後要傳球直接出手，不必再換回手套
-    if(act.kind==='tag')d.tagChase=act.runner;else{d.touching=act.base;resolveTouching(d);}
+    if(act.kind==='tag'){d.tagChase=act.runner;rdStart(d,act.runner);}else{d.touching=act.base;resolveTouching(d);}
     if(d.isCatcher){d.fielding=true;cVis(true);}
     return true;
   }
@@ -2981,21 +3123,35 @@ function stepTags(dt){   // 每幀推進所有守備員的觸殺動作與冷卻
 // 持球守備員偵測可觸殺的跑者，開始伸手（一般守備、盜壘共用；牽制在 pkUpdate 內呼叫同一個 tryStartTag）
 // 持球者「自動迎上去追人」的距離：持球者與非強迫跑者相距在此範圍內，就不能站著等，所有野手（含投手、捕手）共用同一條規則
 const TAG_AUTO_CHASE_ZONE=7.5;
+// tagChase 只允許「正在朝持球者移動，且持球者比目標壘／原壘補位者都近」時成立。
+function tagChaseEligible(h,r,q,dh){
+  if(!h||!h.root||!canChase(r)||!['run','back','lead'].includes(r.state)||(r.v||0)<=0.8)return false;
+  const p=runnerPosAt(r,r.s),dir=r.dir<0?-1:1;
+  const toward=(h.root.position.x-q.x)*(p.dx*dir)+(h.root.position.z-q.z)*(p.dz*dir);
+  if(toward<=0)return false;
+  const coverDistance=b=>{
+    const cv=baseCover[b]||(b===0||b===4?catcherDef:null);
+    if(!cv||cv===h||!cv.root||cv.knockedDown>0)return Infinity;
+    const cp=cv.root.position;return Math.hypot(q.x-cp.x,q.z-cp.z);
+  };
+  return dh<coverDistance(tgtBase(r))&&dh<coverDistance(r.base);
+}
 function checkTags(){
   if(!simLive||inningOver)return;
   const h=ballHolder();if(!tagReadyHolder(h))return;
   const hp=h.root.position;let best=null,bd=1e9;
+  // 追殺資格每次持球檢查都重新驗證；失去方向或最近距離優勢就解除，交回原決策流程。
+  if(h.tagChase){const cr=h.tagChase,cq=tagPt(cr),cd=Math.hypot(cq.x-hp.x,cq.z-hp.z);if(!tagChaseEligible(h,cr,cq,cd))h.tagChase=null;}
   runners.forEach(r=>{
     if(!canTag(r))return;
-    const q=tagPt(r),dh=Math.hypot(q.x-hp.x,q.z-hp.z);
+    const q=tagPt(r),dh=Math.hypot(q.x-hp.x,q.z-hp.z),chaseOK=tagChaseEligible(h,r,q,dh);
     // 蹲在本壘後方、還沒離開本壘的捕手：有跑者衝向本壘且進入 6 m 內，就離開本壘迎上去追人（只負責「出動」，之後走一般流程）
     if(h.isCatcher&&!h.fielding){
-      if(!h.tagChase&&tgtBase(r)===4&&Math.hypot(q.x,q.z)<CATCHER_PLATE_ZONE){h.fielding=true;cVis(true);h.handBall=true;h.tagChase=r;}
+      if(!h.tagChase&&chaseOK&&tgtBase(r)===4&&Math.hypot(q.x,q.z)<CATCHER_PLATE_ZONE&&(!rdValid(rdFocus)||rdFocus===r||isForceRunner(r))){h.fielding=true;cVis(true);h.handBall=true;h.tagChase=r;rdStart(h,r);}
       return;
     }
-    // 任何持球野手（接球／換手階段尚未決定動作也一樣）：身邊有非強迫跑者、搆不到又追得上（或正衝向本壘）→ 迎上去追人，不站著等。
-    // 強迫跑者不在此列：封殺（踩壘／傳壘）由 planAction 決定。
-    if(!h.tagChase&&!h.touching&&!isForceRunner(r)&&dh<TAG_AUTO_CHASE_ZONE&&dh>=tagStartRange(r,q)&&h.noTagRunner!==r){h.handBall=true;h.tagChase=r;return;}   // 跑者在壘間又在身邊：持球者一律迎上去追（追不追得上由跑者的避開邏輯與實際跑速決定）
+    // 強迫跑者不在追殺成立條件內：封殺（踩壘／傳壘）仍由原 planAction 決定。
+    if(!h.tagChase&&!h.touching&&!isForceRunner(r)&&chaseOK&&dh<TAG_AUTO_CHASE_ZONE&&dh>=tagStartRange(r,q)&&h.noTagRunner!==r&&(!rdValid(rdFocus)||rdFocus===r)){h.handBall=true;h.tagChase=r;rdStart(h,r);return;}
     if(dh<tagStartRange(r,q)&&dh<bd){bd=dh;best=r;}
   });
   if(best)tryStartTag(h,best);
@@ -3046,8 +3202,9 @@ function throwReceptionPoint(from,receiver,T){
   return nearestGlovePointOnReachSet(sh.add(f.scale(0.47)).add(V(0,-0.20,0)),sh,receiver,f);
 }
 function startThrow(d,receiver,b){
-  d.handBall=false;if(receiver)receiver.handBall=false;   // 球離手：傳球者不再持球；接球者接到球時球在手套
-  defenseThrower=d;defenseReceiver=receiver;thrownBase=b;defenseFumble=null;defenseFumbleChecked=false;if(receiver&&receiver.isCatcher)cVis(true);
+  d.handBall=false;d.faceSpot=null;if(receiver)receiver.handBall=false;   // 球離手：傳球者不再持球；接球者接到球時球在手套
+  defenseThrower=d;defenseReceiver=receiver;thrownBase=b;if(receiver&&receiver.isCatcher)cVis(true);
+  runners.forEach(q=>{q.thrBase=q.base;});   // 記下出手當下各跑者的壘（傳球出界＝死球時，從這個壘起算判給 2 個壘）
   const hand=handPos(d,'right');
   defenseThrowFrom=V(hand.x,hand.y,hand.z);
   // 接球者在傳球開始時就正面朝向傳球者；接球期間每幀更新目標，避免只追落點卻背對來球。
@@ -3065,7 +3222,22 @@ function startThrow(d,receiver,b){
   fieldingStage='throw';fieldingStageT=0;
   d.throwing=1;ball.position.copyFrom(defenseThrowFrom);ball.isVisible=true;
 }
-function holdBall(d){defenseThrower=null;defenseReceiver=d;fieldingStage='done';fieldingStageT=0;recheckT=0.1;d.throwing=0;}
+function holdBall(d){defenseThrower=null;defenseReceiver=d;fieldingStage='done';fieldingStageT=0;recheckT=0.1;d.throwing=0;d.faceSpot=null;}
+// 傳球方向確定後，身體（與頭）先轉向目標：壘包補位者還沒到位也一樣朝壘包轉身，不用等補位者就位、或球出手才轉。
+function throwFaceSpot(act){
+  if(!act||act.kind==='busy')return null;
+  if(act.kind==='tag'&&act.runner){const c=chaseSpot(act.runner);return V(c.x,1,c.z);}
+  if(act.kind==='self'){const q=coverStepSpot(act.base);return V(q.x,1,q.z);}
+  if(act.kind==='throw'||act.kind==='wait'){
+    if(act.base>0){const q=coverSpot(act.base);return V(q.x,1,q.z);}   // 傳向壘包
+    if(act.receiver&&act.receiver.root){const p=act.receiver.root.position;return V(p.x,1,p.z);}   // 轉傳中繼手
+  }
+  return null;
+}
+function previewFacing(d,dt){   // 接球／換手期間每 0.12 s 預演一次決策（不執行），只用來決定身體朝向
+  d.faceT=(d.faceT||0)-dt;if(d.faceT>0)return;d.faceT=0.12;
+  d.faceSpot=throwFaceSpot(planAction(d));
+}
 // 持球者（換手結束的傳球瞬間、中繼手 regrip 結束）決定下一步：觸殺 → 傳球（含補位／踩壘／外野轉傳）→ 持球不動。
 // 中繼手接到球後也走同一個函式，依最新的跑者狀態重新決策（外野手本想殺二壘，傳球時三壘衝本壘了，中繼手就改殺本壘）。
 function decideThrow(d){
@@ -3154,11 +3326,11 @@ function updateDefense(dt){
   if(defenseChaser&&defenseChaser.knockedDown>0){defenseChaser.walking=false;defenseChaser.v=0;defenseChaser=null;}
   const reactWait=st==='flight'&&ft<REACT;   // 全員共用 REACT：球剛離棒時先反應，再依同一跑速公式移動
   const idle=defenseActive&&!!defenseChaser&&fieldingStage==='idle';
-  if(idle&&FL&&FL.wp&&!FL.pko){   // 暴投：只有捕手去撿球（攔截點＝球剩餘軌跡上他能最早到達的位置）；其他人不追球
+  if(idle&&FL&&FL.wp&&!FL.pko&&!FL.muffLoose&&!FL.dead){   // 暴投：只有捕手去撿球（攔截點＝球剩餘軌跡上他能最早到達的位置）；其他人不追球
     const pts=FL.sim.pts,live=st==='flight'&&ft*60<pts.length-1,c=catcherDef,bp=ball.position;
     defenseIc.clear();defenseIc.set(c,live?interceptPt(c):{x:bp.x,z:bp.z,eta:etaRun(c,Math.max(0,Math.hypot(bp.x-c.root.position.x,bp.z-c.root.position.z)-fieldingApproachStopDistance(c,bp,0))),t:0,stopDist:fieldingApproachStopDistance(c,bp,0)});
     const ic=defenseIc.get(c);defenseTarget=V(ic.x,0,ic.z);defenseCo=[];maybeJump(c,ic);
-  }else if(defenseActive&&FL&&fieldingStage==='idle'){   // 每幀依目前有效球路重新分配追球者；倒地球員不列入候選
+  }else if(defenseActive&&FL&&!FL.dead&&fieldingStage==='idle'){   // 每幀依目前有效球路重新分配追球者；倒地球員不列入候選
     const lp0=FL.res.lp||FL.sim.landed;const landedT=FL.sim.landed?FL.sim.landed.t:0;
     if(ft>=landedT||!lp0)defenseTarget=V(ball.position.x,0,ball.position.z);else defenseTarget=V(lp0.x,0,lp0.z);
     // === 追球分派：依「球剩餘軌跡的最早攔截點」計算每位野手的抵達時間 ===
@@ -3236,12 +3408,13 @@ function updateDefense(dt){
           const fx=fieldingReachFix(d);if(fx){d.fixPos=fx;d.fixT=0.35;tx=fx.x;tz=fx.z;stopDist=0.05;intensity=100;}
         }
       }
+      if(d===defenseChaser||defenseCo.includes(d)){const fc=fenceClampXZ(tx,tz);tx=fc.x;tz=fc.z;}   // 追球目標在牆外（過牆球）：只跑到牆邊
       const dx=tx-root.position.x,dz=tz-root.position.z,dist=Math.hypot(dx,dz);
       const chase=intensity>=100&&stopDist>0.3;   // 追球／追人全力衝刺不煞車；補壘全力跑但到壘前仍煞車停在壘上
       if(dist>stopDist&&!(reactWait&&!d.walking))moveActorToward(d,tx,tz,dt,intensity,stopDist,!chase);
       else{d.walking=false;d.v=0;}
     });
-    if(idle&&defenseChaser?.isPitcher&&defenseChaser.knockedDown<=0){const d=defenseChaser,root=d.root;let tx=defenseTarget.x,tz=defenseTarget.z,stop=defenseIc.get(d)?.stopDist??0.48;
+    if(idle&&defenseChaser?.isPitcher&&defenseChaser.knockedDown<=0){const d=defenseChaser,root=d.root;let tx=defenseTarget.x,tz=defenseTarget.z,stop=defenseIc.get(d)?.stopDist??0.48;{const fc=fenceClampXZ(tx,tz);tx=fc.x;tz=fc.z;}
       if(!reactWait){if(d.fixT>0){d.fixT-=dt;tx=d.fixPos.x;tz=d.fixPos.z;stop=0.05;}else if(Math.hypot(tx-root.position.x,tz-root.position.z)<=stop+0.05){const fx=fieldingReachFix(d);if(fx){d.fixPos=fx;d.fixT=0.35;tx=fx.x;tz=fx.z;stop=0.05;}}}
       const dist=Math.hypot(tx-root.position.x,tz-root.position.z);if(!d.walking)d.v=0;
       if(dist>stop&&!(reactWait&&!d.walking))moveActorToward(d,tx,tz,dt,100,stop,false);else{d.walking=false;d.v=0;}}
@@ -3283,6 +3456,7 @@ function updateDefense(dt){
    const angd=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
    const orient=(d,root,hd,off,psg)=>{   // off：模型正面相對 rotation.y 的偏移；psg：頭部仰俯角方向
      const pos=root.position,tracking=activelyFielding(d);let f=tracking&&fpBall?fpBall:d.aim;
+     if(!f&&d.faceSpot&&fieldingStage!=='idle'&&(d===defenseThrower||d===defenseReceiver))f=d.faceSpot;   // 已確定傳球方向：先轉身面向目標
      if(!f){const holder=(d===defenseThrower||d===defenseReceiver)&&fieldingStage!=='idle';
        f=holder?(Math.hypot(pos.x,pos.z-18.44)>6?MOUND_F:HOME_F):(fpBall||HOME_F);}
      const bf=(tracking&&d.catchPt)?d.catchPt:f,dx=bf.x-pos.x,dz=bf.z-pos.z,h=Math.hypot(dx,dz),fy=h>0.6?Math.atan2(dx,dz):root.rotation.y+off;
@@ -3305,7 +3479,8 @@ function updateDefense(dt){
   [...defenders,catcherDef].forEach(d=>{
     applyCrouch(d,dt);const SYc=SY-(d.crouchV||0),cr=d.crouchV||0;
     d.phase+=dt*(d.walking?Math.max(6,13*(d.v||0)/8.2):2.2);   // 步頻隨速度變化
-    d.shoes.forEach((m,i)=>{const ph=d.phase+(i?Math.PI:0);m.position.x=d.homeFeet[i].x*(1+cr*6)+(d.walking?Math.sin(ph)*0.09:0);m.position.y=d.homeFeet[i].y+(d.walking?Math.max(0,Math.sin(ph))*0.16:0)+(d.jy>0.05?0.1:0);m.position.z=d.homeFeet[i].z+(d.walking?Math.cos(ph)*0.1:0);m.rotation.x=d.walking?Math.sin(ph)*0.3:0;});
+    // 步態：騰空（sin>0）的腳由後往前擺，著地的腳往後蹬（z 為身體前方）
+    d.shoes.forEach((m,i)=>{const ph=d.phase+(i?Math.PI:0);m.position.x=d.homeFeet[i].x*(1+cr*6)+(d.walking?Math.sin(ph)*0.09:0);m.position.y=d.homeFeet[i].y+(d.walking?Math.max(0,Math.sin(ph))*0.16:0)+(d.jy>0.05?0.1:0);m.position.z=d.homeFeet[i].z+(d.walking?-Math.cos(ph)*0.1:0);m.rotation.x=d.walking?Math.sin(ph)*0.3:0;});
     const SXd=d.shoulderX||0.19;let S1=wp(d.root,-SXd,SYc,0);const S2=wp(d.root,SXd,SYc,0);
     let T1=wp(d.root,-0.3,0.42-cr,0.12),T2=wp(d.root,0.3,0.42-cr,0.12),fieldGP=null;
     if(d.throwing>0){const q=Math.min(1,d.throwing);T1=wp(d.root,-0.35,0.65+0.1*Math.sin(q*Math.PI),0.42);T2=wp(d.root,0.38,0.68+0.18*Math.sin(q*Math.PI),0.4);}
@@ -3360,14 +3535,14 @@ function updateDefense(dt){
 
   // 接球：球停在左手手套 -> 右手取球 -> 決定傳壘封殺／傳回內野 -> 接球者手套（regrip）-> 再決定 -> done。
   if(fieldingStage==='catch'&&defenseThrower){
-    fieldingStageT+=dt;const d=defenseThrower;
+    fieldingStageT+=dt;const d=defenseThrower;previewFacing(d,dt);
     ball.position.copyFrom(handPos(d,'left'));
     const back=stepCatchGlove(d,fieldingStageT,defenseCatchExtra);   // 先把手套帶回胸前，之後才開始穩球（HOLD_C）與換手（HOLD_T）
     const holdT=Math.max(0,fieldingStageT-defenseCatchExtra);
     d.throwing=0.18+0.2*Math.min(1,holdT/HOLD_C);
     if(back&&holdT>=HOLD_C){fieldingStage='transfer';fieldingStageT=0;}
   }else if(fieldingStage==='transfer'&&defenseThrower){
-    fieldingStageT+=dt;const d=defenseThrower,left=handPos(d,'left'),right=handPos(d,'right'),t=Math.min(1,fieldingStageT/HOLD_T),e=t*t*(3-2*t);
+    fieldingStageT+=dt;const d=defenseThrower;previewFacing(d,dt);const left=handPos(d,'left'),right=handPos(d,'right'),t=Math.min(1,fieldingStageT/HOLD_T),e=t*t*(3-2*t);
     ball.position.set(left.x+(right.x-left.x)*e,left.y+(right.y-left.y)*e+0.06*Math.sin(t*Math.PI),left.z+(right.z-left.z)*e);
     d.throwing=0.55+0.2*t;
     if(t>=1)decideThrow(d);
@@ -3377,21 +3552,20 @@ function updateDefense(dt){
       // 傳球期間強制接球者面向傳球者（而非偏差落點）；orient() 會依 aim 讓身體與頭部正面朝向傳球者。
       if(defenseThrower&&defenseThrower.root)defenseReceiver.aim=V(defenseThrower.root.position.x,defenseThrower.root.position.y+1.0,defenseThrower.root.position.z);
       // 接球者與接擊球／接牽制同一套：手套追實際球路、構不到就挪步（身體）、太高就起跳。
-      if(!defenseFumble&&!(defenseReceiver.knockedDown>0))trackIncomingBall(defenseReceiver,th.sim,tt,dt);
+      if(!(defenseReceiver.knockedDown>0))trackIncomingBall(defenseReceiver,th.sim,tt,dt);
     }
     const prevThrowPos=ball.position.clone();
     ball.position.copyFrom(throwPosAt(th,tt));   // 與牽制傳球同一條物理軌跡
     if(defenseThrower){defenseThrower.throwing=1-t;defenseThrower.aim=V(defenseThrowTo.x,defenseThrowTo.y,defenseThrowTo.z);}   // 傳球者身體與頭轉向接球者（由朝向系統處理）
     // 接球判定：與擊球／投球／牽制相同的「手套掃掠碰撞」——球沿路徑經過手套就是接觸（不必等球飛到終點）。
     let touched=false;
-    if(!defenseFumble&&!defenseFumbleChecked&&defenseReceiver&&t>0){
+    if(defenseReceiver&&t>0){
       const hit=actorGloveSweepContact(defenseReceiver,prevThrowPos,ball.position,{mesh:gloveMeshFor(defenseReceiver)});
       if(hit){ball.position.copyFrom(hit.point);touched=true;}
     }
-    let arrived=t>=1||touched;   // 失誤率：球接觸手套（或飛到終點仍沒碰到＝幾何漏接）時擲骰；漏接 → 球掉落、延遲撿回後才算「到達」
-    if(arrived&&!defenseFumbleChecked&&defenseReceiver){defenseFumbleChecked=true;const fe=throwReceiveError(touched);if(fe)defenseFumble={t:0,dur:fe.dur,from:ball.position.clone(),to:fe.to};}
-    if(defenseFumble)arrived=stepThrowFumble(dt);
-    if(arrived){defenseFumbleChecked=false;
+    let arrived=t>=1||touched;   // 球碰到手套（或飛到終點仍沒碰到）：走與擊球完全相同的 gloveReceive／looseBallFrom；沒接住 → 球變成場上游離球，由全隊用追擊球的邏輯處理
+    if(arrived&&defenseReceiver&&throwBallLost(touched,tt)){endThrowStage();arrived=false;}
+    if(arrived){
       defenseThrowT=-1;if(defenseThrower)defenseThrower.throwing=0;defenseThrower=null;
       if(defenseReceiver){defenseReceiver.aim=null;defenseReceiver.trajAim=null;}  // 傳球階段結束，避免接球者繼續盯著已完成傳球的傳球者／追舊球路
       fieldingStage='regrip';fieldingStageT=0;
@@ -3407,14 +3581,12 @@ function updateDefense(dt){
     // 已完成「手套接球→轉到投球手」；若決定帶球踩壘，球持續跟隨投球手，不可又跳回手套。
     ball.position.copyFrom(handPos(hd,hd.handBall?'right':'left'));
     if(hd.tagChase&&!canChase(hd.tagChase))hd.tagChase=null;   // 跑者已出局／得分／站上壘包：結束追人，下一輪重新判斷
-    if(hd.tagChase&&!hd.tag&&!isForceRunner(hd.tagChase)){   // 規則 9：追自由跑者時，若更接近本壘的跑者已離壘太遠，改殺離本壘更近者
-      const cr=hd.tagChase,far=runners.find(q=>q!==cr&&canChase(q)&&tgtBase(q)>tgtBase(cr)&&!runnerAtBase(q)&&(q.state==='run'||q.state==='lead'||q.state==='back')&&Math.abs(q.s-(q.baseS[q.base]||0))>1.5);
-      if(far)hd.tagChase=null;}
+    if(hd.tagChase&&!hd.tag&&!isForceRunner(hd.tagChase))rdTick(hd);   // 夾殺：傳球時機／更優先跑者離壘的中斷點
     if(hd.touching)resolveTouching(hd);   // 帶球跑壘中：每幀檢查球到壘包時跑者是否還沒踩到壘
     recheckT-=dt;
     if(recheckT<=0&&hd.touching&&!hd.tagChase&&!hd.tag&&!onBase(hd,hd.touching)){recheckT=0.12;   // 帶球衝向壘包途中：已不在「傳球比較慢」的距離內（或不再衝刺）→ 放棄自己踩壘，下一輪改傳球
       const kr=makePlanCtx(hd).route(hd.touching);if(kr&&kr.kind!=='self')hd.touching=null;}
-    if(recheckT<=0&&!hd.touching&&!hd.tagChase&&!hd.tag){recheckT=0.12;applyAction(hd,planAction(hd),true);}   // 每次持球都重新判斷；不能因為前一個守備／失誤流程結束就永久停住
+    if(recheckT<=0&&!hd.touching&&!hd.tagChase&&!hd.tag){recheckT=0.12;const act=planAction(hd);hd.faceSpot=throwFaceSpot(act);applyAction(hd,act,true);}   // 每次持球都重新判斷；不能因為前一個守備／失誤流程結束就永久停住
   }
 
   if(simLive)checkTags();   // 持球守備員觸殺身邊的跑者
@@ -3636,21 +3808,28 @@ function musicSetup(){
     el.addEventListener('error',()=>{t.bad=true;console.warn('音樂檔無法載入，略過：'+url);});
     el.src=url;musicTracks[k]=t;});
 }
-// 主場守備、對手出局時呼叫：播放 out 曲一次（沒定義／檔案壞掉＝什麼都不做）
-let outSongPend=false;
-function musicOnOut(){
-  if(practiceMode||gameOver||!soundOn||!SND.music||mode!=='pit')return;
-  outSongPend=true;   // 只登記；整個 play 結束後才由 musicFlushOut() 播一次（雙殺也只播一次）
+// 客場打者出局：可立即播放者延遲 1 秒；其餘等本 play 結束、進入下一棒畫面時播放。
+let outSongPend=false,outSongDelay=0,outSongFlag=1,outSongTriggered=false;
+function musicOnOut({batterOut=false,strikeout=false,noWildPitch=false}={}){
+  if(practiceMode||gameOver||!soundOn||!SND.music||mode!=='pit'||!batterOut||outSongTriggered||outSongPend)return;
+  outSongFlag=0; // 本 play 有打者出局，預設延後到 play 結束播放
+  const canPlayNow=!bases.some(Boolean)||(strikeout&&noWildPitch);
+  if(canPlayNow){outSongPend=true;outSongDelay=1;outSongFlag=1;}
+  else{outSongPend=true;outSongDelay=0;}
 }
-function musicFlushOut(){
-  if(!outSongPend)return;outSongPend=false;
-  if(practiceMode||gameOver||!soundOn||!SND.music)return;
+function musicFlushOut(playEnd=false){
+  if(!outSongPend||outSongDelay>0||(outSongFlag===0&&!playEnd))return;
+  outSongPend=false;outSongDelay=0;outSongFlag=1;outSongTriggered=true; // 先消耗事件，避免同一 play 重複 trigger
+  if(practiceMode||!soundOn||!SND.music)return;
   musicSetup();const t=musicTracks.out;if(!t||t.bad)return;
   try{t.el.currentTime=0;t.el.volume=clamp(MUSIC.vol,0,1);const p=t.el.play();if(p&&p.catch)p.catch(e=>{if(e&&e.name!=='NotAllowedError'&&e.name!=='AbortError')t.bad=true;});}catch{}
 }
 function musicTick(dt){
   musicSetup();
-  if(outSongPend&&(st==='ready'||st==='change'))musicFlushOut();   // 保險：不論從哪條路回到待投狀態，play 結束後一定補播
+  if(outSongPend){
+    if(!soundOn||!SND.music||practiceMode||gameOver){outSongPend=false;outSongDelay=0;outSongFlag=1;}
+    else{outSongDelay=Math.max(0,outSongDelay-dt);if(outSongDelay<=0&&outSongFlag===1)musicFlushOut();}
+  }
   // 目前應播放哪一首：只在投球循環中更新（打出去後跑壘期間維持原狀，避免跑者移動時來回切換）
   const live=!practiceMode&&!gameOver&&soundOn&&SND.music&&mode==='bat';
   if(!live||!['ready','windup','pitch','flight','result'].includes(st))musicWant='none';
@@ -3795,7 +3974,7 @@ function updatePrePitchLeads(dt){
     const mvSpd=pkc?Math.abs(pk.run.v):(dt>0?Math.abs(leadD[i]-cur)/dt:0),moving=mvSpd>0.3;
     a.root.setEnabled(!!shown[i]||!!pkKeep[i]);placeLeadActor(a,i);
     a.phase+=dt*(moving?Math.max(6,mvSpd/8.23*13):2.2);
-    a.feet.forEach((m,j)=>{const ph=a.phase+(j?Math.PI:0),h=a.feetHome[j];m.position.x=h.x+(moving?Math.sin(ph)*0.09:0);m.position.y=h.y+(moving?Math.max(0,Math.sin(ph))*0.16:0);m.position.z=h.z+(moving?Math.cos(ph)*0.1:0);m.rotation.x=moving?Math.sin(ph)*0.3:0;});
+    a.feet.forEach((m,j)=>{const ph=a.phase+(j?Math.PI:0),h=a.feetHome[j];m.position.x=h.x+(moving?Math.sin(ph)*0.09:0);m.position.y=h.y+(moving?Math.max(0,Math.sin(ph))*0.16:0);m.position.z=h.z+(moving?-Math.cos(ph)*0.1:0);m.rotation.x=moving?Math.sin(ph)*0.3:0;});
     a.dv=(a.dv||0)+clamp((a.dvTgt||0)-(a.dv||0),-dt/0.35,dt/0.15);
     a.root.rotation.x=DIVE_ANG*a.dv;a.root.position.y=0.12*a.dv;
     poseArms(a.arms,moving?Math.sin(a.phase):0,a.dv);
@@ -3900,9 +4079,9 @@ function walkAdv(pl){   // 保送／觸身：被迫進壘的跑者各進一壘�
   if(scored)addRuns(1,[sc]);
   return walkRuns;
 }
-function lampsAfterOut(sub){
+function lampsAfterOut(sub,{batterOut=false,strikeout=false,noWildPitch=false}={}){
   // 出局只按實際發生的接殺／封殺／三振記錄，不再隨機模擬雙殺、推進或得分。
-  outs++;addPitcherOut(1);let note='';musicOnOut();
+  outs++;addPitcherOut(1);let note='';musicOnOut({batterOut,strikeout,noWildPitch});
   if(outs>=3){outs=0;swPend=true;note='三出局，攻守交換';}
   hud2();return [sub,note].filter(Boolean).join(' ・ ');
 }
@@ -4412,7 +4591,7 @@ function animActor(a,spd,dt){
   const mv=spd>0.3;a.ph+=dt*(mv?Math.max(6,spd/8.23*13):2.2);
   a.sl=(a.sl||0)+clamp((a.slTgt||0)-(a.sl||0),-dt/0.3,dt/0.12);const sl=a.sl;
   a.dv=(a.dv||0)+clamp((a.dvTgt||0)-(a.dv||0),-dt/0.35,dt/0.15);const dv=a.dv;   // 撲壘趴姿 0~1   // 0＝站立、1＝滑壘；放平順避免姿勢瞬間跳動
-  a.feet.forEach((m,i)=>{const ph=a.ph+(i?Math.PI:0),h=a.homeFeet[i];m.position.x=h.x+(mv?Math.sin(ph)*0.09:0);m.position.y=h.y+(mv?Math.max(0,Math.sin(ph))*0.16:0);m.position.z=h.z+(mv?Math.cos(ph)*0.1:0);m.rotation.x=mv?Math.sin(ph)*0.3:0;
+  a.feet.forEach((m,i)=>{const ph=a.ph+(i?Math.PI:0),h=a.homeFeet[i];m.position.x=h.x+(mv?Math.sin(ph)*0.09:0);m.position.y=h.y+(mv?Math.max(0,Math.sin(ph))*0.16:0);m.position.z=h.z+(mv?-Math.cos(ph)*0.1:0);m.rotation.x=mv?Math.sin(ph)*0.3:0;
     if(sl>0.001){m.position.y+=(SLIDE_FEET[i][0]-m.position.y)*sl;m.position.z+=(SLIDE_FEET[i][1]-m.position.z)*sl;m.rotation.x*=1-sl;}});
   stepJump(a,dt);a.root.position.y=(mv?Math.abs(Math.sin(a.ph))*0.035*(1-sl)*(1-dv):0)+a.jy+0.08*sl+0.12*dv;a.root.rotation.x=SL_ANG*sl+DIVE_ANG*dv;
   poseArms(a.arms,mv?Math.sin(a.ph):0,dv);
@@ -4675,6 +4854,14 @@ function stepRunner(r,dt,tgt,intensity,brake,dec){
 function startExit(r){
   if(r.exiting)return;spawnRunner(r);r.slide=null;r.dodge=null;if(r.actor){r.actor.slTgt=0;r.actor.dvTgt=0;}r.diveOff=0;r.prone=0;r.dive=null;r.exiting=true;r.exitIntensity=r.state==='score'?85:62;r.exitPts=exitPts();r.exitI=0;exiters.push(r);
 }
+// 投手視角：出局跑者尚未走回休息室前禁止投球；滑鼠點擊可快速完成這些出局者的離場。
+function hasOutRunnerLeaving(){return exiters.some(r=>r.out&&r.exiting);}
+function fastForwardOutRunnerExits(){
+  for(let i=exiters.length-1;i>=0;i--){const r=exiters[i];if(!r.out||!r.exiting)continue;
+    if(r.actor){releaseActor(r.actor);r.actor=null;}r.exiting=false;exiters.splice(i,1);
+  }
+  updateLockerRoster();
+}
 // 出局／得分離場的人物：沿路線上若有其他球員（野手、跑者、打者、其他離場者、裁判）擋路，就把行進目標往側邊偏移繞開，而不是硬撞後卡住。
 function exitAvoidTarget(a,tx,tz){
   const p=a.root.position,dx=tx-p.x,dz=tz-p.z,d=Math.hypot(dx,dz);if(d<0.05)return {x:tx,z:tz};
@@ -4710,7 +4897,7 @@ function updateExiters(dt){
   }
 }
 function clearExiters(){exiters.forEach(r=>{if(r.actor){releaseActor(r.actor);r.actor=null;}r.exiting=false;});exiters=[];}
-function clearRunners(){bestEffortN=0;runners.forEach(r=>{if(r.actor&&!r.exiting){releaseActor(r.actor);r.actor=null;}});runners=[];simLive=false;}
+function clearRunners(){rdFocus=null;bestEffortN=0;runners.forEach(r=>{if(r.actor&&!r.exiting){releaseActor(r.actor);r.actor=null;}});runners=[];simLive=false;}
 function resetRunner(){
   knockReset();clearWalk();runnerActive=false;clearRunners();setBatterVisible(true);
   batterCollisionActor.knockedDown=0;batterCollisionActor.knockdownAge=0;batterCollisionActor.knockSide=1;if(batterCollisionActor.fallFeetHome){bSh.forEach((m,i)=>m.position.copyFrom(batterCollisionActor.fallFeetHome[i]));batterCollisionActor.fallFeetHome=null;batterCollisionActor.fallOrigin=null;}batter.rotation.x=0;batter.rotation.z=0;batter.position.y=0;
@@ -4827,13 +5014,27 @@ function startHrTrot(){
   };
   for(let i=2;i>=0;i--)if(old[i])add(i+1,standing[i].x,standing[i].z);   // 壘上跑者（前面的先跑）
   add(0,bp.x,bp.z);
-  hrSeq={t:0,list,hold:0,bannerOff:false,zoom:1.15,focus:{x:0,z:19.4,zoom:1.46}};   // 鏡頭固定看整個內野
+  // 全壘打鏡頭時間軸：ball（球飛出牆、落地後再多看 3 秒）→ air（高空俯瞰整個內野）→ hero（打者跑到三壘後，特寫她跑回本壘）
+  //   → cheer（只有主場隊全壘打、且球場有啦啦隊時：切到啦啦隊跳舞）→ 下一球。特寫與啦啦隊鏡頭每次隨機挑一種運鏡。
+  const pts=FL&&FL.sim?FL.sim.pts:null,landT=pts?(FL.sim.landed?FL.sim.landed.t:pts.length/60):0,home=mode==='bat';
+  hrSeq={t:0,list,hold:0,bannerOff:false,zoom:1.15,focus:{x:0,z:19.4,zoom:1.46},
+    pts,ft0:ft,tBall:pts?Math.max(0,landT-ft)+3:0,phase:pts?'ball':'air',fovK:1,cp:null,
+    heroV:Math.floor(Math.random()*3),cheerV:Math.floor(Math.random()*3),cheerSide:Math.floor(Math.random()*2),cheerDur:4+Math.random()*1.5,ct:0,
+    cheer:!!(home&&cheerH&&cheerH.zones&&cheerH.zones.length)};
+  if(hrSeq.cheer)cheerH.excite(2);   // 主場全壘打：啦啦隊從球出牆就開始更激動
   cVis(true);
 }
 function updateHr(dt){
   const w=hrSeq;if(!w)return;
   w.t+=dt;
   if(!w.bannerOff&&w.t>3.4){w.bannerOff=true;hideBanner();}
+  if(w.phase==='ball'){   // 球續飛到落地：沿著原本的模擬軌跡繼續顯示，鏡頭沿用追球視角
+    const q=w.pts,i=clamp(Math.floor((w.ft0+w.t)*60),0,q.length-2),f=clamp((w.ft0+w.t)*60-i,0,1),a=q[i],b=q[i+1];
+    ball.position.set(a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f);ball.isVisible=true;
+    if(w.t>=w.tBall){ball.isVisible=false;w.phase='air';}
+  }
+  const hk=w.list[w.list.length-1];   // 打者（最後一個）：跑到三壘（約 3/4 路程）就切特寫
+  if(w.phase==='air'&&hk&&!hk.done&&hk.s>=hk.total*0.72){w.phase='hero';w.cp=null;}
   let all=true;
   w.list.forEach(k=>{
     if(k.done)return;
@@ -4849,7 +5050,40 @@ function updateHr(dt){
       k.done=true;exiters.push({actor:a,exiting:true,exitIntensity:60,exitPts:exitPts(),exitI:0});k.last=a.root.position.clone();k.a=null;
     }
   });
-  if(all){w.hold+=dt;if(w.hold>=1.5||!exiters.length)enterReady();}
+  if(all){
+    w.hold+=dt;
+    if(w.cheer){   // 主場全壘打：打者踩上本壘停 0.8 秒 → 切啦啦隊跳舞幾秒 → 下一球
+      if(w.phase!=='cheer'&&w.hold>=0.8){w.phase='cheer';w.cp=null;w.ct=0;cheerH.excite(2);}
+      if(w.phase==='cheer'){w.ct+=dt;if(w.ct>=w.cheerDur)enterReady();}
+    }else if(w.hold>=1.5||!exiters.length)enterReady();
+  }
+}
+// 全壘打鏡頭（ball 階段回傳 false＝沿用追球鏡頭）。位置與目標都用指數平滑，切換時是一段順順的運鏡
+function hrCamera(dt){
+  const w=hrSeq;if(!w||w.phase==='ball')return false;
+  const k=1-Math.exp(-dt*4);let tgt,pos=null,fk=1;
+  if(w.phase==='hero'){
+    const b=w.list[w.list.length-1],p0=b.a?b.a.root.position:(b.last||V(0,0,0)),q=runnerPosAt(b.r,Math.min(b.s,b.total)),n=Math.hypot(q.dx,q.dz)||1,hx=q.dx/n,hz=q.dz/n;
+    let px=hz,pz=-hx;if(px<0){px=-px;pz=-pz;}   // 側向：取朝內野中央那一邊
+    const at=(ax,ay,az)=>V(p0.x+ax,ay,p0.z+az);
+    const v=[   // 0 迎面（在本壘後方看她衝過來）、1 後上方追跑、2 側面平行拍
+      ()=>({pos:at(hx*11+px*2,2.0,hz*11+pz*2),tgt:at(0,1.1,0),fk:0.85}),
+      ()=>({pos:at(-hx*9+px*2,3.8,-hz*9+pz*2),tgt:at(hx*3,1.0,hz*3),fk:0.9}),
+      ()=>({pos:at(px*11+hx*1.5,2.0,pz*11+hz*1.5),tgt:at(hx*1.5,1.1,hz*1.5),fk:0.85})][w.heroV]();
+    tgt=v.tgt;pos=v.pos;fk=v.fk;
+  }else if(w.phase==='cheer'&&cheerH&&cheerH.zones.length){
+    const z=cheerH.zones[w.cheerSide%cheerH.zones.length],fx=Math.sin(z.ry),fz=Math.cos(z.ry),ax=Math.cos(z.ry),az=-Math.sin(z.ry);
+    const u=clamp(w.ct/w.cheerDur,0,1),cv=[{d:12,fk:1.35,pan:0},{d:9.5,fk:1.0,pan:-5},{d:9.5,fk:1.0,pan:5}][w.cheerV];
+    const pan=cv.pan*(u-0.5)*2,c=V(z.cx+ax*pan,z.y+1.1,z.cz+az*pan);
+    tgt=c;pos=V(c.x+fx*cv.d,z.y+2.4,c.z+fz*cv.d);fk=cv.fk;
+  }else{   // air：固定在高處看整個內野（原本的繞壘鏡頭）
+    const f=w.focus,want=V(f.x,0,f.z);
+    camFollow=camFollow?lerpV(camFollow,want,k):want.clone();w.zoom+=(f.zoom-w.zoom)*k;
+    camTgt=camFollow.clone();placeAir(camTgt,w.zoom);w.cp=null;w.fovK+=(1-w.fovK)*k;return true;
+  }
+  if(!w.cp){w.cp=cam.position.clone();w.ct0=camTgt.clone();}   // 從目前鏡頭開始平滑移動
+  const k2=1-Math.exp(-dt*5);w.cp=lerpV(w.cp,pos,k2);w.ct0=lerpV(w.ct0,tgt,k2);w.fovK+=(fk-w.fovK)*k2;
+  camFollow=null;camTgt=w.ct0.clone();cam.position.copyFrom(w.cp);return true;
 }
 function clearWalk(){
   clearHr();
@@ -4867,6 +5101,7 @@ function cancelPlayRuns(){if(playRuns>0){for(let i=0;i<playRuns&&runLog.length;i
 //  第三個出局：若是封殺／接殺／打者在到一壘前出局，這個打席的得分全部無效；若是觸殺或回壘失敗（時間差），先踩回本壘的得分有效
 function putOut(r,how,defender=null){
   if(r.out||r.state==='score')return;
+  if(r.overrun&&(how==='tag'||how==='force'||how==='appeal'))return;   // 衝過一壘後留在延伸線上（含回壘途中）＝安全：任何觸殺／封殺／回壘訴求都不成立
   if(how==='force'&&r.safeOn===r.to)return;     // 腳已先踩到要去的壘（已顯示 SAFE）：球後到，不能再封殺
   if(how==='appeal'&&r.safeOn===r.base)return;  // 已踩回原壘：回壘訴求不成立
   if(r.safe&&r.base<r.safe)return;   // 保送獲得的安全進壘權：還沒踏上獲得的壘包前不會被出局
@@ -4923,7 +5158,6 @@ function defenseControl(){
   if(stg==='throw'){
     const rc=defenseReceiver;if(!rc||!rc.root||!defenseThrow)return null;
     let remain=Math.max(0,defenseThrow.T-Math.max(0,defenseThrowT));
-    if(defenseFumble)remain=Math.max(0,(defenseFumble.dur||0.8)-defenseFumble.t)+0.35;
     const p=predictActorPos(rc,remain);
     return {x:p.x,z:p.z,rel:remain+0.18,direct:thrownBase||0,directRel:remain};
   }
@@ -5006,7 +5240,7 @@ function chooseTarget(r){
   const nb=r.base+1;let free=r.base;while(free<4&&!baseTaken(free+1,r))free++;
   // 目標＝強迫進壘／下一壘為下限，其餘完全由「存活度」決定（以預測接球位置與時間、目前持球狀態計算）。
   // 不預設野手會失誤；野手真的接到球、狀態改變後，下一次評估再決定繼續進壘或回壘。
-  return Math.min(Math.max(nb,advanceTarget(r,ADV_MARGIN)),Math.max(free,nb));
+  return Math.max(r.safe||0,Math.min(Math.max(nb,advanceTarget(r,ADV_MARGIN)),Math.max(free,nb)));   // 獲判的壘（保送／妨礙／死球）一定要跑到
 }
 // 目標壘 → 路徑公式的各壘到壘方式：途經＝繞壘；終點一壘＝衝刺、其餘＝停留
 function legsTo(r,target){const legs=[];for(let b=r.base+1;b<=target;b++)legs.push({b,style:b===target?(b===1?'through':'stop'):'round'});return legs;}
@@ -5192,7 +5426,7 @@ function runnerBrain(r,dt,landed){
   if(flyOut&&!r.fo){r.fo=true;onCatchRunner(r);}
   const confirmedHomeRun=!!(FL&&FL.res&&FL.res.hr);
   // 全壘打確定後不再啟動一般跑壘決策；後續由 startHrTrot 的專用繞壘演出接手。
-  if(!confirmedHomeRun&&!r.isB&&!r.out&&!flyOut&&r.base<3&&(r.state==='hold'||r.state==='lead'||(r.state==='stop'&&!r.retreated))&&(!catchPredicted()||landed)&&!baseTaken(r.base+1,r))beginRun(r);   // 已折返過的跑者不再被這條「落地就跑」硬拉出去（否則 起跑→判斷不安全→折返→再起跑 無限循環）；之後由 stopDecide 以存活度決定
+  if(!confirmedHomeRun&&!r.isB&&!r.out&&!flyOut&&r.base<3&&(r.state==='hold'||r.state==='lead'||(r.state==='stop'&&!r.retreated))&&(!catchPredicted()||landed)&&!baseTaken(r.base+1,r)&&!(FL&&FL.dead))beginRun(r);   // 已折返過的跑者不再被這條「落地就跑」硬拉出去（否則 起跑→判斷不安全→折返→再起跑 無限循環）；之後由 stopDecide 以存活度決定
   const bs=r.baseS;
   if(r.state==='run'||r.state==='overrun'||r.state==='back'||r.state==='lead'){r.thinkT=(r.thinkT||0)-dt;if(r.thinkT<=0){r.thinkT=0.1;runnerThink(r);}}
   if(r.evade==='brake'&&(r.state==='run'||r.state==='back'))brakeInPlace(r,dt);   // 避開觸殺：就地煞車
@@ -5205,7 +5439,7 @@ function runnerBrain(r,dt,landed){
     }
   }else if(r.state==='lead'){
     stepRunner(r,dt,Math.min(bs[r.base]+Math.min(r.leadL,r.capL),bs[r.to]-1.5),72,true);
-    r.dec-=dt;if(r.dec<=0){r.dec=0.1;if(FL&&FL.sim.apex>=2.5&&!landed&&!flyOut)r.capL=r.leadL;leadDecide(r,landed);}
+    r.dec-=dt;if(r.dec<=0){r.dec=0.1;if(FL&&FL.sim.apex>=2.5&&!landed&&!flyOut)r.capL=r.leadL;if(!(FL&&FL.dead))leadDecide(r,landed);}
   }else if(r.state==='run'){
     const lg=legOf(r,r.to),pass=!!lg&&(lg.style==='round'||lg.style==='through');
     if(pass)passRun(r,dt,lg.style);   // 繞壘／衝刺：不為壘包煞車，踩到就沿路徑繼續
@@ -5225,12 +5459,12 @@ function runnerBrain(r,dt,landed){
     if(r.dive){diveStep(r,dt);}
     else if(stepRunner(r,dt,bs[r.base],100,true)){
       r.s=bs[r.base];placeRunner(r,0);
-      if(!runnerFootOnBase(r,r.base)&&(r.touchTry=(r.touchTry||0)+1)<=3){r.s=Math.max(bs[r.o]||0,bs[r.base]-0.22);r.v=Math.max(r.v,1.5);r.dir=1;r.state='back';r.retouch=true;}
+      if(!r.overrun&&!runnerFootOnBase(r,r.base)&&(r.touchTry=(r.touchTry||0)+1)<=3){r.s=Math.max(bs[r.o]||0,bs[r.base]-0.22);r.v=Math.max(r.v,1.5);r.dir=1;r.state='back';r.retouch=true;}
       else{markSafeTouch(r,r.base);if(!(r.log&&r.log.includes(r.base)))noteTouch(r,r.base);r.touchTry=0;r.v=0;r.dir=1;r.retouch=false;r.overrun=false;r.state='stop';r.dec=0.15;   // 重踩原壘：之後只能被觸殺（越壘保護解除）
         if(flyOut&&!inningOver&&canAdvance(r,-0.3))beginRun(r);}                    // 接殺後從壘上離壘（tag up）
     }
   }else if(r.state==='stop'){
-    r.dec-=dt;if(r.dec<=0){r.dec=0.15;stopDecide(r,landed);}
+    r.dec-=dt;if(r.dec<=0){r.dec=0.15;if(!(FL&&FL.dead))stopDecide(r,landed);}
     if(r.base>=r.o&&r.base<=3&&r.s<bs[r.base]-1e-3)r.s=Math.min(bs[r.base],r.s+3*dt);   // 滑壘後站起來時，身體慢慢移回壘包正上方
   }
   r.bslide=!!(r.state==='back'&&!r.dive&&!r.isB&&r.v>=1&&diveThreat()&&(r.s-bs[r.base])<=SLIDE_MAX&&(r.s-bs[r.base])>0.3);   // 跑著回壘：腳先滑回壘
@@ -5397,7 +5631,7 @@ function checkPlayEnd(dt){
   playClock+=dt;
   const live=runners.filter(r=>!r.out&&!r.exiting&&r.state!=='score'),onB=live.map(settledBase);
   const sig=live.map((r,i)=>r.o+'@'+onB[i]).join(',')+'/'+(runners.length-live.length);
-  const normalStill=fieldingStage==='done'&&onB.every(b=>b>0);
+  const normalStill=(fieldingStage==='done'||!!(FL&&FL.dead))&&onB.every(b=>b>0);   // 死球：跑者都站上獲判的壘即可結束
   const wpLanded=!!(FL&&FL.wp&&FL.sim&&FL.sim.landed&&ft>=FL.sim.landed.t);
   const wpRunnersStayed=live.every(r=>!r.isB&&r.base===r.o&&!['run','back','score'].includes(r.state));
   const wildPitchNoAdvance=fieldingStage==='done'&&wpLanded&&ballPointInInfield(ball.position)&&wpRunnersStayed;
@@ -5445,6 +5679,7 @@ function finalizePlay(){
     addBatEvent('OUT',{rbi:FL.muffed?0:runsScored});   // 野手選擇有打點；失誤上壘沒有
   }
   closeFieldingLifecycle();
+  if(b.out)musicOnOut({batterOut:true});
   announce(txt,cls,[r0.d?r0.d+' m':'',tt,playNote].filter(Boolean).join(' ・ '));
   hud();refreshRosterTable();updateActiveJerseys();updateLockerRoster();stT=0;holdT=1.3;
 }
@@ -5758,7 +5993,14 @@ $('pregame').addEventListener('click',e=>{
 });
 pcDragInit($('pregame'),'data-pgid',id=>{const p=pcFind(id);return !!(pregame&&pregame.edit&&p&&p.team==='RED');},(a,b)=>{const pa=pcFind(a),pb=pcFind(b);if(pa&&pb&&pa.team==='RED'&&pb.team==='RED')pgSwap(a,b);});
 // 打者走向打擊區的過場：點一下直接就位
-function skipWalkUp(){if(!walkUp||practiceMode||chg||st!=='ready')return false;walkUpAbort();stT=0;wait=pitchWait();return true;}
+function skipWalkUp(){
+  if(practiceMode||chg||st!=='ready')return false;
+  const skipBatterEntry=!!walkUp,skipOutExit=hasOutRunnerLeaving();
+  if(!skipBatterEntry&&!skipOutExit)return false;
+  if(skipBatterEntry)walkUpAbort();
+  if(skipOutExit)fastForwardOutRunnerExits();   // 跳過新打者進場時，同步完成出局跑者離開打擊區
+  stT=0;wait=pitchWait();return true;
+}
 
 // ================= 換場：守備方退場進休息區、攻方（下一局的守備方）從休息區跑到守備位置 =================
 // 流程：三出局 → 立刻結算這個打席 → 場上所有跑者與守備員（含投手、捕手）同時走回各自休息區（phase 'leave'）
@@ -5775,7 +6017,7 @@ function fielderVis(f,v){   // 投手、捕手與全部野手共用相同的視�
 function haltDefense(){
   allFielders().forEach(f=>{f.trajAim=null;});   // 停止所有追球／傳球／補位邏輯，但不傳送人物位置
   defenseActive=false;defenseChaser=null;defenseCo=[];defenseStopped=new Set();defenseIc=new Map();defenseTarget=null;defenseThrowT=-1;defenseThrowFrom=null;defenseThrowTo=null;defenseThrow=null;defenseThrower=null;defenseReceiver=null;ballCaughtBy=null;fieldingStage='idle';fieldingStageT=0;baseCover={};prevBall=null;
-  allFielders().forEach(f=>{f.touching=null;f.tag=null;f.tagChase=null;f.tagCool=0;f.throwing=0;f.walking=false;f.v=0;f.aim=null;});
+  allFielders().forEach(f=>{f.touching=null;f.tag=null;f.tagChase=null;f.tagCool=0;f.throwing=0;f.walking=false;f.v=0;f.aim=null;});rdFocus=null;
   catcherDef.fielding=true;cVis(true);   // 捕手改用「離開本壘」的守備模式，才能走動
 }
 function dugoutSpot(team,pos){const q=playerAtPos(team,pos),a=q&&dugoutAvatars.find(x=>x.player===q);return a?V(a.root.position.x,0,a.root.position.z):stadiumDug().T(sideOf(team));}
@@ -5789,7 +6031,6 @@ function chgPaths(team,leaving){
 function startChange(){
   if(chg||gameOver)return;
   odLeave();walkUpAbort();
-  musicFlushOut();
   pkClear();
   const team=pitchingTeam();   // 即將退場的守備隊（此時 mode 尚未切換）
   // 1) 場上跑者全部改走回休息區（不再停在壘上、也不會憑空消失）
@@ -5912,9 +6153,10 @@ function resetBall(){wild=null;fieldErrInPlay=0;
   sparks.forEach(s=>{s.m.isVisible=false;s.t=0;});
   land.setEnabled(false);
 }
-function enterReady(){rcClear();pkAICool=0;musicFlushOut();
+function enterReady(){rcClear();pkAICool=0;
   if(!(swPend&&!chg&&!gameOver&&st!=='title'))announceBatter();
-  if(swPend&&!chg&&!gameOver&&st!=='title'){startChange();return;}   // 三出局：先跑換場流程，換場結束後才真正換邊
+  if(swPend&&!chg&&!gameOver&&st!=='title'){startChange();return;}
+  musicFlushOut(true);if(!outSongPend)outSongTriggered=false;   // 三出局：先跑換場流程，換場結束後才真正換邊
   hbpView=false;wpOpt=null;buntEnterReady();resetRunner();resetDefense();catcher.position.set(0,0,CZ);   // 暴投撿球後捕手回到本壘後方蹲位
   if(typeof umps!=='undefined')umps.forEach(u=>{u.calm=Math.max(u.calm,9);u.react=0;});   // 每個 play 開始：裁判回到各自崗位（主審依左右打站位）
   if(swPend){swPend=false;switchSides();if(gameOver){endGame();return;}}
@@ -5924,7 +6166,7 @@ function enterReady(){rcClear();pkAICool=0;musicFlushOut();
   batterWalkUpCheck();
   pkOnReady();
 }
-function showModeSelection(){pregame=null;if($('pregame'))$('pregame').classList.remove('show');odReset();umpSetOn(false);outSongPend=false;lastBatKey='';
+function showModeSelection(){pregame=null;if($('pregame'))$('pregame').classList.remove('show');odReset();umpSetOn(false);outSongPend=false;outSongDelay=0;outSongFlag=1;outSongTriggered=false;lastBatKey='';
   endRunTrain();
   practiceMode=false;zone.isVisible=true;zg.isVisible=true;practiceShotSettled=false;selectedGameMode=null;st='title';mode='bat';chase=false;FL=null;P=null;camFollow=null;lockerRoomView=false;
   hideMissIndicator();clearSafeIndicators();
@@ -6159,7 +6401,8 @@ function enforcePlayerSeparation(){
         const canAt2=(x,z)=>!blockedPlayerPosition(x,z,0.42);
         const tx2=Fo.position.x+ex*pen,tz2=Fo.position.z+ez*pen;
         if(canAt2(tx2,tz2)){Fo.position.x=tx2;Fo.position.z=tz2;}
-        else{const sl=Math.min(0.42,pen+0.08);for(const sg of [1,-1]){const ax2=Fo.position.x-ez*sl*sg,az2=Fo.position.z+ex*sl*sg;if(canAt2(ax2,az2)){Fo.position.x=ax2;Fo.position.z=az2;break;}}}
+        else{const sl=Math.min(0.42,pen+0.08);let moved=false;for(const sg of [1,-1]){const ax2=Fo.position.x-ez*sl*sg,az2=Fo.position.z+ex*sl*sg;if(canAt2(ax2,az2)){Fo.position.x=ax2;Fo.position.z=az2;moved=true;break;}}
+          if(!moved&&R.overrun){Fo.position.x=tx2;Fo.position.z=tz2;}}   // 越壘保護中的跑者：野手絕不能擋路，推不開就硬推
         continue;
       }
       let nx,nz;if(d<1e-6){const ang=(i*2.399963229728653+j)*0.7;nx=Math.cos(ang);nz=Math.sin(ang);}else{nx=dx/d;nz=dz/d;}
@@ -6255,7 +6498,7 @@ function launchPracticeBall(){
   $('practiceLaunch').disabled=true;$('practiceLaunch').textContent='球飛行中…';$('practiceStatus').textContent=`出速 ${Math.round(v0*3.6)} km/h · ${elev}° · 野手追球中／跑者依正式比賽規則移動`;
 }
 function startGame(){
-  outSongPend=false;lastBatKey='';
+  outSongPend=false;outSongDelay=0;outSongFlag=1;outSongTriggered=false;lastBatKey='';
   if(st!=='title'||selectedGameMode!=='single'||!playerTeamChosen||!opponentTeamChosen||!stadiumSelReady())return;
   if(avatarSig!==rosterSig())buildRosterAvatars();   // 球隊在選球場之後又改過 → 休息區人偶跟著換
   practiceMode=false;zone.isVisible=true;zg.isVisible=true;$('app').classList.remove('practice-mode');$('practiceControls').hidden=true;setBatterVisible(true);
@@ -6372,7 +6615,7 @@ function doContact(){
   {const e=sim.landed||sim.cross||(sim.pts&&sim.pts.length?{x:sim.pts[sim.pts.length-1][0],z:sim.pts[sim.pts.length-1][2]}:null);if(e&&!res.foul&&sim.apex>=15&&Math.hypot(e.x,e.z)>=55)crowd('fly');
     if(e&&res.foul&&Math.hypot(e.x,e.z)<30&&!practiceMode)speakZh('界外球請小心',1.5);}   // 內野界外球：出手瞬間用中文女聲快語速提醒   // 打出深遠高飛球的瞬間就播放（不等落地）
   ft=0;st='flight';chase=true;hitStop=0.07;
-  if(res.deadBallAward){resetDefense();clearRunners();defenseActive=false;simLive=false;fieldingStage='idle';fieldingStageT=0;}
+  if(res.deadBallAward){resetDefense();clearRunners();simLive=false;fieldingStage='idle';fieldingStageT=0;startDefense();}   // 死球（地上規則二壘打）：野手仍追球到牆邊
   else{startDefense();startRunners();}
   ball.position.set(x0,y0,0);ball.scaling.setAll(3);ball.isVisible=true;
   showTiming(dt);showPitchInfo();
@@ -6446,7 +6689,7 @@ function resolveCatch(receive=null){
     if(miss&&(!bases[0]||outs>=2)){   // 不死三振：仍記錄三振與打席，但打者可衝向一壘
       addPitcherStrikeout();addBatEvent('SO');wpPlan={batter:true};finish('三振','','不死三振 ・ '+sub+' ・ 打者衝向一壘',2.0);
     }else{
-      startK();finish('三振','bad',lampsAfterOut(sub),2.0);
+      startK();finish('三振','bad',lampsAfterOut(sub,{batterOut:true,strikeout:true,noWildPitch:!miss}),2.0);
       if(miss&&bases.some(Boolean))wpPlan={kOut:true};   // 一壘有人且少於兩出局：打者出局，但球漏接時壘上跑者仍可推進
     }
   };
@@ -6574,20 +6817,21 @@ function pointOnTrajectory(pts,t){
   return V(a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u,a[2]+(b[2]-a[2])*u);
 }
 function simulateDeflectedBall(start,velocity){
-  let x=start.x,y=Math.max(BALL_R,start.y),z=start.z,vx=velocity.x,vy=velocity.y,vz=velocity.z,t=0,apex=y,landed=null,hitT=null,wall=false,stop=false,n=0;
+  let x=start.x,y=Math.max(BALL_R,start.y),z=start.z,vx=velocity.x,vy=velocity.y,vz=velocity.z,t=0,apex=y,landed=null,hitT=null,wall=false,stop=false,n=0,dead=null;   // dead＝球進入死球區（觀眾席／記分板／飛出外野牆）的時刻
   const h=1/120,pts=[[x,y,z]],K=0.0055,bounces=[];
   while(t<8&&!stop){
     const speed=Math.hypot(vx,vy,vz);vx-=K*speed*vx*h;vy-=(9.8+K*speed*vy)*h;vz-=K*speed*vz*h;
     const px=x,py=y,pz=z;x+=vx*h;y+=vy*h;z+=vz*h;t+=h;if(y>apex)apex=y;
     const hit=solidHit(px,py,pz,x,y,z);
-    if(hit){const vn=vx*hit.x+vy*hit.y+vz*hit.z;if(vn<-1e-6){const f=clamp(hit.hitTime===undefined?1:hit.hitTime,0,1),cx=px+(x-px)*f,cy=py+(y-py)*f,cz=pz+(z-pz)*f;vx=(vx-1.5*vn*hit.x)*0.82;vy=(vy-1.5*vn*hit.y)*0.82;vz=(vz-1.5*vn*hit.z)*0.82;x=cx+hit.x*(hit.pushOut||0.003);y=cy+hit.y*(hit.pushOut||0.003);z=cz+hit.z*(hit.pushOut||0.003);if(hit.isOutfieldFence)wall=true;if(hitT===null)hitT=t-h+h*f;}}
+    if(hit){const vn=vx*hit.x+vy*hit.y+vz*hit.z;if(vn<-1e-6){const f=clamp(hit.hitTime===undefined?1:hit.hitTime,0,1),cx=px+(x-px)*f,cy=py+(y-py)*f,cz=pz+(z-pz)*f;vx=(vx-1.5*vn*hit.x)*0.82;vy=(vy-1.5*vn*hit.y)*0.82;vz=(vz-1.5*vn*hit.z)*0.82;x=cx+hit.x*(hit.pushOut||0.003);y=cy+hit.y*(hit.pushOut||0.003);z=cz+hit.z*(hit.pushOut||0.003);if(hit.isOutfieldFence)wall=true;if(hitT===null)hitT=t-h+h*f;if(!dead&&(hit.ballRuleKind==='spectator'||hit.ballRuleKind==='scoreboard'))dead={t:t-h+h*f,kind:hit.ballRuleKind};}}
+    if(!dead&&y>FENCE_H+BALL_R&&Math.hypot(x,z)>fenceRadius(x,z)&&Math.abs(Math.atan2(x,z))*180/Math.PI<=OUTFIELD_ARC_DEG)dead={t,kind:'outfieldBoundary'};
     groundResolve(y,vx,vy,vz,BALL_R,h);   // 共用地面物理
     if(_g.hit&&!landed)landed={x:x,z:z,t:t};if(_g.bounce)bounces.push(t);
     y=_g.y;vx=_g.vx;vy=_g.vy;vz=_g.vz;if(_g.stop)stop=true;
     if(++n%2===0)pts.push([x,y,z]);
   }
   if(n%2!==0)pts.push([x,y,z]);
-  return {pts,landed,apex,hitT,wall,tEnd:t,bounces};
+  return {pts,landed,apex,hitT,wall,tEnd:t,bounces,dead};
 }
 // 軌跡重算時分開保存「本次球路的落點」與「整球第一次觸地時間」。
 // 球在地面彈跳／滾動後即使被野手碰歪或漏接，也不能再被判成接殺。
@@ -6609,6 +6853,7 @@ function rebuildBallTrajectoryTail(hitPoint,velocity,impactTime){
   FL.sim.apex=Math.max(pastApex,tail.apex);FL.sim.tEnd=baseFrame/60+tail.tEnd;
   FL.sim.hitT=tail.hitT!==null?baseFrame/60+tail.hitT:(FL.sim.hitT!==null&&FL.sim.hitT<impactTime?FL.sim.hitT:null);FL.sim.wall=tail.wall;
   if(FL.sim.cross&&FL.sim.cross.t>=impactTime)FL.sim.cross=null;
+  FL.deadAt=(tail.dead&&!FL.dead&&!FL.res.foul&&!FL.res.hr&&!FL.res.deadBallAward)?baseFrame/60+tail.dead.t:null;   // 之後球進入死球區的時刻（ft 到了就宣告死球）
   const last=FL.sim.pts[FL.sim.pts.length-1]||[hitPoint.x,hitPoint.y,hitPoint.z];
   FL.res.lp=FL.sim.landed?{x:FL.sim.landed.x,z:FL.sim.landed.z,t:FL.sim.landed.t}:{x:last[0],z:last[2],t:FL.sim.tEnd};
   if(FL.practice&&land)land.position.set(FL.res.lp.x,0.15,FL.res.lp.z);
@@ -6779,62 +7024,66 @@ function attemptGloveReception(d,point,velocity,meta={}){
   const result=rollFieldingError(d,ctx);
   return {err:!!result.err};
 }
-// 擊球漏接：球從手套彈開（保留 10~35% 球速＋隨機偏轉＋小幅上彈），之後的追球／傳球流程沿用既有軌跡系統
-function muffBallAtGlove(d,contact,st){
-  const vin=st.vel,hs=Math.hypot(st.vel.x,st.vel.z);
-  const impactTime=st.impactTime,hitPoint=contact.point.clone();hitPoint.y=Math.max(BALL_R,hitPoint.y);
+// ===== 球離開手套／野手的共用流程：擊球漏接、傳球漏接、傳球沒碰到手套全部走這裡 =====
+// gloveReceive：球到達手套（擊球與傳球同一入口）→ 共用失誤率模型 → 接穩回傳 false；漏接＝球彈開變成游離球，回傳 true。
+// looseBallFrom：球從 hitPoint 以 velocity 繼續飛／彈／滾（與擊球後的游離球同一套物理與軌跡拼接）。
+//   之後全隊依新球路重新分工（最早攔到的人追球、能及時趕到的人補位），跑者也走同一套存活度公式；
+//   球若撞進觀眾席／記分板／飛出牆外＝死球（declareDeadBall）。
+// o.fromThrow＝球來自野手傳球（不是擊球失誤；死球時從「傳球當下的壘」起算）；o.muff＝擊球漏接（算守備失誤）；o.d＝漏接的野手
+function gloveReceive(d,point,vel,meta,o={}){
+  if(!FIELD_ERR.enabled||!attemptGloveReception(d,point,vel,meta).err)return false;
+  return muffBallAtGlove(d,{point},{vel,impactTime:o.impactTime},o);
+}
+function looseBallFrom(hitPoint,velocity,impactTime,o={}){
+  const d=o.d||null;
+  rebuildBallTrajectoryTail(hitPoint,velocity,impactTime);
+  FL.muffLoose=true;if(o.muff)FL.muffed=true;if(o.fromThrow)FL.fromThrow=true;
+  if(st!=='flight'){st='flight';stT=0;}ball.isVisible=true;   // 球要繼續沿新軌跡播放（擊球與傳球都一樣）
+  if(d){d.muffPlay=FL;d.muffUntil=ft+0.15;d.gloveTrackingActive=true;d.gloveReactionRemaining=0;d.fixT=0;d.fixPos=null;d.walking=false;d.v=0;}   // 漏接後立刻撿球：只短暫忽略同一球；手套不必再等反應延遲
+  defenseStopped.clear();defenseCo=[];defenseIc.clear();   // 球路改變：清掉舊的協同停追名單與攔截資料，全隊依新球位重新分工
+  defenseChaser=d;defenseTarget=V(ball.position.x,0,ball.position.z);   // 漏接者先去撿；沒有人（傳球沒碰到手套）＝下一幀由追球分派挑最早攔到的人
+}
+// 擊球／傳球漏接：球從手套彈開（保留 10~35% 球速＋隨機偏轉＋小幅上彈）
+function muffBallAtGlove(d,contact,st0,o={}){
+  const vin=st0.vel,hs=Math.hypot(vin.x,vin.z),hitPoint=contact.point.clone();hitPoint.y=Math.max(BALL_R,hitPoint.y);
   const base=hs>0.5?Math.atan2(vin.x,vin.z):(d.root.rotation.y||0),ang=base+clamp(gs(1.0),-Math.PI,Math.PI);
   const hsOut=hs*rnd(0.10,0.35)+rnd(0.4,1.4),vyOut=rnd(0.6,2.2)+Math.max(0,vin.y)*0.1;
-  const velocity=V(Math.sin(ang)*hsOut,vyOut,Math.cos(ang)*hsOut);
-  rebuildBallTrajectoryTail(hitPoint,velocity,impactTime);
-  FL.muffed=true;FL.muffLoose=true;d.muffPlay=FL;d.muffUntil=ft+0.15;   // 漏接後立刻撿球：只短暫忽略同一球，避免下一幀又被吸回手套
-  d.gloveTrackingActive=true;d.gloveReactionRemaining=0;d.fixT=0;d.fixPos=null;   // 手套不必再等反應延遲，直接追彈開的球；清掉舊攔截點修正
-  // 漏接會改變球路，先清除正常接球階段累積的協同停追名單與舊攔截資料，讓全隊依新球位重新分工。
-  defenseStopped.clear();defenseCo=[];defenseIc.clear();
-  defenseChaser=d;d.walking=false;d.v=0;defenseTarget=V(ball.position.x,0,ball.position.z);   // 漏接者仍是追球員，下一幀重新計算攔截點並全速去撿
+  looseBallFrom(hitPoint,V(Math.sin(ang)*hsOut,vyOut,Math.cos(ang)*hsOut),st0.impactTime,{d,muff:!o.fromThrow,fromThrow:o.fromThrow});
   showMissIndicator(d,1.2);
   return true;
 }
-// 傳球到達時漏接：回傳 {dur:球落地到撿回的總秒數, to:球落點}；沒失誤回傳 null
-function throwReceiveError(touched){
-  const d=defenseReceiver,th=defenseThrow;if(!d||!th)return null;
-  // touched＝球沿路徑已被共用手套掃掠碰撞接觸；false＝飛到終點仍沒碰到手套＝幾何漏接（不抽失誤率）。
-  if(!touched){
-    showMissIndicator(d,1.2);const p0=ball.position,ang=rnd(0,Math.PI*2),dist=rnd(0.5,1.6);
-    return {dur:rnd(0.6,1.2),to:V(p0.x+Math.sin(ang)*dist,BALL_R,p0.z+Math.cos(ang)*dist)};
-  }
-  if(!FIELD_ERR.enabled)return null;
-  // 球速、離彈地時間取自飛行軌跡在「接觸時刻」的實際狀態；與牽制傳球同一個 attemptThrowReception。
-  const point=ball.position.clone();
-  const reception=attemptThrowReception(d,th,clamp(defenseThrowT,0.06,th.T),point);
-  if(!reception.err)return null;
-  showMissIndicator(d,1.2);const ang=rnd(0,Math.PI*2),dist=rnd(0.5,1.6);
-  return {dur:rnd(0.6,1.2),to:V(point.x+Math.sin(ang)*dist,BALL_R,point.z+Math.cos(ang)*dist)};
+// 傳球到達：碰到手套 → gloveReceive（可能漏接）；沒碰到手套（暴傳）→ 球帶著原本的速度繼續飛，沒有任何「停住」的特例。回傳 true＝球沒接住
+function throwBallLost(touched,tt){
+  const d=defenseReceiver,th=defenseThrow;if(!FL||!d||!th)return false;
+  const p=ball.position.clone(),s=throwStateAt(th,tt);let lost;
+  if(touched)lost=gloveReceive(d,p,s.vel,{tb:s.tb,tn:s.tn,brk:0},{impactTime:ft,fromThrow:true});
+  else{looseBallFrom(V(p.x,Math.max(BALL_R,p.y),p.z),s.vel,ft,{fromThrow:true});showMissIndicator(d,1.2);lost=true;}
+  if(lost&&thrownBase===1&&runners.some(r=>r.isB&&r.base===0&&!r.out))FL.muffed=true;   // 傳一壘要刺殺打者卻沒接住＝守備失誤上壘
+  return lost;
 }
-
-// （外野手一定回傳內野；內野手有封殺／觸殺就立刻動作）。回傳 true＝撿回完成
-// 漏接後球在 0.35 s 內落地；接球者立即追球撿回，再回到 regrip → decideThrow。
-function stepThrowFumble(dt){
-  const f=defenseFumble;if(!f)return true;
-  const d=defenseReceiver;f.t+=dt;
-  if(!f.pick){
-    const u=clamp(f.t/0.35,0,1);
-    const x=f.from.x+(f.to.x-f.from.x)*u,z=f.from.z+(f.to.z-f.from.z)*u;
-    const y=BALL_R+(f.from.y-BALL_R)*(1-u*u)+0.30*Math.sin(Math.PI*u);
-    ball.position.set(x,y,z);
-    if(d&&!(d.knockedDown>0)){
-      d.aim=V(f.to.x,0.3,f.to.z);   // 臉朝向球
-      moveActorToward(d,f.to.x,f.to.z,dt,100,0.30,false);
-      if(u>=1&&Math.hypot(d.root.position.x-f.to.x,d.root.position.z-f.to.z)<=0.65)f.pick=1e-4;
-    }
-    if(f.t>3)f.pick=1e-4;   // 保險：接球者倒地等情況，最多等 3 秒
-  }
-  if(f.pick){
-    f.pick+=dt;const k=clamp(f.pick/0.15,0,1);
-    if(d){const h=handPos(d,'left');ball.position.set(f.to.x+(h.x-f.to.x)*k,BALL_R+(h.y-BALL_R)*k,f.to.z+(h.z-f.to.z)*k);}
-    if(k>=1){defenseFumble=null;return true;}
-  }
-  return false;
+function endThrowStage(){   // 傳球階段結束（球變成游離球）：清掉傳／接球者的傳球狀態，回到「追球」階段
+  if(defenseThrower)defenseThrower.throwing=0;
+  [defenseThrower,defenseReceiver].forEach(f=>{if(f){f.aim=null;f.trajAim=null;}});
+  defenseThrower=null;defenseReceiver=null;defenseThrowT=-1;thrownBase=0;fieldingStage='idle';fieldingStageT=0;
+}
+// ===== 死球 =====
+// 游離球撞進觀眾席／記分板（含啦啦隊平台）或飛出外野牆＝死球：守備全部停手；每位跑者從「傳球當下的壘（擊球漏接＝本打席開始的壘）」起算獲判 2 個壘，
+// 不低於目前已到（或正跑向）的壘。獲判的壘用既有的 r.safe（保送／妨礙跑壘同一機制）：跑向該壘途中不能被觸殺、封殺。
+function declareDeadBall(){
+  if(!FL||FL.dead||!simLive)return;
+  FL.dead=true;FL.muffLoose=false;
+  defenseChaser=null;defenseCo=[];defenseStopped.clear();defenseIc.clear();defenseTarget=null;baseCover={};stopFieldingActors();
+  runners.slice().sort((a,b)=>b.base-a.base).forEach(r=>{
+    if(r.out||r.exiting||r.state==='score'||r.manual)return;
+    const from=FL.fromThrow&&r.thrBase!==undefined?r.thrBase:r.o,cur=r.state==='run'?r.to:r.base,aw=Math.min(4,Math.max(from+2,cur));
+    r.safe=Math.max(r.safe||0,aw);r.forced=false;if(aw<=r.base&&r.state!=='run')return;
+    if(r.state==='run')planRunnerPath(r,legsTo(r,aw));
+    else if(r.state==='back'&&!r.retouch)turnForward(r);
+    else if(r.state==='overrun')runnerOverrunGo(r,legsTo(r,aw));
+    else if(r.state==='hold'||r.state==='lead'||r.state==='stop'){r.waitT=0;r.plan='go';beginRun(r);}
+  });
+  playNote=(playNote?playNote+' ・ ':'')+'死球 判給 2 個壘';
+  announce('死球','good','球進入死球區，跑者獲判 2 個壘');
 }
 // 投球到達捕手手套：和其他接球完全同一條式子（球速、高度、離彈地時間、橫移、手套伸展、球路偏移）；漏接＝捕逸，沿用既有暴投流程
 function pitchReceiveError(bp,measuredVel=null,contactTime=null){
@@ -6850,7 +7099,7 @@ function pitchReceiveError(bp,measuredVel=null,contactTime=null){
   return {spill:rnd(0.25,0.7),wild:{vx:rnd(-2.5,2.5),vy:rnd(0.5,2.5),vz:-rnd(3,7)*(dirt?1.4:1)}};
 }
 function checkDefenderContact(frameDt=1/60){
-  if(!defenseActive||fieldingStage!=='idle'||!FL||FL.res.hr||FL.res.deadBallAward||!ball.isVisible)return false;
+  if(!defenseActive||fieldingStage!=='idle'||!FL||FL.dead||FL.res.hr||FL.res.deadBallAward||!ball.isVisible)return false;
   const cur=ball.position.clone(),resetSweep=!prevBall,from=prevBall||cur;prevBall=cur;
 
 
@@ -6890,7 +7139,7 @@ function checkDefenderContact(frameDt=1/60){
     if(!allFielders().includes(d))continue;
     if(d.muffPlay===FL&&ft<d.muffUntil)continue;   // 剛漏接：同一個野手的手套短暫忽略這顆球，避免下一幀又吸回去
     {const st0=ballStateAtContact(contact,frameDt);   // 接球統一流程：先確定共用手套碰撞，再由共用失誤率模型決定接穩或漏接
-     if(st0&&FIELD_ERR.enabled){const attempt=attemptGloveReception(d,contact.point,st0.vel,{tb:st0.tb,tn:st0.tn,brk:0});if(attempt.err&&muffBallAtGlove(d,contact,st0))return true;}}
+     if(st0&&gloveReceive(d,contact.point,st0.vel,{tb:st0.tb,tn:st0.tn,brk:0},{impactTime:st0.impactTime}))return true;}
     if(FL.muffLoose)FL.muffLoose=false;   // 實際再次接穩球後，才恢復一般跑壘安全性判斷
     ballCaughtBy=d;defenseChaser=d;ball.isVisible=false;
     // 正式比賽與守備練習共用接殺、封殺／觸殺、傳球與接應流程；練習模式只抑制正式記分與換局。
@@ -6901,7 +7150,7 @@ function checkDefenderContact(frameDt=1/60){
       runners.forEach(q=>{q.fo=true;onCatchRunner(q);});
     }
     beginDefensiveThrow(d,contact&&contact.point);assignCovers(d);
-    if(FL.res.foul&&fly&&!FL.shown){FL.shown=true;balls=0;strikes=0;sfx.pop();const fsub=lampsAfterOut('');addBatEvent('OUT');announce('界外接殺','bad',fsub);hud();}
+    if(FL.res.foul&&fly&&!FL.shown){FL.shown=true;balls=0;strikes=0;sfx.pop();const fsub=lampsAfterOut('',{batterOut:true});addBatEvent('OUT');announce('界外接殺','bad',fsub);hud();}
     if(!FL.shown){FL.shown=true;showFlightResult();}
     if(st==='flight'){st='result';stT=0;}
     return true;
@@ -7148,7 +7397,8 @@ function gameFrame(dt){
   // state machine
   if(st==='ready'){
     stT+=dt;pclock=0;pReset();pkMoveBasemen(dt);
-    if(walkUp){throwReq=false;stT=0;}else if(pk){throwReq=false;pkUpdate(dt);}   // 打者走向打擊區時不投球；牽制進行中：不能同時投球
+    if(hasOutRunnerLeaving()){throwReq=false;stT=0;}   // 不論投手或打擊視角，只要出局跑者尚未離場，電腦與玩家都必須等待
+    else if(walkUp){throwReq=false;stT=0;}else if(pk){throwReq=false;pkUpdate(dt);}   // 打者走向打擊區時不投球；牽制進行中：不能同時投球
     else if(mode==='bat'&&pkAIMaybe(dt)){}else if(mode==='bat'?stT>=wait:throwReq){throwReq=false;P=mode==='bat'?newPitch():playerPitch();st='windup';pclock=-W;flightClock=0;swung=false;BUNT.done=false;BUNT.passed=false;mark.position.set(P.A.x,Math.max(0.05,P.A.y),0);}
   }else if(st==='windup'){
     pclock+=dt;
@@ -7185,6 +7435,7 @@ function gameFrame(dt){
     ft+=dt;const s=FL.sim,i=clamp(Math.floor(ft*60),0,s.pts.length-2),f=clamp(ft*60-i,0,1);
     const a=s.pts[i],b=s.pts[i+1];
     ball.position.set(a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f);
+    if(FL.deadAt!=null&&ft>=FL.deadAt&&!FL.dead&&defenseActive)declareDeadBall();   // 游離球進入死球區
     deferredFlightContact=true;
   }else if(st==='result'){
     stT+=dt;
@@ -7298,11 +7549,8 @@ function gameFrame(dt){
   else if(runTrain.active){camFollow=null;camTgt=V(8,0,22);cam.position.set(6,58,-16);}   // 跑壘訓練：高處看整個內野與一壘延伸線
   else if(chg&&pregame){pregameCam(dt);}
   else if(chg){camFollow=null;camTgt=V(0,0,44);placeAir(camTgt,1.9);}   // 換場：高處俯視全場，看得到各守位與兩側休息區
-  else if(hrSeq&&hrSeq.focus){   // 全壘打繞壘：固定在高處看整個內野
-    const f=hrSeq.focus,want=V(f.x,0,f.z),k=1-Math.exp(-dt*4);
-    camFollow=camFollow?lerpV(camFollow,want,k):want.clone();hrSeq.zoom+=(f.zoom-hrSeq.zoom)*k;
-    camTgt=camFollow.clone();placeAir(camTgt,hrSeq.zoom);
-  }else if(walkCam&&walkSeq&&walkSeq.focus){   // 保送：切到守備視角，跟著跑者群
+  else if(hrSeq&&hrCamera(dt)){}   // 全壘打：追球 → 高空俯瞰 → 打者特寫 →（主場）啦啦隊
+else if(walkCam&&walkSeq&&walkSeq.focus){   // 保送：切到守備視角，跟著跑者群
     const f=walkSeq.focus,want=V(f.x,0,clamp(f.z,8,28)),k=1-Math.exp(-dt*4);
     camFollow=camFollow?lerpV(camFollow,want,k):want.clone();walkSeq.zoom+=(f.zoom-walkSeq.zoom)*k;
     camTgt=camFollow.clone();placeAir(camTgt,walkSeq.zoom);
@@ -7330,6 +7578,7 @@ function gameFrame(dt){
   pkFrame();
   cam.setTarget(camTgt);
   cam.fov=lockerRoomView?0.9:((chase||walkCam||hbpView||chg||hrSeq)?baseFov*((chase&&FL&&FL.wp)?1.12:1):mode==="pit"?baseFov*0.13:baseFov);
+  if(hrSeq&&hrSeq.phase!=='ball')cam.fov*=hrSeq.fovK;   // 全壘打特寫／啦啦隊鏡頭的視角縮放
   // 球的顯示比例依鏡頭視角調整：守備／跑壘鏡頭拉遠時放大，投球與打擊近景維持較小比例。
   // 以鏡頭到球的距離作為守備視角縮放依據，避免跑壘過程球變得難以辨識。
   if(catchHold&&ball.isVisible&&!catcherDef.fielding){ball.position.copyFrom(catcherBallAnchorWorld());}   // 每幀以手套局部座標更新球的位置；手套移動／轉向時，球仍固定在口袋前側
@@ -8062,7 +8311,10 @@ function fastForwardUntil(done,maxT){
 function trySkipScreen(){
   if(practiceMode||runTrain.active||chg||gameOver||runnerTacticsOpen||subOpen||defOpen||st==='title'||st==='change')return false;
   if(st==='flight'){   // 界外球飛行中結果未定（可能被接殺）：落地且結果已結算（FL.shown）之後才能跳過
-    const landed=FL&&FL.res&&FL.res.foul&&!FL.wp&&!FL.steal&&FL.shown&&FL.sim&&FL.sim.landed&&ft>=FL.sim.landed.t&&!flyOut&&!ballCaughtBy;
+    // 結果已定、可以跳過的時刻：落地、或撞到觀眾席／記分板／看台／牆等非地面物體（hitT／structureContact／越界 cross；撞到之後即使在空中也不可能被接殺）、或軌跡已結束。
+    // 原本只認「落地」，界外球先撞到觀眾席等物體時 sim.landed 可能是空的，會一直不能跳過。
+    const sm=FL&&FL.sim,settled=!!sm&&((sm.landed&&ft>=sm.landed.t)||(sm.structureContact&&ft>=sm.structureContact.t)||(sm.cross&&sm.cross.t!=null&&ft>=sm.cross.t)||(sm.hitT!=null&&ft>=sm.hitT)||ft>=sm.tEnd);
+    const landed=FL&&FL.res&&FL.res.foul&&!FL.wp&&!FL.steal&&FL.shown&&settled&&!flyOut&&!ballCaughtBy;
     if(!landed)return false;
     enterReady();return true;
   }
@@ -8095,7 +8347,7 @@ canvas.addEventListener('pointerdown',e=>{e.preventDefault();ptrX=e.clientX;ptrY
     if(!practiceMode&&(st==='ready'||st==='windup'||st==='pitch')&&!(st==='pitch'&&P&&flightClock>=P.T-0.05)&&!pk&&!walkSeq){BUNT.held=true;BUNT.offX=BUNT.offY=0;BUNT.drag={x:e.clientX,y:e.clientY};try{canvas.setPointerCapture(e.pointerId);}catch(_){}}
     return;}
   if(mode==='bat'&&BUNT.held)return;   // 觸擊中不能同時揮棒
-  if(mode==='pit'){if(st==='ready'){updateAim(ptrX,ptrY);throwReq=true;}}else{if(!aimLock)updateAim(ptrX,ptrY);swing();}});
+  if(hasOutRunnerLeaving()&&st==='ready'){throwReq=false;fastForwardOutRunnerExits();return;}if(mode==='pit'){if(st==='ready'){updateAim(ptrX,ptrY);throwReq=true;}}else{if(!aimLock)updateAim(ptrX,ptrY);swing();}});
 async function loadFixedTeamConfig(){
  const status=$('teamLoadStatus');
  const deferConfig=cfg=>{if(selectedGameMode!==null||$('modeSelect').hidden)pendingTeamConfig=cfg;else applyTeamConfig(cfg);};
@@ -8140,7 +8392,7 @@ $('goStadium').addEventListener('click',e=>{e.preventDefault();e.stopPropagation
 $('go').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(!playerTeamChosen||!opponentTeamChosen)return;startGame();});
 $('tst').addEventListener('click',e=>{e.stopPropagation();testMode=!testMode;$('tst').classList.toggle('on',testMode);$('tst').textContent=testMode?'測試球 ON':'測試球';$('tst').blur();});
 window.addEventListener('keydown',e=>{
-  if(e.code==='Space'||e.key===' '){e.preventDefault();if(pregame){}else if(st==='title'){if(selectedGameMode==='single'&&playerTeamChosen&&opponentTeamChosen)startGame();}else if(runTrain.active){rtGo();}else if(practiceMode){if(st==='practiceReady')launchPracticeBall();}else if(st==='change')skipChange();else if(skipWalkUp()){}else if(trySkipScreen()){}else if(mode==='pit'){if(st==='ready')throwReq=true;}else swing();}
+  if(e.code==='Space'||e.key===' '){e.preventDefault();if(pregame){}else if(st==='title'){if(selectedGameMode==='single'&&playerTeamChosen&&opponentTeamChosen)startGame();}else if(runTrain.active){rtGo();}else if(practiceMode){if(st==='practiceReady')launchPracticeBall();}else if(st==='change')skipChange();else if(skipWalkUp()){}else if(trySkipScreen()){}else if(mode==='pit'){if(st==='ready'&&!hasOutRunnerLeaving())throwReq=true;}else if(st==='ready'&&hasOutRunnerLeaving()){}else swing();}
   else if(e.key==='Escape'){if(!$('rosterPanel').hidden)$('rosterPanel').hidden=true;else if(!$('settings').hidden)$('settings').hidden=true;else if(lockerRoomView)setLockerView(false);}
   else if(mode==='pit'&&/^[1-4]$/.test(e.key)){selT=+e.key-1;selUI();}
 });

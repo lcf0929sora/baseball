@@ -5106,6 +5106,9 @@ function putOut(r,how,defender=null){
   if(how==='appeal'&&r.safeOn===r.base)return;  // 已踩回原壘：回壘訴求不成立
   if(r.safe&&r.base<r.safe)return;   // 保送獲得的安全進壘權：還沒踏上獲得的壘包前不會被出局
   r.out=true;r.how=how;r.state='out';r.forced=false;playOuts++;umpCall('out',r,how);
+  // 打者跑者在此刻已被正式判定出局：立即啟動客場出局歌計時，不必等整個跑壘 play 的收尾計時。
+  // 壘上無人時 1 秒後播放；有跑者時保留待播事件，等 enterReady／換場完成再播放。
+  if(r.isB)musicOnOut({batterOut:true});
   // 接殺、封殺、觸殺／回壘失敗使用同一個 OUT billboard；封殺與觸殺顯示在實際完成出局的守備員旁。
   if(defender&&(how==='force'||how==='tag'||how==='appeal'))showOutIndicator(defender);
   runners.forEach(q=>{if(q.o>r.o)q.forced=false;});   // 前面的強迫進壘因此解除
@@ -5679,7 +5682,7 @@ function finalizePlay(){
     addBatEvent('OUT',{rbi:FL.muffed?0:runsScored});   // 野手選擇有打點；失誤上壘沒有
   }
   closeFieldingLifecycle();
-  if(b.out)musicOnOut({batterOut:true});
+  // 打者出局的音樂事件已在 putOut() 確認出局時建立；此處只結算 play，避免延後重設播放時機。
   announce(txt,cls,[r0.d?r0.d+' m':'',tt,playNote].filter(Boolean).join(' ・ '));
   hud();refreshRosterTable();updateActiveJerseys();updateLockerRoster();stT=0;holdT=1.3;
 }

@@ -1,6 +1,6 @@
 /*
- * 伊斯坦堡清真寺球場（id: istanbul）— 外觀是土耳其（奧斯曼）清真寺風格：橢圓外牆有尖拱、紅白石條、伊茲尼克磁磚圓花、一圈圓頂，
- * 四個角各有一座巨大的禮拜塔（宣禮塔，約 130 m）；裡面是棒球場；球場外是伊斯坦堡的景色。
+ * 伊斯坦堡清真寺球場（id: istanbul）— 外觀是土耳其（奧斯曼）清真寺風格：球場外圍沒有外牆，只在四個角各立一座巨大的禮拜塔
+ * （宣禮塔，約 130 m）；裡面是棒球場；球場外是伊斯坦堡的景色。
  * 介面規格請參考 stadium-night.js 開頭的「球場外掛開發指南」。
  *
  *  場地
@@ -11,12 +11,12 @@
  *   · 看台是一圈封閉、等深(12 階)的碗；一壘／三壘兩側各有一座懸挑的大理石啦啦隊舞台（18×7.3 m，各 15 個站位，球員尺寸），
  *     紅底白字橫幅「TÜRKİYE CHEERS」、旗桿上掛土耳其國旗；站位座標在 BaseballStadiums.istanbul.cheerSlots。
  *  清真寺外觀
- *   · 看台外圍是橢圓外牆（高 36 m、80 個開間）：紅白石條、尖拱大門、雙連尖拱窗、八芒星磁磚圓花、垛口；牆頂有 40 座鉛灰色圓頂。
- *   · 四根禮拜塔立在橢圓的四個角：方形基座、有凹槽的長長塔身、兩層陽台(şerefe)、鉛灰色尖頂與金色頂飾。
- *   · 中外野正後方的外牆內側掛電子記分板（鈷藍／金框、象牙白分數格）。
- *  打擊區看得到的巨大國旗
- *   · 外牆後方立一根 112 m 的旗桿，掛一面 66×44 m 的土耳其國旗（2:3 標準比例），旗面每幀用程式擺動、有明暗皺褶，飄揚中；
- *     高度算過：從打擊區看出去，旗面下緣高於外牆上緣，所以打者一定看得到。
+ *   · 外圍的橢圓高牆已拆除；四根禮拜塔立在橢圓（半長軸 120 m、半短軸 94 m）的四個角：方形基座、有凹槽的長長塔身、
+ *     兩層陽台(şerefe)、鉛灰色尖頂與金色頂飾。
+ *   · 記分板立在外野看台的最後端（看台後牆頂上、中外野正後方；鈷藍／金框、象牙白分數格）。
+ *  打擊區看得到的國旗
+ *   · 記分板左右兩側對稱各立一根 46 m 的旗桿，各掛一面 24×16 m 的土耳其國旗（2:3 標準比例），旗面每幀用程式擺動、有明暗皺褶，飄揚中；
+ *     旗面最高點 42 m、離本壘 160 m，從打擊區看出去仰角約 9°~15°，且在記分板兩側不被擋住。
  *  伊斯坦堡
  *   · 外圍是起伏的山丘城市：彩色牆面、赤陶屋頂的奧斯曼木屋、成排的柏樹與傘松、多座清真寺（藍色清真寺、聖索菲亞、蘇萊曼尼耶…）、加拉達塔；
  *     北邊遠處是博斯普魯斯海峽：懸索大橋、渡輪、貨輪、少女塔小島，對岸又是一片山丘城市。
@@ -218,43 +218,9 @@ ctx.setDugouts({
     return {x:p.x,y:i%3===0?0.55:0,z:p.z,ry:s===-1?Math.PI/4:-Math.PI/4,scale:i%3===0?[0.82,0.72,0.82]:null};}
 });
 
-// ═════════ ⑥ 清真寺外牆：橢圓形、尖拱＋紅白石條（高 36 m、80 個開間）、牆頂 40 座圓頂、四根巨大的禮拜塔 ═════════
-const EC=[0,48],EA=120,EB=94,NBAY=80,HR=36;
+// ═════════ ⑥ 禮拜塔：外圍的橢圓高牆已拆除，只留橢圓四個角上的四根巨大禮拜塔 ═════════
+const EC=[0,48],EA=120,EB=94;   // 橢圓（外圍廣場／山丘平台的範圍，也是四根禮拜塔的定位基準）
 const ell=t=>[EA*Math.cos(t),EC[1]+EB*Math.sin(t)];
-const RP=[];let PER=0;
-{const M_=6000,cum=[0];let prev=ell(0);for(let i=1;i<=M_;i++){const p=ell(i/M_*TAU);cum.push(cum[i-1]+Math.hypot(p[0]-prev[0],p[1]-prev[1]));prev=p;}PER=cum[M_];
- for(let i=0;i<NBAY;i++){const target=PER*i/NBAY;let lo=0,hi=M_;while(hi-lo>1){const m=(lo+hi)>>1;if(cum[m]<target)lo=m;else hi=m;}RP.push(ell(lo/M_*TAU));}}   // 依弧長等分的 80 個頂點
-const BAY_W=PER/NBAY;
-function facadeTex(){   // 一個開間（寬 BAY_W m × 高 HR m）：紅白相間石條、尖拱大門、雙連尖拱窗、八芒星磁磚圓花、垛口
-  const W=256,H=1024,t=newTex('xxFacade',W,H),g=t.getContext(),r=rng(41),kx=W/BAY_W,ky=H/HR,Y=y=>H-y*ky,bc=BAY_W/2;
-  for(let y=0,k=0;y<HR;y+=0.9,k++){g.fillStyle=k%2?'#efe6cd':'#d9ab9a';g.fillRect(0,Y(y+0.9),W,0.9*ky+1);}
-  speck(g,W,r,9000,'rgba(255,255,255,0.07)','rgba(70,50,20,0.10)');
-  for(let n=0;n<22;n++){g.fillStyle=n%2?'rgba(120,95,55,0.06)':'rgba(255,245,220,0.06)';g.beginPath();g.ellipse(r()*W,r()*H,20+r()*50,30+r()*90,0,0,TAU);g.fill();}
-  const ogive=(cm,wm,y0,ys,ya)=>{const hw=wm*kx/2,x0=cm*kx,k1=ys+0.5*(ya-ys),k2=ya-0.1*(ya-ys);g.beginPath();g.moveTo(x0-hw,Y(y0));g.lineTo(x0-hw,Y(ys));
-    g.bezierCurveTo(x0-hw,Y(k1),x0-hw*0.3,Y(k2),x0,Y(ya));g.bezierCurveTo(x0+hw*0.3,Y(k2),x0+hw,Y(k1),x0+hw,Y(ys));g.lineTo(x0+hw,Y(y0));g.closePath();};
-  const tileBand=(y0,y1)=>{g.fillStyle='#1c4696';g.fillRect(0,Y(y1),W,(y1-y0)*ky);g.fillStyle='#efe7d2';for(let x=0;x<W;x+=0.9*kx){g.beginPath();g.moveTo(x+0.45*kx,Y(y1)+0.12*ky);g.lineTo(x+0.9*kx,Y((y0+y1)/2));g.lineTo(x+0.45*kx,Y(y0)-0.12*ky);g.lineTo(x,Y((y0+y1)/2));g.closePath();g.fill();}
-    g.fillStyle='#d9b04a';g.fillRect(0,Y(y1),W,0.14*ky);g.fillRect(0,Y(y0)-0.14*ky,W,0.14*ky);};
-  // 兩側扶壁
-  for(const x0 of [0,W-0.55*kx]){const gx=g.createLinearGradient(x0,0,x0+0.55*kx,0);gx.addColorStop(0,'#c7b48c');gx.addColorStop(0.5,'#f3ead0');gx.addColorStop(1,'#b9a57c');g.fillStyle=gx;g.fillRect(x0,Y(HR-2),0.55*kx,(HR-2.8)*ky);}
-  // 底層：尖拱大門（紅白交錯的拱石）＋門內暖光
-  ogive(bc,5.4,0.8,7.8,12.8);g.save();g.lineJoin='round';g.lineWidth=1.0*kx;g.strokeStyle='#f6efdc';g.stroke();g.setLineDash([0.9*kx,0.9*kx]);g.strokeStyle='#d03a30';g.stroke();g.setLineDash([]);g.restore();
-  ogive(bc,5.4,0.8,7.8,12.8);{const gr=g.createLinearGradient(0,Y(12.8),0,Y(0.8));gr.addColorStop(0,'#120a05');gr.addColorStop(0.6,'#24150a');gr.addColorStop(1,'#5a3414');g.fillStyle=gr;g.fill();
-    const gl=g.createRadialGradient(bc*kx,Y(2.5),2,bc*kx,Y(2.5),3.4*kx);gl.addColorStop(0,'rgba(255,170,70,0.6)');gl.addColorStop(1,'rgba(255,170,70,0)');g.save();g.clip();g.fillStyle=gl;g.fillRect(0,0,W,H);g.restore();}
-  tileBand(14.0,15.2);
-  // 中層：雙連尖拱窗（綠松石窗框）＋中央八芒星磁磚圓花
-  for(const dx of [-2.55,2.55]){ogive(bc+dx,1.7,16.0,20.4,23.4);g.lineWidth=0.4*kx;g.strokeStyle='#18a3b4';g.stroke();g.fillStyle='#0e1a30';g.fill();
-    const gl=g.createLinearGradient(0,Y(20),0,Y(16));gl.addColorStop(0,'rgba(255,190,90,0)');gl.addColorStop(1,'rgba(255,190,90,0.55)');g.fillStyle=gl;g.fill();}
-  g.fillStyle='#1c4696';g.beginPath();g.arc(bc*kx,Y(19.7),1.75*kx,0,TAU);g.fill();g.strokeStyle='#d9b04a';g.lineWidth=0.18*kx;g.stroke();
-  g.fillStyle='#18a3b4';star8(g,bc*kx,Y(19.7),1.55*kx,0);g.fill();g.strokeStyle='#f4f0e0';g.lineWidth=0.12*kx;g.stroke();g.fillStyle='#f4f0e0';star8(g,bc*kx,Y(19.7),0.8*kx,Math.PI/8);g.fill();g.fillStyle='#E30A17';g.beginPath();g.arc(bc*kx,Y(19.7),0.28*kx,0,TAU);g.fill();
-  tileBand(24.6,25.8);
-  // 上層：三個圓窗
-  for(const dx of [-2.6,0,2.6]){g.fillStyle='#0e1a30';g.beginPath();g.arc((bc+dx)*kx,Y(29.8),0.62*kx,0,TAU);g.fill();g.strokeStyle='#18a3b4';g.lineWidth=0.2*kx;g.stroke();g.fillStyle='rgba(255,190,90,0.4)';g.beginPath();g.arc((bc+dx)*kx,Y(29.5),0.4*kx,0,Math.PI);g.fill();}
-  // 垛口與頂部線腳
-  g.fillStyle='#efe6cd';g.fillRect(0,Y(HR),W,0.9*ky);g.fillStyle='#d9b04a';g.fillRect(0,Y(HR-0.9),W,0.16*ky);
-  for(let x=0.2*kx;x<W;x+=1.4*kx){g.fillStyle='#efe6cd';g.beginPath();g.moveTo(x,Y(HR-0.9));g.lineTo(x,Y(HR-2.0));g.lineTo(x+0.35*kx,Y(HR-2.6));g.lineTo(x+0.7*kx,Y(HR-2.0));g.lineTo(x+0.7*kx,Y(HR-0.9));g.closePath();g.fill();g.strokeStyle='#d9ab9a';g.lineWidth=2;g.stroke();}
-  g.fillStyle='#a8946c';g.fillRect(0,Y(0.9),W,0.9*ky);
-  t.update();return t;
-}
 // 圓頂：用旋轉面做的半球（base 在 y=0）
 const domeMesh=(R,hs)=>{const sh=[];for(let a=0;a<=90;a+=10)sh.push(new BABYLON.Vector3(R*Math.cos(a*D2R),R*Math.sin(a*D2R)*hs,0));return MB.CreateLathe('xxDome',{shape:sh,tessellation:20,closed:false,sideOrientation:BABYLON.Mesh.DOUBLESIDE},scene);};
 const addDome=(arr,x,y,z,R,hs)=>{const m=domeMesh(R,hs);m.position.set(x,y,z);arr.push(m);return m;};
@@ -279,44 +245,8 @@ function minaret(x,z,s,y0){
   cy_(minG.gold,0.3,0.3,5,127.5,8);const g1=MB.CreateSphere('xxMinGold',{diameter:0.9*s,segments:8},scene);g1.position.set(x,Yh(125.2),z);minG.gold.push(g1);
   const g2=MB.CreateSphere('xxMinGold',{diameter:0.55*s,segments:8},scene);g2.position.set(x,Yh(130.3),z);minG.gold.push(g2);
 }
-{
-  // ★ 防閃爍原則：面與面之間不是完全不重疊，就是相距 10 cm 以上。外牆的內芯、檐口、台座都是沿橢圓連續的帶狀幾何（接縫斜接）；立面貼圖片離內芯 0.4 m。
-  const facade=tm(facadeTex(),1),outerP=[],innerP=[],floods=[],domeG=[],drumG=[],goldG=[],stoneM=candy('#e6dcc2',0.5),stoneD=candy('#d2c4a2',0.5);
-  stoneM.backFaceCulling=false;stoneD.backFaceCulling=false;
-  const en=[],vn=[],vs=[],elen=[];
-  for(let i=0;i<NBAY;i++){const a=RP[i],b=RP[(i+1)%NBAY],dx=b[0]-a[0],dz=b[1]-a[1],l=Math.hypot(dx,dz);let nx=dz/l,nz=-dx/l;const mx=(a[0]+b[0])/2,mz=(a[1]+b[1])/2;if(nx*(mx-EC[0])+nz*(mz-EC[1])<0){nx=-nx;nz=-nz;}en.push([nx,nz]);elen.push(l);}
-  for(let i=0;i<NBAY;i++){const p=en[(i+NBAY-1)%NBAY],c=en[i];let sx=p[0]+c[0],sz=p[1]+c[1];const l=Math.hypot(sx,sz);sx/=l;sz/=l;vn.push([sx,sz]);vs.push(1/(sx*c[0]+sz*c[1]));}
-  function ringBand(y0,y1,o0,o1,mat,name){
-    const pos=[],nor=[],uv=[],idx=[],P=(i,o,y)=>[RP[i][0]+vn[i][0]*vs[i]*o,y,RP[i][1]+vn[i][1]*vs[i]*o];
-    const quad=(a,b,c,d,n)=>{const k=pos.length/3;[a,b,c,d].forEach(q=>{pos.push(q[0],q[1],q[2]);nor.push(n[0],n[1],n[2]);uv.push(0,0);});idx.push(k,k+1,k+2,k,k+2,k+3);};
-    for(let i=0;i<NBAY;i++){const j=(i+1)%NBAY,n=en[i];
-      quad(P(i,o1,y0),P(j,o1,y0),P(j,o1,y1),P(i,o1,y1),[n[0],0,n[1]]);quad(P(i,o0,y0),P(i,o0,y1),P(j,o0,y1),P(j,o0,y0),[-n[0],0,-n[1]]);
-      quad(P(i,o0,y1),P(i,o1,y1),P(j,o1,y1),P(j,o0,y1),[0,1,0]);quad(P(i,o0,y0),P(j,o0,y0),P(j,o1,y0),P(i,o1,y0),[0,-1,0]);}
-    const m=new BABYLON.Mesh(name,scene),vd=new BABYLON.VertexData();vd.positions=pos;vd.normals=nor;vd.uvs=uv;vd.indices=idx;vd.applyToMesh(m);m.material=mat;m.isPickable=false;return m;
-  }
-  for(let i=0;i<NBAY;i++){
-    const a=RP[i],b=RP[(i+1)%NBAY],mx=(a[0]+b[0])/2,mz=(a[1]+b[1])/2,nx=en[i][0],nz=en[i][1],yo=faceYaw(nx,nz),len=elen[i]+0.06;
-    const po=MB.CreatePlane('xxFacadeO',{width:len,height:HR},scene);po.position.set(mx+nx*0.5,HR/2,mz+nz*0.5);po.rotation.y=yo;outerP.push(po);
-    const pi=MB.CreatePlane('xxFacadeI',{width:len,height:HR},scene);pi.position.set(mx-nx*0.5,HR/2,mz-nz*0.5);pi.rotation.y=yo+Math.PI;innerP.push(pi);
-    if(i%5===0){const lp=MB.CreateBox('xxRingFlood',{width:2.4,height:1.1,depth:0.3},scene);lp.position.set(mx-nx*3.0,HR+1.2,mz-nz*3.0);lp.rotation.y=yo+Math.PI;floods.push(lp);}
-    if(i%2===0){   // 牆頂圓頂：鼓座＋鉛灰圓頂＋金色頂飾
-      const dr=MB.CreateCylinder('xxDrum',{diameter:6.4,height:1.6,tessellation:16},scene);dr.position.set(mx,HR+1.6,mz);drumG.push(dr);
-      addDome(domeG,mx,HR+2.4,mz,3.4,0.95);
-      const fc=MB.CreateCylinder('xxDomeFin',{diameter:0.16,height:1.6,tessellation:6},scene);fc.position.set(mx,HR+2.4+3.23+0.5,mz);goldG.push(fc);
-      const fs=MB.CreateSphere('xxDomeFinB',{diameter:0.5,segments:6},scene);fs.position.set(mx,HR+2.4+3.23+1.4,mz);goldG.push(fs);}
-  }
-  ringBand(0,HR,-0.1,0.1,stoneM,'xxRingCoreBand');
-  [10.5,21,31.5].forEach(y=>ringBand(y-0.15,y+0.35,0.2,1.5,stoneD,'xxRingLedge'));
-  ringBand(HR-0.2,HR+0.8,-2.2,2.2,stoneD,'xxRingTopBand');
-  ringBand(0,1.2,0.2,1.0,stoneD,'xxRingPlinthBand');
-  merge(outerP,facade,'xxRingFacadeOuter');merge(innerP,facade,'xxRingFacadeInner');merge(floods,M('#fff2c8',{em:'#fff2c8'}),'xxRingFloods');
-  merge(domeG,candy('#8c9eaa',0.5),'xxRingDomes');merge(drumG,stoneD,'xxRingDrums');merge(goldG,goldM,'xxRingGold');
-  // 碰撞：24 段弦
-  const NC=24;for(let k=0;k<NC;k++){const a=RP[Math.round(k*NBAY/NC)%NBAY],b=RP[Math.round((k+1)*NBAY/NC)%NBAY],dx=b[0]-a[0],dz=b[1]-a[1];
-    const bx=put(MB.CreateBox('xxRingHit',{width:Math.hypot(dx,dz)+0.4,height:HR,depth:2.4}),(a[0]+b[0])/2,HR/2,(a[1]+b[1])/2,null);bx.rotation.y=Math.atan2(-dz,dx);bx.isVisible=false;registerBallSolid(bx);}
-  // 四根巨大的禮拜塔：立在橢圓的四個角（參數角 45°、135°、225°、315°），離外牆 9 m
+// 四根巨大的禮拜塔：立在橢圓的四個角（參數角 45°、135°、225°、315°），離橢圓 9 m
   [45,135,225,315].forEach(a=>{const t=a*D2R,p=ell(t),gx=(p[0]-EC[0])/(EA*EA),gz=(p[1]-EC[1])/(EB*EB),gl=Math.hypot(gx,gz);minaret(p[0]+gx/gl*9,p[1]+gz/gl*9,1,0.08);});
-}
 // 看台外緣多邊形（用來挖空看台與外牆之間的廣場鋪面）：本壘後方 → 側邊看台 → 轉角 → 外野弧 → 左側
 const fo=(s,r,o)=>{const p=lpt(s,r,o);return [p.x,p.z];};
 const standPoly=[[0,-31]],half=[[16,-31],fo(1,8,37),fo(1,S_C,37)];
@@ -324,12 +254,12 @@ const standPoly=[[0,-31]],half=[[16,-31],fo(1,8,37),fo(1,S_C,37)];
 standPoly.push(...half);for(let i=0;i<=28;i++){const a=A_C-2*A_C*i/28;standPoly.push([121.5*Math.sin(a),121.5*Math.cos(a)]);}
 standPoly.push(...half.map(([x,z])=>[-x,z]).reverse());
 
-// ═════════ ⑦ 記分板：掛在中外野正後方的外牆內側（36×12 m）；鈷藍底、金框、象牙白分數格、綠松石局數、八芒星裝飾 ═════════
+// ═════════ ⑦ 記分板：立在外野看台的最後端（看台後牆頂上、中外野正後方；36×12 m）；鈷藍底、金框、象牙白分數格、綠松石局數、八芒星裝飾 ═════════
 {
-  const BW=36,BH=12,BY=24,boardTex=sbTexInit();
+  const BW=36,BH=12,BY=22.1,boardTex=sbTexInit();   // 外野看台後牆頂高 15.6 m、後牆中心半徑 119.1 m；框底 15.4 m（插進牆頂 0.2 m），記分板坐在牆頂上，看台本身不動
   const fm=M('#000000');fm.emissiveTexture=boardTex;fm.disableLighting=true;fm.backFaceCulling=false;
-  put(MB.CreatePlane('xxBoardFace',{width:BW,height:BH,sideOrientation:BABYLON.Mesh.DOUBLESIDE},scene),0,BY,139.9,fm);                    // 平面正面 -z ＝ 朝向本壘
-  put(MB.CreateBox('xxBoardFrame',{width:BW+1.4,height:BH+1.4,depth:1.6}),0,BY,141.4,candy('#d9b04a',0.7));   // 框的前面 140.6；記分板在框前 0.7 m（139.9），框的後面伸進外牆內
+  put(MB.CreatePlane('xxBoardFace',{width:BW,height:BH,sideOrientation:BABYLON.Mesh.DOUBLESIDE},scene),0,BY,116.7,fm);                    // 平面正面 -z ＝ 朝向本壘（框前面 117.4，記分板在框前 0.7 m）
+  registerBallSolid(put(MB.CreateBox('xxBoardFrame',{width:BW+1.4,height:BH+1.4,depth:2.4}),0,BY,118.6,candy('#d9b04a',0.7)));   // 框 z 117.4~119.8：後端蓋過弧形後牆（記分板兩端的後牆退到 z≈117.3）
   function drawBoard(g,s,W,H){
     const FONT='"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif',NUM='"Arial Rounded MT Bold","Arial Narrow",Arial,sans-serif';
     const rr=(x,y,w,h,r)=>{g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();};
@@ -408,8 +338,8 @@ const cheerSlots=[],cheerZones=[];
 }
 
 // ═════════ ⑨ 球場外：伊斯坦堡 ═════════
-// 外牆內側的走道（看台與外牆之間）→ 外牆外的山丘城市（彩色木屋、清真寺、加拉達塔）→ 北邊的博斯普魯斯海峽（懸索大橋、渡輪、貨輪）→ 對岸的山丘城市。
-// 全部是純外觀（外牆本身有碰撞，球飛不到外面）。
+// 看台外圍的環形廣場 → 外圍的山丘城市（彩色木屋、清真寺、加拉達塔）→ 北邊的博斯普魯斯海峽（懸索大橋、渡輪、貨輪）→ 對岸的山丘城市。
+// 全部是純外觀（沒有外牆，球飛出看台就是全壘打）。
 const GY=0.08,SEA_Y=0.12;
 const sst=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t);};
 const ellR=(th,a,b)=>1/Math.sqrt((Math.cos(th)/a)**2+(Math.sin(th)/b)**2);
@@ -430,7 +360,7 @@ function annulus(key,rIn,rOut,extraPts){
   raw.sort((a,b)=>a-b);const A=raw.filter((a,i)=>i===0||a-raw[i-1]>1e-7),PX=(t2,r)=>[EC[0]+r*Math.cos(t2),EC[1]+r*Math.sin(t2)];
   for(let i=0;i<A.length;i++){const t0=A[i],t1=i===A.length-1?A[0]+TAU:A[i+1];gq(key,[PX(t0,rIn(t0)),PX(t0,rOut(t0)),PX(t1,rOut(t1)),PX(t1,rIn(t1))],(x,z)=>[x/8,z/8]);}
 }
-annulus('plaza',th=>castPoly(standPoly,th),th=>ellR(th,EA-0.6,EB-0.6),standPoly);       // 看台與外牆之間的環形走道
+annulus('plaza',th=>castPoly(standPoly,th),th=>ellR(th,EA-0.6,EB-0.6),standPoly);       // 看台外圍的環形廣場（鋪到橢圓邊緣）
 Object.keys(acc).forEach(key=>{const a=acc[key],m=new BABYLON.Mesh('xxGround_'+key,scene),vd=new BABYLON.VertexData(),nor=[];for(let q=0;q<a.pos.length/3;q++)nor.push(0,1,0);
   vd.positions=a.pos;vd.normals=nor;vd.uvs=a.uv;vd.indices=a.idx;vd.applyToMesh(m);m.material=tm(plazaTex(),1);m.isPickable=false;});
 
@@ -577,25 +507,27 @@ function ship(type,x,z,dir,sc){
 [['ferry',-60,760,1,1.1],['ferry',320,800,-1,1.1],['ferry',-420,860,1,1],['ferry',120,1010,-1,1],['cargo',-120,960,1,1],['cargo',480,1090,-1,1.1],['tanker',-560,1100,1,1],['tanker',640,870,-1,1],
  ['sail',20,730,1,1.2],['sail',-180,790,-1,1],['sail',240,740,1,1.1],['sail',380,950,1,1],['sail',-340,1030,-1,0.9],['fish',-20,720,1,1],['fish',200,830,1,1],['fish',-300,740,-1,1],['fish',60,1140,1,1]].forEach(a=>ship(...a));
 
-// ── 打擊區看得到的巨大土耳其國旗：旗桿 112 m，旗面 66×44 m（2:3），每幀擺動並有明暗皺褶
+// ── 打擊區看得到的土耳其國旗：記分板左右對稱各一面。旗面 24×16 m（2:3）、最高點 42 m、旗桿 46 m，每幀擺動並有明暗皺褶
 {
-  const FWm=66,FHm=44,NXf=44,NYf=24,hx=-34,hz=168,yb=56,pm=candy('#e0b94e',0.8);
+  const FWm=24,FHm=16,NXf=44,NYf=24,hz=160,yb=26,sc=FWm/66,pm=candy('#e0b94e',0.8);   // 旗面底緣 26 m、頂緣 42 m；兩面旗離本壘 160 m、左右各在 x=±36~60 m（記分板兩側）
   const ft=newTex('xxGiantFlagTex',1536,1024),fg=ft.getContext();drawTurkishFlag(fg,1536,1024);ft.update();
   const fm=M('#000000');fm.emissiveTexture=ft;fm.disableLighting=true;fm.backFaceCulling=false;
-  const pos0=[],uv=[],idx=[],col=[],nor=[];
-  for(let j=0;j<=NYf;j++)for(let i=0;i<=NXf;i++){const u=i/NXf,v=j/NYf;pos0.push(hx+u*FWm,yb+(1-v)*FHm,hz);uv.push(u,1-v);col.push(1,1,1,1);nor.push(0,0,-1);}
-  for(let j=0;j<NYf;j++)for(let i=0;i<NXf;i++){const a=j*(NXf+1)+i;idx.push(a,a+1,a+NXf+1,a+1,a+NXf+2,a+NXf+1);}
-  const flag=new BABYLON.Mesh('xxGiantFlag',scene),vd=new BABYLON.VertexData();vd.positions=pos0.slice();vd.indices=idx;vd.uvs=uv;vd.normals=nor;vd.colors=col;vd.applyToMesh(flag,true);
-  flag.material=fm;flag.alwaysSelectAsActiveMesh=true;flag.isPickable=false;
-  put(MB.CreateCylinder('xxFlagPole',{diameter:1.4,height:114,tessellation:14},scene),hx-0.8,57,hz,pm);put(MB.CreateSphere('xxFlagPoleTop',{diameter:3.2,segments:10},scene),hx-0.8,115.2,hz,pm);
-  const cur=pos0.slice(),colA=col.slice(),t0=Date.now();
-  const obs=scene.onBeforeRenderObservable.add(()=>{
-    if(flag.isDisposed()){scene.onBeforeRenderObservable.remove(obs);return;}   // 換球場時自動移除
-    const t=(Date.now()-t0)/1000;
-    for(let j=0;j<=NYf;j++)for(let i=0;i<=NXf;i++){const u=i/NXf,v=j/NYf,k=(j*(NXf+1)+i),amp=u*(1.2+4.6*u),ph=u*9.0-t*3.0+v*1.3;
-      cur[k*3]=hx+u*FWm-0.05*amp*amp*(0.5+0.5*Math.sin(ph));cur[k*3+1]=yb+(1-v)*FHm-1.4*u*u-0.18*amp*Math.cos(ph);cur[k*3+2]=hz+amp*Math.sin(ph)+0.3*amp*Math.sin(u*17-t*5+v*2.1);
-      const sh=0.84+0.16*Math.cos(ph-0.5)*Math.min(1,u*4);colA[k*4]=colA[k*4+1]=colA[k*4+2]=sh;}
-    flag.updateVerticesData(BABYLON.VertexBuffer.PositionKind,cur);flag.updateVerticesData(BABYLON.VertexBuffer.ColorKind,colA);
+  [-60,36].forEach((hx,side)=>{   // hx＝旗桿所在 x（旗面從旗桿往右展開）：左旗 -60~-36，右旗 36~60，對稱於 x=0
+    const pos0=[],uv=[],idx=[],col=[],nor=[];
+    for(let j=0;j<=NYf;j++)for(let i=0;i<=NXf;i++){const u=i/NXf,v=j/NYf;pos0.push(hx+u*FWm,yb+(1-v)*FHm,hz);uv.push(u,1-v);col.push(1,1,1,1);nor.push(0,0,-1);}
+    for(let j=0;j<NYf;j++)for(let i=0;i<NXf;i++){const a=j*(NXf+1)+i;idx.push(a,a+1,a+NXf+1,a+1,a+NXf+2,a+NXf+1);}
+    const flag=new BABYLON.Mesh('xxGiantFlag'+side,scene),vd=new BABYLON.VertexData();vd.positions=pos0.slice();vd.indices=idx;vd.uvs=uv;vd.normals=nor;vd.colors=col;vd.applyToMesh(flag,true);
+    flag.material=fm;flag.alwaysSelectAsActiveMesh=true;flag.isPickable=false;
+    put(MB.CreateCylinder('xxFlagPole',{diameter:0.9,height:46,tessellation:14},scene),hx-0.5,23,hz,pm);put(MB.CreateSphere('xxFlagPoleTop',{diameter:2.0,segments:10},scene),hx-0.5,46.8,hz,pm);
+    const cur=pos0.slice(),colA=col.slice(),t0=Date.now();
+    const obs=scene.onBeforeRenderObservable.add(()=>{
+      if(flag.isDisposed()){scene.onBeforeRenderObservable.remove(obs);return;}   // 換球場時自動移除
+      const t=(Date.now()-t0)/1000;
+      for(let j=0;j<=NYf;j++)for(let i=0;i<=NXf;i++){const u=i/NXf,v=j/NYf,k=(j*(NXf+1)+i),amp=sc*u*(1.2+4.6*u),ph=u*9.0-t*3.0+v*1.3;
+        cur[k*3]=hx+u*FWm-0.05*amp*amp/sc*(0.5+0.5*Math.sin(ph));cur[k*3+1]=yb+(1-v)*FHm-1.4*sc*u*u-0.18*amp*Math.cos(ph);cur[k*3+2]=hz+amp*Math.sin(ph)+0.3*amp*Math.sin(u*17-t*5+v*2.1);
+        const sh=0.84+0.16*Math.cos(ph-0.5)*Math.min(1,u*4);colA[k*4]=colA[k*4+1]=colA[k*4+2]=sh;}
+      flag.updateVerticesData(BABYLON.VertexBuffer.PositionKind,cur);flag.updateVerticesData(BABYLON.VertexBuffer.ColorKind,colA);
+    });
   });
 }
 // ── 合併

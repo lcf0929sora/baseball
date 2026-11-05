@@ -1,4 +1,3 @@
-/* 球隊資料：完整移植原 teams.json，遊戲直接載入 JavaScript。 */
 window.BASEBALL_TEAM_CONFIG = {
   "version": 1,
   "teams": [
@@ -1587,6 +1586,112 @@ window.BASEBALL_TEAM_CONFIG = {
         {
           "id": "POPE-12",
           "name": "梵蒂岡",
+          "number": 12,
+          "position": "替補"
+        }
+      ]
+    },
+    {
+      "id": "KYIV",
+      "name": "基輔無人機隊",
+      "logo": "./baseball/drone.webp",
+      "music": {
+        "chance": "chance.mp3",
+        "cheer": "cheer.mp3",
+        "out": "out.mp3"
+      },
+      "crowd": {
+        "fly": "normal_scream.m4a",
+        "strikeout": "middle_scream.m4a",
+        "score": "long_scream.m4a",
+        "hit": "middle_scream2.m4a",
+        "homerun": "long_scream2.m4a",
+        "win": "long_scream4.m4a"
+      },
+      "uniforms": {
+        "home": {
+          "helmet": "#0057b7",
+          "body": "#ffd700",
+          "arms": "#ffd700",
+          "shoes": "#f2f2f2"
+        },
+        "away": {
+          "helmet": "#0057b7",
+          "body": "#ffd700",
+          "arms": "#ffd700",
+          "shoes": "#f2f2f2"
+        }
+      },
+      "players": [
+        {
+          "id": "KYIV-01",
+          "name": "博格丹",
+          "number": 1,
+          "position": "投手"
+        },
+        {
+          "id": "KYIV-02",
+          "name": "塔拉斯",
+          "number": 2,
+          "position": "捕手"
+        },
+        {
+          "id": "KYIV-03",
+          "name": "德米特里",
+          "number": 3,
+          "position": "一壘手"
+        },
+        {
+          "id": "KYIV-04",
+          "name": "安德烈",
+          "number": 4,
+          "position": "二壘手"
+        },
+        {
+          "id": "KYIV-05",
+          "name": "伊万",
+          "number": 5,
+          "position": "游擊手"
+        },
+        {
+          "id": "KYIV-06",
+          "name": "谢尔盖",
+          "number": 6,
+          "position": "三壘手"
+        },
+        {
+          "id": "KYIV-07",
+          "name": "弗拉基米尔",
+          "number": 7,
+          "position": "左外野手"
+        },
+        {
+          "id": "KYIV-08",
+          "name": "马克西姆",
+          "number": 8,
+          "position": "中外野手"
+        },
+        {
+          "id": "KYIV-09",
+          "name": "叶夫根尼",
+          "number": 9,
+          "position": "右外野手"
+        },
+        {
+          "id": "KYIV-10",
+          "name": "维克托",
+          "number": 10,
+          "position": "替補"
+        },
+        {
+          "id": "KYIV-11",
+          "name": "阿尔乔姆",
+          "number": 11,
+          "position": "替補"
+        },
+        {
+          "id": "KYIV-12",
+          "name": "罗曼",
           "number": 12,
           "position": "替補"
         }

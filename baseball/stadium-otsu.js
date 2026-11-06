@@ -98,8 +98,11 @@
  *   · 內野全黑土、沒有草坪（深褐近黑、有土塊與小石子）；外野草地沒有斜紋，只有草葉與深淺不均的草皮感。
  *   · 外野看台很小(5 階)；記分板是綠底、白框、翻牌數字的「傳統手動記分板」，不是電子記分板。
  *   · 球員休息區是凹進界外牆前的簡易棚子；另有小型封閉休息室（建在 x=240）。
+ *   · 右外野看台上方有一座啦啦隊舞台（甲板高 8.35 m、背板、頂棚、音響，10 位啦啦隊員一直在跳）。
+ *   · 球場外圍是高山與茂密森林（山高約 60~110 m，只有約 30~50 m 的平地緩衝）；平地上只有一座 4 層立體停車場（右側）
+ *     和一條緊貼停車場、彎彎曲曲爬進山谷的聯外道路。外圍全部在 makeGround 的 420×420 m 範圍內。
  * 本檔「不」設定天空／霧／光源——那些由主程式的天氣系統決定。
- * 閱讀順序：①共用工具 ②貼圖 ③牆(三段直線) ④看台 ⑤擋球牆與休息區 ⑥記分板 ⑦休息室 ⑧登錄規則
+ * 閱讀順序：①共用工具 ②貼圖 ③牆(三段直線) ④看台 ⑤擋球牆與休息區 ⑥記分板 ⑦啦啦隊舞台 ⑧外圍山林＋停車場＋道路 ⑨休息室 ⑩登錄規則
  * ───────────────────────────────────────────────────────────────────────────── */
 function build(ctx){
 const {BABYLON,scene,MB,M,C,put,texMat,lpt,registerBallSolid,registerFenceCollider,sbTexInit}=ctx;
@@ -125,6 +128,32 @@ function wallSeg(ax,az,bx,bz,h,th,mat,fence,outfield,capMat,ext){
 // 看不見、只供球碰撞的方盒（看台、屋頂、記分板…）
 function ghostBox(cx,cy,cz,w,h,d,ang,kind){
   const b=put(MB.CreateBox('xxHit',{width:w,height:h,depth:d}),cx,cy,cz,null);b.rotation.y=ang;b.isVisible=false;registerBallSolid(b,kind);return b;
+}
+
+// 把很多方盒／錐體合併成「一個 mesh」（頂點色＋平面法線）：舞台、停車場、樹木都用它，避免上千個 draw call。
+const hexRGB=h=>[parseInt(h.slice(1,3),16)/255,parseInt(h.slice(3,5),16)/255,parseInt(h.slice(5,7),16)/255];
+const vcMat=M('#ffffff');vcMat.backFaceCulling=false;vcMat.specularColor=C(0,0,0);   // 吃頂點色的共用材質（不反光）
+function newBatch(){
+  const P=[],N=[],K=[],I=[];
+  const vtx=(p,n,c)=>{P.push(p[0],p[1],p[2]);N.push(n[0],n[1],n[2]);K.push(c[0],c[1],c[2],1);};
+  const tri=(a,b,c,n,col)=>{const i=P.length/3;vtx(a,n,col);vtx(b,n,col);vtx(c,n,col);I.push(i,i+1,i+2);};
+  const quad=(a,b,c,d,n,col)=>{const i=P.length/3;vtx(a,n,col);vtx(b,n,col);vtx(c,n,col);vtx(d,n,col);I.push(i,i+1,i+2,i,i+2,i+3);};
+  // 方盒：中心 (cx,cy,cz)、尺寸 w(x)×h(y)×d(z)、繞 y 軸旋轉 ang（與 mesh.rotation.y 同一個方向）
+  function box(cx,cy,cz,w,h,d,ang,col){const c=Math.cos(ang||0),s=Math.sin(ang||0),X=w/2,Y=h/2,Z=d/2;
+    const W=(x,y,z)=>[cx+x*c+z*s,cy+y,cz-x*s+z*c],R=(x,z)=>[x*c+z*s,0,-x*s+z*c];
+    quad(W(-X,Y,-Z),W(X,Y,-Z),W(X,Y,Z),W(-X,Y,Z),[0,1,0],col);
+    quad(W(-X,-Y,-Z),W(-X,-Y,Z),W(X,-Y,Z),W(X,-Y,-Z),[0,-1,0],col);
+    quad(W(X,-Y,-Z),W(X,-Y,Z),W(X,Y,Z),W(X,Y,-Z),R(1,0),col);
+    quad(W(-X,-Y,Z),W(-X,-Y,-Z),W(-X,Y,-Z),W(-X,Y,Z),R(-1,0),col);
+    quad(W(-X,-Y,Z),W(-X,Y,Z),W(X,Y,Z),W(X,-Y,Z),R(0,1),col);
+    quad(W(X,-Y,-Z),W(X,Y,-Z),W(-X,Y,-Z),W(-X,-Y,-Z),R(0,-1),col);}
+  // 錐體（只有側面）：底在 y0、半徑 r、高 h；dir=1 尖端朝上、-1 朝下；sides 邊形，ph 為起始相位
+  function cone(cx,y0,cz,r,h,sides,col,dir,ph){dir=dir||1;ph=ph||0;const ap=[cx,y0+dir*h,cz],k=r/h,nl=Math.hypot(1,k);
+    for(let i=0;i<sides;i++){const a0=ph+i/sides*6.2832,a1=ph+(i+1)/sides*6.2832,am=(a0+a1)/2;
+      tri(ap,[cx+r*Math.cos(a0),y0,cz+r*Math.sin(a0)],[cx+r*Math.cos(a1),y0,cz+r*Math.sin(a1)],[Math.cos(am)/nl,dir*k/nl,Math.sin(am)/nl],col);}}
+  function toMesh(name,mat){if(!P.length)return null;const m=new BABYLON.Mesh(name,scene),vd=new BABYLON.VertexData();
+    vd.positions=P;vd.normals=N;vd.colors=K;vd.indices=I;vd.applyToMesh(m);m.material=mat;m.isPickable=false;return m;}
+  return {tri,quad,box,cone,toMesh,count:()=>P.length/3};
 }
 
 // ═════════ ② 貼圖：草地、黑土、常春藤、觀眾 ═════════
@@ -315,7 +344,209 @@ function drawBoard(g,s,W,H){
 }
 ctx.setScoreboardRenderer(drawBoard);
 
-// ═════════ ⑦ 封閉球員休息室（建在 x=240，遠離球場；切換到休息室視角才看得到）═════════
+// ═════════ ⑦ 啦啦隊舞台（右外野看台上方，面向球場）═════════
+// 舞台架在右外野看台(第 3 段牆)的上方：甲板高 8.35 m，懸在看台前半部之上，四根鋼柱立在牆與看台之間的空隙撐住；
+// 甲板後面是大型背板，上面有遮雨頂棚、燈串、兩側音響和兩面旗；正前方的橫幅寫著應援口號。
+// 舞台上有 10 位啦啦隊員一直在跳（拿彩球、雙手 V 字上下擺動）。看台本身沒有改動。
+{
+  const SA=OF[2],SB=OF[3],sdx=SB[0]-SA[0],sdz=SB[1]-SA[1],SL=Math.hypot(sdx,sdz),su=[sdx/SL,sdz/SL];
+  let sn=[su[1],-su[0]];if(sn[0]*(SA[0]+SB[0])/2+sn[1]*(SA[1]+SB[1])/2<0)sn=[-sn[0],-sn[1]];   // 看台往球場外的方向（和 stand() 同一套算法）
+  const sAng=Math.atan2(-sdz,sdx),SC=SL/2;                 // 舞台座標：s＝沿牆方向（從 A 端算起）、off＝離牆往外的距離；盒子 rotation.y=sAng 時 x 軸沿著牆
+  const SW=(s,off)=>[SA[0]+su[0]*s+sn[0]*off,SA[1]+su[1]*s+sn[1]*off];
+  const DY=8.1,DT=DY+0.25;                                  // 甲板中心高、甲板上表面高 8.35 m
+  const stg=newBatch(),lamp=newBatch();
+  const sbox=(s,off,y,w,h,d,col,b)=>{const p=SW(SC+s,off);(b||stg).box(p[0],y,p[1],w,h,d,sAng,hexRGB(col));};
+  // 甲板（木地板）＋中間的領舞台座＋前緣紅色裙板＋前緣欄杆
+  sbox(0,4.15,DY,22,0.5,6.3,'#9c7b4f');
+  sbox(0,3.9,DT+0.18,6,0.36,3.2,'#d9d4c2');
+  sbox(0,0.95,DY-0.1,22,0.9,0.3,'#c8323a');
+  sbox(0,1.15,DT+1.0,22,0.08,0.08,'#e8e8ea');
+  for(let i=-3;i<=3;i++)sbox(i*3.6,1.15,DT+0.5,0.08,1.0,0.08,'#e8e8ea');
+  // 四根鋼柱（立在牆與第 1 階看台之間的空隙）＋橫梁
+  for(const s of[-10,-3.4,3.4,10])sbox(s,1.4,(DY-0.25)/2,0.5,DY-0.25,0.5,'#4a4f55');
+  sbox(0,1.4,DY-0.5,21,0.4,0.4,'#4a4f55');
+  // 背板（貼圖另外貼）、遮雨頂棚、四根頂棚柱、頂棚前緣紅色飾帶
+  sbox(0,7.1,(DT+13.2)/2,22,13.2-DT,0.3,'#1d3d2c');
+  for(const s of[-10.7,10.7])for(const o of[1.6,6.7])sbox(s,o,(DT+13.4)/2,0.35,13.4-DT,0.35,'#d8d4c4');
+  sbox(0,4.5,13.6,22.4,0.4,7.8,'#2a4a38');
+  sbox(0,0.7,13.5,22.4,0.7,0.25,'#c8323a');
+  // 音響（左右各兩層）、兩支旗桿＋旗
+  for(const s of[-9.3,9.3]){sbox(s,6.2,DT+1.3,1.7,2.6,1.2,'#1c1e22');sbox(s,6.2,DT+3.1,1.5,1.0,1.0,'#2a2d33');}
+  for(const s of[-11.4,11.4]){sbox(s,1.3,DT+4.2,0.18,8.4,0.18,'#e8e8ea');sbox(s+(s<0?1.4:-1.4),1.3,DT+7.3,2.8,1.7,0.06,s<0?'#d8323a':'#2f6fe0');}
+  // 頂棚下的燈串（會發光的小燈）
+  for(let i=-5;i<=5;i++)sbox(i*2.1,1.6,13.2,0.4,0.25,0.4,'#fff2b8',lamp);
+  stg.toMesh('xxCheerStage',vcMat);lamp.toMesh('xxCheerLamps',M('#fff2b8',{em:'#fff2b8'}));
+  { const p=SW(SC,4.15);ghostBox(p[0],DY,p[1],22,0.6,6.3,sAng,'spectator'); }       // 球打得到甲板
+
+  // 貼圖：背板與前緣橫幅（朝向球場，平面預設朝 -z，也就是旋轉後的「球場方向」）
+  const FONT='"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif';
+  {const bt=newTex('xxCheerBackTex',1536,340),g=bt.getContext();
+   const gr=g.createLinearGradient(0,0,0,340);gr.addColorStop(0,'#1f5a3c');gr.addColorStop(1,'#0e2d1e');g.fillStyle=gr;g.fillRect(0,0,1536,340);
+   g.fillStyle='rgba(255,255,255,0.08)';for(let x=-340;x<1536;x+=110){g.beginPath();g.moveTo(x,340);g.lineTo(x+60,340);g.lineTo(x+400,0);g.lineTo(x+340,0);g.closePath();g.fill();}   // 斜條紋
+   g.strokeStyle='#e2c35a';g.lineWidth=10;g.strokeRect(12,12,1512,316);
+   g.textAlign='center';g.textBaseline='middle';
+   g.fillStyle='#e2c35a';g.font='bold 40px '+FONT;g.fillText('★   ★   ★',768,52);
+   g.fillStyle='#f7f4e8';g.font='bold 150px '+FONT;g.fillText('乙子園  加油！',768,170);
+   g.fillStyle='#ff6b6b';g.font='bold 54px '+FONT;g.fillText('GO!  GO!  FIGHT!',768,282);
+   bt.update();
+   const m=M('#000000');m.emissiveTexture=bt;m.disableLighting=true;m.backFaceCulling=false;
+   const p=SW(SC,6.9),pl=put(MB.CreatePlane('xxCheerBack',{width:21.6,height:13.2-DT-0.1},scene),p[0],(DT+13.2)/2,p[1],m);pl.rotation.y=sAng;}
+  {const ft=newTex('xxCheerFasciaTex',1536,100),g=ft.getContext();
+   g.fillStyle='#c8323a';g.fillRect(0,0,1536,100);g.fillStyle='#f7f4e8';g.font='bold 62px '+FONT;g.textAlign='center';g.textBaseline='middle';
+   g.fillText('應援團  ★  乙子園  ★  應援團  ★  乙子園  ★  應援團',768,54);ft.update();
+   const m=M('#000000');m.emissiveTexture=ft;m.disableLighting=true;m.backFaceCulling=false;
+   const p=SW(SC,0.78),pl=put(MB.CreatePlane('xxCheerFascia',{width:21.8,height:0.85},scene),p[0],DY-0.1,p[1],m);pl.rotation.y=sAng;}
+
+  // 啦啦隊員：身體(裙子)＋頭＋兩隻手（手臂樞紐在肩膀，末端有彩球）。每幀只改 root 的高度和兩個樞紐的角度。
+  const skin=M('#f1c9a5'),outfits=[['#d8323a','#ffffff'],['#ffffff','#d8323a'],['#d8323a','#ffd84a'],['#ffffff','#2f6fe0']].map(o=>({sk:M(o[0]),pom:M(o[1],{em:o[1]})}));
+  const dancers=[];
+  const spots=[];for(let i=0;i<6;i++)spots.push([(i-2.5)*3.2,2.9]);for(let i=0;i<4;i++)spots.push([(i-1.5)*3.6,5.0]);   // 前排 6 人、後排 4 人
+  spots.forEach((sp,idx)=>{
+    const p=SW(SC+sp[0],sp[1]),o=outfits[idx%outfits.length],root=new BABYLON.Mesh('xxCheerer',scene);
+    root.position.set(p[0],DT,p[1]);root.rotation.y=sAng;root.scaling.set(1.35,1.35,1.35);
+    const body=MB.CreateCylinder('xxCheerBody',{diameterTop:0.36,diameterBottom:0.7,height:1.0,tessellation:8},scene);body.parent=root;body.position.y=0.85;body.material=o.sk;
+    const legs=MB.CreateBox('xxCheerLegs',{width:0.32,height:0.4,depth:0.2},scene);legs.parent=root;legs.position.y=0.2;legs.material=skin;
+    const head=MB.CreateSphere('xxCheerHead',{diameter:0.32,segments:6},scene);head.parent=root;head.position.y=1.55;head.material=skin;
+    const arms=[-1,1].map(sd=>{const pv=new BABYLON.Mesh('xxCheerArm',scene);pv.parent=root;pv.position.set(sd*0.2,1.3,0);
+      const arm=MB.CreateCylinder('xxCheerArmM',{diameter:0.1,height:0.55,tessellation:6},scene);arm.parent=pv;arm.position.y=0.28;arm.material=skin;
+      const pom=MB.CreateSphere('xxCheerPom',{diameter:0.34,segments:5},scene);pom.parent=pv;pom.position.y=0.62;pom.material=o.pom;return pv;});
+    dancers.push({root,arms,ph:idx*0.9});
+  });
+  const t0=Date.now(),first=dancers[0].root;
+  const obs=scene.onBeforeRenderObservable.add(()=>{
+    if(first.isDisposed()){scene.onBeforeRenderObservable.remove(obs);return;}   // 換球場時自動移除
+    const t=(Date.now()-t0)/1000;
+    for(const d of dancers){const w=Math.sin(t*5.2+d.ph);d.root.position.y=DT+0.16*Math.abs(w);
+      d.arms[0].rotation.z=0.55+0.4*w;d.arms[1].rotation.z=-(0.55+0.4*Math.sin(t*5.2+d.ph+1.4));}   // 左手 +、右手 −：兩手呈 V 字往外張
+  });
+}
+
+// ═════════ ⑧ 外圍：高山、茂密森林、立體停車場、彎曲的聯外道路 ═════════
+// 範圍很小：球場周圍只留一圈約 30~50 m 的平地（橢圓），外面立刻升起 60~110 m 的山，整片山坡長滿樹；
+// 平地上只有一座 4 層的立體停車場（在右側）和一條彎曲的聯外道路（沿著停車場外側，繞過去之後蜿蜒爬進山谷）。
+// 所有地形都在 x:-205~205、z:-145~265 以內（就是 makeGround 的 420×420 草地範圍裡），超出的部分被山擋住看不到。
+{
+  const clamp=(v,a,b)=>v<a?a:v>b?b:v,sst=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
+  // 可重現的 2D 值噪聲／分形噪聲（0~1）
+  const hash=(ix,iz)=>{let h=Math.imul(ix,374761393)+Math.imul(iz,668265263)|0;h=Math.imul(h^h>>>13,1274126177);return((h^h>>>16)>>>0)/4294967296;};
+  const vnoise=(x,z)=>{const ix=Math.floor(x),iz=Math.floor(z),fx=x-ix,fz=z-iz,ux=fx*fx*(3-2*fx),uz=fz*fz*(3-2*fz);
+    const a=hash(ix,iz),b=hash(ix+1,iz),c=hash(ix,iz+1),d=hash(ix+1,iz+1);return a+(b-a)*ux+(c-a)*uz+(a-b-c+d)*ux*uz;};
+  const fbm=(x,z)=>{let s=0,a=0.5,f=1/90;for(let i=0;i<4;i++){s+=a*vnoise(x*f+i*17.3,z*f-i*9.1);a*=0.5;f*=2;}return s/0.9375;};
+
+  // ── 平地範圍：球場周圍的橢圓 ＋ 停車場的停車坪（長方形）；平地以外才會升起山 ──
+  const EX=0,EZ=42,ERX=112,ERZ=98;
+  const PX0=84,PX1=142,PZ0=-22,PZ1=72;
+  const dEll=(x,z)=>(Math.hypot((x-EX)/ERX,(z-EZ)/ERZ)-1)*Math.sqrt(ERX*ERZ);       // 離橢圓邊緣的大約距離(m)，負＝在平地裡
+  const dPad=(x,z)=>Math.hypot(Math.max(PX0-x,0,x-PX1),Math.max(PZ0-z,0,z-PZ1));
+  const dFlat=(x,z)=>Math.min(dEll(x,z),dPad(x,z));
+
+  // ── 聯外道路：Catmull-Rom 曲線。起點在本壘後方，往東沿著停車場南側→繞到停車場東側→蜿蜒爬進東北方的山谷 ──
+  const RC=[[30,-40],[58,-37],[86,-31],[116,-30],[140,-30],[156,-20],[160,4],[156,30],[150,54],[156,76],[172,92],[186,110],[180,134],[186,158],[200,180],[196,206]];
+  const road=[],segS=[];
+  {const cr=(a,b,c,d,t)=>0.5*(2*b+(-a+c)*t+(2*a-5*b+4*c-d)*t*t+(-a+3*b-3*c+d)*t*t*t);
+   let s=0;
+   for(let k=0;k<RC.length-1;k++){const p0=RC[Math.max(k-1,0)],p1=RC[k],p2=RC[k+1],p3=RC[Math.min(k+2,RC.length-1)];
+     const n=Math.max(2,Math.ceil(Math.hypot(p2[0]-p1[0],p2[1]-p1[1])/3));segS.push(s);
+     for(let j=0;j<n;j++){const t=j/n,x=cr(p0[0],p1[0],p2[0],p3[0],t),z=cr(p0[1],p1[1],p2[1],p3[1],t);
+       if(road.length)s+=Math.hypot(x-road[road.length-1].x,z-road[road.length-1].z);road.push({x,z,s});}}
+   const Lp=RC[RC.length-1];s+=Math.hypot(Lp[0]-road[road.length-1].x,Lp[1]-road[road.length-1].z);road.push({x:Lp[0],z:Lp[1],s});}
+  const S0=segS[9],roadH=s=>0.09*Math.max(0,s-S0);   // 道路在停車場旁邊貼地；繞過停車場之後才開始往山裡爬（坡度 9%）
+  const roadNear=(x,z)=>{let bd=1e9,bs=0;
+    for(let i=0;i<road.length-1;i++){const a=road[i],b=road[i+1],dx=b.x-a.x,dz=b.z-a.z,l2=dx*dx+dz*dz;let t=l2?((x-a.x)*dx+(z-a.z)*dz)/l2:0;t=clamp(t,0,1);
+      const d=Math.hypot(x-(a.x+dx*t),z-(a.z+dz*t));if(d<bd){bd=d;bs=a.s+(b.s-a.s)*t;}}
+    return {d:bd,s:bs};};
+
+  // ── 地形高度：平地(0) → 山。山高 40~110 m；道路兩側 7 m 內壓成和路面同高，再用 28 m 長的坡接回山 ──
+  const mountH=(x,z,d)=>{const n=fbm(x+300,z-150),rg=1-Math.abs(2*fbm(x*0.8-90,z*0.8+40)-1);return(38+48*n+28*rg*rg)*(0.75+0.25*sst(d/150));};
+  const RISE=95;
+  const terrainH=(x,z)=>{const d=dFlat(x,z),base=d<=0?0:mountH(x,z,d)*sst(d/RISE),r=roadNear(x,z);
+    if(r.d>=35)return base;const hr=roadH(r.s);return hr+(base-hr)*sst((r.d-7)/28);};
+
+  // ── 地形 mesh（頂點色：森林地面；高處偏灰；平地交界偏亮）──
+  const TX0=-205,TX1=205,TZ0=-145,TZ1=265,TS=2.5,NX=Math.round((TX1-TX0)/TS)+1,NZ=Math.round((TZ1-TZ0)/TS)+1;
+  const HT=new Float32Array(NX*NZ);
+  for(let j=0;j<NZ;j++)for(let i=0;i<NX;i++)HT[j*NX+i]=terrainH(TX0+i*TS,TZ0+j*TS);
+  {const pos=[],nor=[],col=[],idx=[];
+   for(let j=0;j<NZ;j++)for(let i=0;i<NX;i++){const x=TX0+i*TS,z=TZ0+j*TS,h=HT[j*NX+i];
+     const hx0=HT[j*NX+Math.max(i-1,0)],hx1=HT[j*NX+Math.min(i+1,NX-1)],hz0=HT[Math.max(j-1,0)*NX+i],hz1=HT[Math.min(j+1,NZ-1)*NX+i];
+     let nx=(hx0-hx1)/(2*TS),nz=(hz0-hz1)/(2*TS);const nl=Math.hypot(nx,1,nz);nx/=nl;nz/=nl;
+     pos.push(x,h-0.12,z);nor.push(nx,1/nl,nz);                                    // 比地面低 12 cm：平地部分藏在草地下面
+     const k=vnoise(x*0.35,z*0.35),rock=sst((h-85)/45)*0.55,lawn=1-sst((dFlat(x,z)-2)/16);
+     const r=0.13+0.1*k,g=0.27+0.11*k,b=0.12+0.05*k;
+     col.push(r+(0.46-r)*rock+(0.2-r)*lawn*0.6,g+(0.47-g)*rock+(0.42-g)*lawn*0.6,b+(0.42-b)*rock+(0.12-b)*lawn*0.6,1);}
+   for(let j=0;j<NZ-1;j++)for(let i=0;i<NX-1;i++){const a=j*NX+i;idx.push(a,a+NX,a+1,a+1,a+NX,a+NX+1);}
+   const m=new BABYLON.Mesh('xxTerrain',scene),vd=new BABYLON.VertexData();vd.positions=pos;vd.normals=nor;vd.colors=col;vd.indices=idx;vd.applyToMesh(m);
+   m.material=vcMat;m.isPickable=false;m.freezeWorldMatrix();}
+
+  // ── 茂密森林：5.5 m 間距的抖動格點，每格一棵（低處闊葉、高處針葉杉），避開平地、停車坪和道路 ──
+  {const rt=rng(777),chunks=new Map(),brown=hexRGB('#4b3a28');
+   for(let gx=TX0+4;gx<TX1-4;gx+=5.5)for(let gz=TZ0+4;gz<TZ1-4;gz+=5.5){
+     const x=gx+(rt()-0.5)*4.8,z=gz+(rt()-0.5)*4.8,d=dFlat(x,z);
+     if(d<4||d>190)continue;
+     const rd=roadNear(x,z);if(rd.d<9.5)continue;
+     const h=terrainH(x,z),key=Math.floor(x/90)+','+Math.floor(z/90);let b=chunks.get(key);if(!b){b=newBatch();chunks.set(key,b);}
+     const size=0.8+rt()*0.55,ph=rt()*6.28;
+     if(rt()<0.3+0.65*sst((h-20)/50)){            // 針葉樹
+       const H=(10+rt()*8)*size,R=(2.3+rt()*0.8)*size,g=0.26+rt()*0.12,c=[0.09+rt()*0.05,g,0.12+rt()*0.04],cl=[c[0]*1.18,c[1]*1.18,c[2]*1.1];
+       b.cone(x,h-0.2,z,0.55*size,H*0.3,4,brown,1,ph);
+       b.cone(x,h+H*0.1,z,R,H*0.5,7,c,1,ph);b.cone(x,h+H*0.36,z,R*0.76,H*0.44,7,cl,1,ph+0.4);b.cone(x,h+H*0.6,z,R*0.5,H*0.42,7,c,1,ph+0.8);
+     }else{                                         // 闊葉樹
+       const H=(8+rt()*6)*size,R=(3+rt()*1.2)*size,c=[0.18+rt()*0.12,0.38+rt()*0.15,0.1+rt()*0.06];
+       b.cone(x,h-0.2,z,0.5*size,H*0.45,5,brown,1,ph);
+       b.cone(x,h+H*0.4,z,R,H*0.4,7,c,1,ph);b.cone(x,h+H*0.4,z,R,H*0.3,7,[c[0]*0.7,c[1]*0.75,c[2]*0.8],-1,ph);}
+   }
+   chunks.forEach((b,key)=>{const m=b.toMesh('xxForest'+key,vcMat);if(m)m.freezeWorldMatrix();});}
+
+  // ── 聯外道路：沿著曲線鋪一條 9.2 m 寬的柏油帶（兩側白邊線、中央黃色虛線）＋路邊反光標柱 ──
+  {const rtex=newTex('xxRoadTex',256,256),g=rtex.getContext();
+   fillNoise(g,256,rng(5),78,80,84,0.12);
+   g.fillStyle='#e9e6da';g.fillRect(14,0,5,256);g.fillRect(237,0,5,256);g.fillStyle='#e8c23a';g.fillRect(125,0,6,120);rtex.update();
+   const rm=texMat(rtex,1);rm.backFaceCulling=false;
+   const pos=[],nor=[],uv=[],idx=[],HW=4.6,post=newBatch(),pw=hexRGB('#e8e6dc');
+   for(let i=0;i<road.length;i++){const p=road[i],a=road[Math.max(i-1,0)],b=road[Math.min(i+1,road.length-1)];
+     let tx=b.x-a.x,tz=b.z-a.z;const tl=Math.hypot(tx,tz);tx/=tl;tz/=tl;const nx=-tz,nz=tx,y=roadH(p.s)+0.1;
+     pos.push(p.x-nx*HW,y,p.z-nz*HW,p.x+nx*HW,y,p.z+nz*HW);nor.push(0,1,0,0,1,0);uv.push(0,p.s/9,1,p.s/9);
+     if(i>0){const k=(i-1)*2;idx.push(k,k+1,k+2,k+1,k+3,k+2);}
+     if(i%5===0)for(const sd of[-1,1])post.box(p.x+nx*sd*(HW+0.4),y+0.45,p.z+nz*sd*(HW+0.4),0.16,0.9,0.16,0,pw);}
+   const m=new BABYLON.Mesh('xxRoad',scene),vd=new BABYLON.VertexData();vd.positions=pos;vd.normals=nor;vd.uvs=uv;vd.indices=idx;vd.applyToMesh(m);m.material=rm;m.isPickable=false;m.freezeWorldMatrix();
+   post.toMesh('xxRoadPosts',vcMat);}
+
+  // ── 立體停車場：4 層（地面層＋3 層停車甲板＋屋頂層），柱網 9×8 m；北端有一條坡道，西北角有樓梯塔和「P」招牌 ──
+  {const lot=newBatch(),lampB=newBatch(),CX=112,CZ=18,CW=40,CL=58,FH=3.3,NF=4;
+   const conc=hexRGB('#b9b6ae'),concD=hexRGB('#8f8c85'),band=hexRGB('#dcd8cb'),colm=hexRGB('#a5a29a'),asp=hexRGB('#55585c');
+   for(let k=1;k<=NF;k++){const y=FH*k;
+     lot.box(CX,y-0.175,CZ,CW,0.35,CL,0,k===NF?concD:conc);                                            // 樓板
+     lot.box(CX,y+0.55,CZ-CL/2+0.15,CW,1.1,0.3,0,band);lot.box(CX,y+0.55,CZ+CL/2-0.15,CW,1.1,0.3,0,band);   // 四周護牆
+     lot.box(CX-CW/2+0.15,y+0.55,CZ,0.3,1.1,CL-0.6,0,band);lot.box(CX+CW/2-0.15,y+0.55,CZ,0.3,1.1,CL-0.6,0,band);}
+   for(let k=0;k<NF;k++)for(let i=0;i<5;i++)for(let j=0;j<8;j++)lot.box(CX-18+i*9,FH*k+FH/2,CZ-28+j*8,0.7,FH,0.7,0,colm);   // 柱子
+   for(let k=1;k<NF;k++)for(let j=0;j<=19;j++){const z=CZ-CL/2+1.5+j*(CL-3)/19;                                   // 西側立面的直條遮陽板
+     lot.box(CX-CW/2,FH*k+1.1+(FH-1.1-0.35)/2,z,0.25,FH-1.45,0.4,0,band);}
+   // 北端坡道：從停車坪(z=69)緩坡上到第一層樓板(z=47)
+   {const xa=CX-8,xb=CX+8,z0=CZ+CL/2+22,z1=CZ+CL/2,nl=Math.hypot(22,FH),nn=[0,22/nl,FH/nl];
+    lot.quad([xa,0.08,z0],[xb,0.08,z0],[xb,FH,z1],[xa,FH,z1],nn,asp);
+    lot.tri([xa,0.08,z0],[xa,FH,z1],[xa,0.08,z1],[-1,0,0],concD);lot.tri([xb,0.08,z0],[xb,0.08,z1],[xb,FH,z1],[1,0,0],concD);}
+   // 樓梯／電梯塔（西北角，靠球場那一側）
+   const TXc=CX-CW/2-1.8,TZc=CZ+CL/2-4,TH=FH*NF+3.4;
+   lot.box(TXc,TH/2,TZc,5,TH,6,0,hexRGB('#7a7f86'));lot.box(TXc-2.52,TH/2,TZc,0.1,TH-1.2,2.4,0,hexRGB('#9fc4d8'));lot.box(TXc,TH+0.2,TZc,5.4,0.4,6.4,0,hexRGB('#3a3f45'));
+   // 車子：每層兩排（中間是車道），放約一半～七成
+   const carCol=['#d8323a','#e8e8ea','#2f6fe0','#1d1f22','#c9c9cd','#f0c43a','#2c7a4a','#8a8d93','#b5651d'].map(hexRGB),glass=hexRGB('#2a3238'),rc=rng(31);
+   for(let k=0;k<=NF;k++){const y=k?FH*k:0.08,occ=k===0?0.75:(k===NF?0.4:0.6);
+     for(const sx of[-14.6,14.6])for(let z=-26;z<=26;z+=2.6){if(rc()>occ)continue;const c=carCol[Math.floor(rc()*carCol.length)];
+       lot.box(CX+sx,y+0.5,CZ+z,4.3,0.7,1.8,0,c);lot.box(CX+sx+(rc()<0.5?0.3:-0.3),y+1.1,CZ+z,2.3,0.55,1.6,0,glass);}}
+   // 屋頂燈柱
+   for(const sx of[-18,18])for(let z=-24;z<=24;z+=12){lot.box(CX+sx,FH*NF+2.2,CZ+z,0.15,4.4,0.15,0,hexRGB('#3a3f45'));lampB.box(CX+sx+(sx<0?0.45:-0.45),FH*NF+4.4,CZ+z,1.0,0.18,0.35,0,hexRGB('#fff2b8'));}
+   lot.toMesh('xxParkingGarage',vcMat);lampB.toMesh('xxParkingLamps',M('#fff2b8',{em:'#fff2b8'}));
+   // 停車坪（柏油）＋停車場到看台之間的步道廣場
+   const apron=MB.CreateGround('xxLotApron',{width:PX1-PX0,height:PZ1-PZ0},scene);put(apron,(PX0+PX1)/2,0.05,(PZ0+PZ1)/2,M('#4a4d52'));
+   const walk=MB.CreateGround('xxLotWalk',{width:22,height:40},scene);put(walk,81,0.07,8,M('#aeb0a8'));
+   // 「P 停車場」招牌（貼在樓梯塔朝球場那一面）
+   const st=newTex('xxLotSignTex',256,256),sg=st.getContext();sg.fillStyle='#1f4fa8';sg.fillRect(0,0,256,256);sg.strokeStyle='#ffffff';sg.lineWidth=8;sg.strokeRect(8,8,240,240);
+   sg.fillStyle='#ffffff';sg.textAlign='center';sg.textBaseline='middle';sg.font='bold 150px Arial,sans-serif';sg.fillText('P',128,100);sg.font='bold 52px "Noto Sans TC","Microsoft JhengHei",sans-serif';sg.fillText('停車場',128,206);st.update();
+   const sm=M('#000000');sm.emissiveTexture=st;sm.disableLighting=true;sm.backFaceCulling=false;
+   const sign=put(MB.CreatePlane('xxLotSign',{width:4.6,height:4.6},scene),TXc-2.6,TH-3.2,TZc,sm);sign.rotation.y=Math.PI/2;}   // 平面預設朝 -z；轉 90° 後朝 -x（球場方向）
+}
+
+// ═════════ ⑨ 封閉球員休息室（建在 x=240，遠離球場；切換到休息室視角才看得到）═════════
 {
   const wall=M('#cfc8b4'),floorM=M('#6b6258'),lockerM=M('#35506b'),bench=M('#8a6b43');
   put(MB.CreateBox('xxLockFloor',{width:34,height:0.2,depth:16}),240,0.1,0,floorM);
@@ -327,7 +558,7 @@ ctx.setScoreboardRenderer(drawBoard);
 }
 ctx.setLocker({camPos:[240,12,-22],camTarget:[240,1,0],seat:p=>({x:230.2+(p.index%9)*2.45,y:0,z:p.team==='RED'?3.6:-4.5,s:1.05})});
 
-// ═════════ ⑧ 休息區位置契約＋全壘打規則 ═════════
+// ═════════ ⑩ 休息區位置契約＋全壘打規則 ═════════
 ctx.setDugouts({
   E:s=>lpt(s,DUG_R,DUG_FRONT-1.4),                         // 前緣矮牆外側
   T:s=>lpt(s,DUG_R,FOUL_OFF-3.2),                          // 棚內、長椅前

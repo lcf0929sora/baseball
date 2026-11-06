@@ -99,6 +99,7 @@
  *   · 外野看台很小(5 階)；記分板是綠底、白框、翻牌數字的「傳統手動記分板」，不是電子記分板。
  *   · 球員休息區是凹進界外牆前的簡易棚子；另有小型封閉休息室（建在 x=240）。
  *   · 右外野看台上方有一座啦啦隊舞台（甲板高 8.35 m、背板、頂棚、音響，10 位啦啦隊員一直在跳）。
+ *   · 另外兩個球員休息區的屋頂上各留 13 個「系統預設啦啦隊」站位（cheerSlots／cheerZones），屋頂邊緣加了護欄。
  *   · 球場外圍是高山與茂密森林（山高約 60~110 m，只有約 30~50 m 的平地緩衝）；平地上只有一座 4 層立體停車場（右側）
  *     和一條緊貼停車場、彎彎曲曲爬進山谷的聯外道路。外圍全部在 makeGround 的 420×420 m 範圍內。
  * 本檔「不」設定天空／霧／光源——那些由主程式的天氣系統決定。
@@ -298,6 +299,28 @@ sides.forEach(s=>{
   wallSeg(f0.x,f0.z,f1.x,f1.z,1.1,0.4,foulMat,true,false,stripe,0);
   wallSeg(f2.x,f2.z,f3.x,f3.z,1.1,0.4,foulMat,true,false,stripe,0);
 });
+
+// ── 系統預設啦啦隊：站在兩個球員休息區的屋頂上（屋頂上表面高 2.79 m，屋頂範圍：沿界外線 11.7~26.3 m、離界外線 12.1~19.4 m）。
+// 主程式會讀 window.BaseballStadiums.otsu.cheerSlots，把預設啦啦隊放到這些站位上（每側 13 個：前排 7、後排 6；2 m 間距）。
+// 站位約定與休息區 seat() 相同：{side,row,x,y,z,ry}（y＝站立面高度、ry＝面向場內）。這裡只加護欄、站位和 zone，
+// 右外野看台上原本的日式啦啦隊舞台（⑦）原樣保留。
+const cheerSlots=[],cheerZones=[];
+{
+  const ROOF_TOP=2.7+0.09,RO_C=(DUG_FRONT+FOUL_OFF)/2,ROWS=[[13.5,[-6,-4,-2,0,2,4,6]],[16.3,[-5,-3,-1,1,3,5]]];
+  const rail=newBatch(),railC=hexRGB('#e7e3d3');
+  sides.forEach(s=>{
+    const ang=Math.atan2(-SQ,s*SQ),c=lpt(s,DUG_R,RO_C),P=(dr,o)=>lpt(s,DUG_R+dr,o);   // ang 與休息區屋頂的 rotation.y 相同（盒子 x 軸沿界外線）
+    const rb=(dr,o,w,h,d,y)=>{const p=P(dr,o);rail.box(p.x,y,p.z,w,h,d,ang,railC);};
+    rb(0,12.25,14.2,0.06,0.06,ROOF_TOP+1.0);rb(0,12.25,14.2,0.05,0.05,ROOF_TOP+0.5);                       // 前緣兩道欄杆
+    for(let dr=-7;dr<=7;dr+=2)rb(dr,12.25,0.08,1.0,0.08,ROOF_TOP+0.5);                                      // 前緣立柱
+    for(const dr of[-7.15,7.15]){rb(dr,15.7,0.06,0.06,6.95,ROOF_TOP+1.0);rb(dr,15.7,0.05,0.05,6.95,ROOF_TOP+0.5);   // 兩側欄杆
+      for(const o of[12.25,14.5,16.8,19.1])rb(dr,o,0.08,1.0,0.08,ROOF_TOP+0.5);}
+    ROWS.forEach(([o,drs],row)=>drs.forEach(dr=>{const p=P(dr,o);cheerSlots.push({side:s,row,x:p.x,y:ROOF_TOP,z:p.z,ry:-s*Math.PI/4});}));
+    cheerZones.push({side:s,center:{x:c.x,z:c.z},y:ROOF_TOP,length:14.6,depth:7.3,slots:ROWS.reduce((n,[,d])=>n+d.length,0)});
+  });
+  rail.toMesh('xxDugRoofRails',vcMat);
+  const reg=(window.BaseballStadiums||{}).otsu;if(reg){reg.cheerSlots=cheerSlots;reg.cheerZones=cheerZones;}
+}
 
 // ═════════ ⑥ 傳統記分板（綠底、白框、翻牌數字）═════════
 // 位置：中外野牆(z=101)正後方，兩根立柱撐起，板子下緣離地 6 m、不擋看台。大小 36×12 m（貼圖仍是 1536×512，比例 3:1）。

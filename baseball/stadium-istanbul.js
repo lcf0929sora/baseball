@@ -16,10 +16,10 @@
  *   · 記分板立在外野看台的最後端（看台後牆頂上、中外野正後方；鈷藍／金框、象牙白分數格）。
  *  打擊區看得到的國旗
  *   · 記分板左右兩側對稱各立一根 46 m 的旗桿，各掛一面 24×16 m 的土耳其國旗（2:3 標準比例），旗面每幀用程式擺動、有明暗皺褶，飄揚中；
- *     旗面最高點 42 m、離本壘 160 m，從打擊區看出去仰角約 9°~15°，且在記分板兩側不被擋住。
+ *     旗面最高點 42 m、立在海峽南岸邊（離本壘 182 m），從打擊區看出去仰角約 8°~13°，且在記分板兩側不被擋住。
  *  伊斯坦堡
  *   · 外圍是起伏的山丘城市：彩色牆面、赤陶屋頂的奧斯曼木屋、成排的柏樹與傘松、多座清真寺（藍色清真寺、聖索菲亞、蘇萊曼尼耶…）、加拉達塔；
- *     北邊遠處是博斯普魯斯海峽：懸索大橋、渡輪、貨輪、少女塔小島，對岸又是一片山丘城市。
+ *     北邊緊鄰博斯普魯斯海峽（南岸離外牆區約 50 m）：懸索大橋、渡輪、貨輪、少女塔小島，對岸是一片山丘城市；兩面國旗立在岸邊。
  *  本檔「不」設定天空／霧／光源。
  */
 (function(){
@@ -341,6 +341,7 @@ const cheerSlots=[],cheerZones=[];
 // 看台外圍的環形廣場 → 外圍的山丘城市（彩色木屋、清真寺、加拉達塔）→ 北邊的博斯普魯斯海峽（懸索大橋、渡輪、貨輪）→ 對岸的山丘城市。
 // 全部是純外觀（沒有外牆，球飛出看台就是全壘打）。
 const GY=0.08,SEA_Y=0.12;
+const ZS=500;   // 海峽（連同大橋、船、對岸城市）整體往球場平移的距離：原本 z≈690~1180 → 現在 z≈190~680，南岸就在球場北邊約 50 m 處；下面所有「690／1180」之類的數字都是平移前的座標，用 ZS 換算
 const sst=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t);};
 const ellR=(th,a,b)=>1/Math.sqrt((Math.cos(th)/a)**2+(Math.sin(th)/b)**2);
 const castPoly=(poly,th)=>{const dx=Math.cos(th),dz=Math.sin(th);let best=1e9;
@@ -364,9 +365,9 @@ annulus('plaza',th=>castPoly(standPoly,th),th=>ellR(th,EA-0.6,EB-0.6),standPoly)
 Object.keys(acc).forEach(key=>{const a=acc[key],m=new BABYLON.Mesh('xxGround_'+key,scene),vd=new BABYLON.VertexData(),nor=[];for(let q=0;q<a.pos.length/3;q++)nor.push(0,1,0);
   vd.positions=a.pos;vd.normals=nor;vd.uvs=a.uv;vd.indices=a.idx;vd.applyToMesh(m);m.material=tm(plazaTex(),1);m.isPickable=false;});
 
-// ── 山丘地形：外牆外緣一圈 30 m 平台（石板），再往外慢慢隆起成起伏的山丘城市；北邊(z≈690~1180)是海峽，對岸(z>1180)又是山丘
+// ── 山丘地形：外牆外緣一圈 30 m 平台（石板），再往外慢慢隆起成起伏的山丘城市；北邊(z≈190~680，已用 ZS 平移)是海峽，對岸(z>680)是山丘
 const rhoT=th=>ellR(th,EA+1.4,EB+1.4);
-const land=z=>z<700?1-sst(560,690,z):(z>1180?sst(1180,1270,z):0);
+const land=z=>{z+=ZS;return z<700?1-sst(560,690,z):(z>1180?sst(1180,1270,z):0);};   // 近岸(球場這一側)的山丘在海峽前漸漸變平；遠岸才隆起
 function hAt(x,z){
   const dx=x-EC[0],dz=z-EC[1],D=Math.hypot(dx,dz)-rhoT(Math.atan2(dz,dx));if(D<=0)return GY;
   const n=0.5*Math.sin(x*0.011+1.3)*Math.sin(z*0.013+0.4)+0.3*Math.sin(x*0.027+z*0.021+2.1)+0.2*Math.sin(z*0.043-x*0.037+0.7),sh=Math.pow(Math.max(0,0.5+0.58*n),1.2);
@@ -389,18 +390,18 @@ const slopeAt=(x,z)=>{const e=3;return Math.hypot(hAt(x+e,z)-hAt(x-e,z),hAt(x,z+
   const sun=(()=>{const v=[0.42,0.78,-0.46],l=Math.hypot(...v);return v.map(a=>a/l);})(),col=[],mix=(a,b,t)=>a.map((v,i)=>v+(b[i]-v)*t);
   for(let v=0;v<cnt;v++){const x=pos[3*v],y=pos[3*v+1],z=pos[3*v+2],D=distOut(x,z),sh=0.62+0.5*Math.max(0,nor[3*v]*sun[0]+nor[3*v+1]*sun[1]+nor[3*v+2]*sun[2]);
     let c=D<32?[0.86,0.82,0.72]:mix([0.50,0.60,0.36],[0.68,0.62,0.45],0.5+0.5*Math.sin(x*0.05)*Math.sin(z*0.047));
-    c=mix(c,[0.56,0.52,0.44],sst(0,80,y-GY)*0.5);if((z>640&&z<710)||(z>1160&&z<1230))c=mix(c,[0.84,0.78,0.60],0.7);
+    c=mix(c,[0.56,0.52,0.44],sst(0,80,y-GY)*0.5);if((z+ZS>640&&z+ZS<710)||(z+ZS>1160&&z+ZS<1230))c=mix(c,[0.84,0.78,0.60],0.7);
     col.push(Math.min(1,c[0]*sh),Math.min(1,c[1]*sh),Math.min(1,c[2]*sh),1);}
   const tm_=new BABYLON.Mesh('xxCityTerrain',scene),vd=new BABYLON.VertexData(),mt=M('#000000');mt.emissiveTexture=cityT;mt.disableLighting=true;mt.backFaceCulling=false;
   vd.positions=pos;vd.indices=idx;vd.normals=nor;vd.uvs=uv;vd.colors=col;vd.applyToMesh(tm_);tm_.material=mt;tm_.isPickable=false;
 }
-// ── 博斯普魯斯海峽：z≈690~1180，從岸邊的淺綠松石漸層到深藍，浪紋＋白色浪花
+// ── 博斯普魯斯海峽：z≈190~680（平移前 690~1180），從岸邊的淺綠松石漸層到深藍，浪紋＋白色浪花
 {const S=512,t=newTex('xxSeaTex',S,S),g=t.getContext(),r=rng(77);g.fillStyle='#d8e6f6';g.fillRect(0,0,S,S);speck(g,S,r,4000,'rgba(255,255,255,0.10)','rgba(0,40,100,0.08)');
  for(let L=0;L<26;L++){const y0=L*S/26+r()*6,k=2+((r()*3)|0),ph=r()*TAU,amp=3+r()*5;for(const [c,off] of [['rgba(255,255,255,0.40)',0],['rgba(0,50,120,0.22)',3]]){g.strokeStyle=c;g.lineWidth=1.6;g.beginPath();for(let x=0;x<=S;x+=4){const y=y0+off+amp*Math.sin(x/S*TAU*k+ph);x?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();}}
  for(let n=0;n<160;n++){const x=r()*S,y=r()*S;tile(S,x,y,6,(dx,dy)=>{g.fillStyle='rgba(255,255,255,0.7)';g.fillRect(x+dx,y+dy,2+r()*3,1.2);});}t.update();
  const sm=M('#000000');sm.emissiveTexture=t;sm.disableLighting=true;sm.backFaceCulling=false;
  const stops=[[690,[1,1,1]],[694,[0.80,0.97,0.96]],[708,[0.30,0.80,0.84]],[740,[0.12,0.56,0.76]],[800,[0.06,0.38,0.66]],[900,[0.04,0.25,0.52]],[1000,[0.04,0.25,0.52]],[1080,[0.06,0.38,0.66]],[1140,[0.12,0.56,0.76]],[1168,[0.30,0.80,0.84]],[1180,[0.80,0.97,0.96]],[1186,[1,1,1]]];
- const pos=[],uv=[],col=[],idx=[],nor=[];stops.forEach(([z,c])=>[-3200,3200].forEach(x=>{pos.push(x,SEA_Y,z);uv.push(x/64,z/64);col.push(c[0],c[1],c[2],1);nor.push(0,1,0);}));
+ const pos=[],uv=[],col=[],idx=[],nor=[];stops.forEach(([z,c])=>[-3200,3200].forEach(x=>{pos.push(x,SEA_Y,z-ZS);uv.push(x/64,z/64);col.push(c[0],c[1],c[2],1);nor.push(0,1,0);}));
  for(let i=0;i<stops.length-1;i++){const a=i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2);}
  const sea=new BABYLON.Mesh('xxStrait',scene),vd=new BABYLON.VertexData();vd.positions=pos;vd.normals=nor;vd.uvs=uv;vd.colors=col;vd.indices=idx;vd.applyToMesh(sea);sea.material=sm;sea.isPickable=false;}
 
@@ -452,14 +453,14 @@ function mosque(x,z,s,rot,nMin){
   cyl(mG.gold,p[0],top+17.35*s+2.5*s,p[1],0.5*s,0.5*s,5*s,8);sph(mG.gold,p[0],top+17.3*s,p[1],1.6*s);
   const mp=[[23,-23],[-23,-23],[23,23],[-23,23],[23,0],[-23,0]];for(let k=0;k<nMin;k++){const q=P(mp[k][0],mp[k][1]);minaret(q[0],q[1],s*0.5,y0+1);}
 }
-[[-170,430,1.4,0,6],[150,470,1.5,0.4,4],[-20,590,1.7,0.2,4],[330,350,1.1,0.8,2],[-360,300,1.2,-0.5,2],[430,90,1.0,0.3,2],[-440,-40,1.0,1.1,2],[270,-300,1.1,0.2,4],[-260,-330,1.1,0.9,2],[-200,1330,1.2,0,4],[260,1360,1.0,0,2]].forEach(m=>mosque(...m));
+[[-170,820,1.4,0,6],[150,880,1.5,0.4,4],[-20,960,1.7,0.2,4],[330,790,1.1,0.8,2],[-360,770,1.2,-0.5,2],[430,90,1.0,0.3,2],[-440,-40,1.0,1.1,2],[270,-300,1.1,0.2,4],[-260,-330,1.1,0.9,2],[-200,900,1.2,0,4],[260,850,1.0,0,2]].forEach(m=>mosque(...m));
 // 加拉達塔：石造圓塔＋陽台＋錐形尖頂
-{const gx=-80,gz=310,y0=terrainMin(gx,gz,9)-0.2;mosqueAt.push([gx,gz,30]);
+{const gx=-80,gz=790,y0=terrainMin(gx,gz,9)-0.2;mosqueAt.push([gx,gz,30]);
  cyl(mG.stone,gx,y0+18,gz,19,17,36,24);cyl(mG.stone,gx,y0+39,gz,19,19,6,24);cyl(mG.drum,gx,y0+42.4,gz,23,23,1,24);
  const tr=MB.CreateTorus('xxGalataRail',{diameter:22.4,thickness:0.4,tessellation:28},scene);tr.position.set(gx,y0+43.6,gz);mG.drum.push(tr);
  cyl(mG.stone,gx,y0+47.5,gz,14,14,8,24);const cap=MB.CreateCylinder('xxGalataCap',{diameterBottom:16,diameterTop:0,height:16,tessellation:24},scene);cap.position.set(gx,y0+59.5,gz);mG.dome.push(cap);cyl(mG.gold,gx,y0+69,gz,0.4,0.4,4,8);}
 // 少女塔（海峽中的小島）
-{const sx=150,sz=935;cyl(mG.stone,sx,0.6,sz,34,30,1.2,20);box(mG.stone,sx,8,sz,8,14,8,0);cyl(mG.drum,sx,15.6,sz,10,10,1.4,16);addDome(mG.dome,sx,16.3,sz,4.6,0.9);cyl(mG.gold,sx,23,sz,0.3,0.3,3,6);}
+{const sx=150,sz=935-ZS;cyl(mG.stone,sx,0.6,sz,34,30,1.2,20);box(mG.stone,sx,8,sz,8,14,8,0);cyl(mG.drum,sx,15.6,sz,10,10,1.4,16);addDome(mG.dome,sx,16.3,sz,4.6,0.9);cyl(mG.gold,sx,23,sz,0.3,0.3,3,6);}
 // ── 房屋與樹：以約 22 m 的格子鋪滿山丘（遠岸用 40 m 格）
 function placeCells(x0,x1,z0,z1,step,dens){
   for(let x=x0;x<x1;x+=step)for(let z=z0;z<z1;z+=step){
@@ -470,10 +471,10 @@ function placeCells(x0,x1,z0,z1,step,dens){
     const w=Math.round(8+rnc()*(step*0.4)),d=Math.round(8+rnc()*(step*0.4)),fl=2+((rnc()*rnc()*3.2)|0);house(px,pz,w,d,fl,(rnc()*6)|0);
   }
 }
-placeCells(-800,800,-440,690,22,0.78);placeCells(-760,760,1190,1440,40,0.7);
+placeCells(-800,800,-440,690-ZS+20,22,0.78);placeCells(-760,760,1190-ZS,1440-ZS,40,0.7);
 
 // ── 博斯普魯斯大橋（懸索橋）：橋面、兩座橋塔、主纜、吊索
-{const Bx=-230,z0=690,z1=1180,deckY=60,tz=[780,1090],towerH=104,bm=[],cm=[],dm=[],steel=candy('#b7c0c8',0.5),red=candy('#cf5a3e',0.5);
+{const Bx=-230,z0=690-ZS,z1=1180-ZS,deckY=60,tz=[780-ZS,1090-ZS],towerH=104,bm=[],cm=[],dm=[],steel=candy('#b7c0c8',0.5),red=candy('#cf5a3e',0.5);
  box(dm,Bx,deckY,(z0+z1)/2,26,2.4,z1-z0+40,0);
  for(const z of tz){for(const sx of[-1,1])box(bm,Bx+sx*14,towerH/2,z,4.2,towerH,4.2,0);for(const y of[deckY+12,towerH-10,towerH-2])box(bm,Bx,y,z,32,2.6,3.6,0);}
  const cableY=z=>{if(z<=tz[0]){const t=(tz[0]-z)/(tz[0]-z0);return towerH-2-(towerH-2-(deckY+2))*t*t;}if(z>=tz[1]){const t=(z-tz[1])/(z1-tz[1]);return towerH-2-(towerH-2-(deckY+2))*t*t;}
@@ -505,11 +506,11 @@ function ship(type,x,z,dir,sc){
   else if(type==='fish'){hull(14,4,1.8,3,'#143a82');part(-2,1.8,0,5,2.6,3,'#f4f0e0',0.5);part(-3,4.4,0,1,3,1,'#ffb000',0.9);part(2.5,3.2,0,0.5,0.5,0.5,'#ffffaa',1);}
 }
 [['ferry',-60,760,1,1.1],['ferry',320,800,-1,1.1],['ferry',-420,860,1,1],['ferry',120,1010,-1,1],['cargo',-120,960,1,1],['cargo',480,1090,-1,1.1],['tanker',-560,1100,1,1],['tanker',640,870,-1,1],
- ['sail',20,730,1,1.2],['sail',-180,790,-1,1],['sail',240,740,1,1.1],['sail',380,950,1,1],['sail',-340,1030,-1,0.9],['fish',-20,720,1,1],['fish',200,830,1,1],['fish',-300,740,-1,1],['fish',60,1140,1,1]].forEach(a=>ship(...a));
+ ['sail',20,730,1,1.2],['sail',-180,790,-1,1],['sail',240,740,1,1.1],['sail',380,950,1,1],['sail',-340,1030,-1,0.9],['fish',-20,720,1,1],['fish',200,830,1,1],['fish',-300,740,-1,1],['fish',60,1140,1,1]].forEach(a=>ship(a[0],a[1],a[2]-ZS,a[3],a[4]));
 
 // ── 打擊區看得到的土耳其國旗：記分板左右對稱各一面。旗面 24×16 m（2:3）、最高點 42 m、旗桿 46 m，每幀擺動並有明暗皺褶
 {
-  const FWm=24,FHm=16,NXf=44,NYf=24,hz=160,yb=26,sc=FWm/66,pm=candy('#e0b94e',0.8);   // 旗面底緣 26 m、頂緣 42 m；兩面旗離本壘 160 m、左右各在 x=±36~60 m（記分板兩側）
+  const FWm=24,FHm=16,NXf=44,NYf=24,hz=182,yb=26,sc=FWm/66,pm=candy('#e0b94e',0.8);   // 旗面底緣 26 m、頂緣 42 m；兩面旗離本壘 182 m、就立在海峽南岸邊（岸線在 z≈190）、左右各在 x=±36~60 m（記分板兩側）
   const ft=newTex('xxGiantFlagTex',1536,1024),fg=ft.getContext();drawTurkishFlag(fg,1536,1024);ft.update();
   const fm=M('#000000');fm.emissiveTexture=ft;fm.disableLighting=true;fm.backFaceCulling=false;
   [-60,36].forEach((hx,side)=>{   // hx＝旗桿所在 x（旗面從旗桿往右展開）：左旗 -60~-36，右旗 36~60，對稱於 x=0

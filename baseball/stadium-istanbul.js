@@ -105,41 +105,31 @@ function friezeTex(){   // 6 m 一格：鈷藍底、綠松石八芒星磁磚（�
   for(const x of [0,W]){g.fillStyle='#f4f0e0';g.beginPath();g.moveTo(x-22,cy);g.lineTo(x,cy-22);g.lineTo(x+22,cy);g.lineTo(x,cy+22);g.closePath();g.fill();g.fillStyle='#18a3b4';g.beginPath();g.moveTo(x-10,cy);g.lineTo(x,cy-10);g.lineTo(x+10,cy);g.lineTo(x,cy+10);g.closePath();g.fill();}
   t.update();return t;
 }
-function facadeTex(){   // 8 m 寬 × 16 m 高一格（每公尺 64 px）：土耳其紅白石條基座＋尖拱壁龕（伊茲尼克磁磚＋花窗）＋八芒星磁磚飾帶＋小尖拱垛口
-  const W=512,H=1024,t=newTex('xxFacade',W,H),g=t.getContext(),r=rng(88),P=64,Y=m=>H-m*P,X=m=>m*P;
-  g.fillStyle='#efe5cc';g.fillRect(0,0,W,H);for(let q=0;q<18000;q++){g.fillStyle=q%2?'rgba(255,255,255,0.10)':'rgba(90,70,35,0.10)';const s2=1+r()*2;g.fillRect(r()*W,r()*H,s2,s2);}
-  // 基座：紅白相間的石條（ablaq）＋深色線腳
-  for(let i=0;i<5;i++){g.fillStyle=i%2?'#efe5cc':'#b5483a';g.fillRect(0,Y(0.44*(i+1)),W,0.44*P+1);}
-  g.fillStyle='#6b4a2a';g.fillRect(0,Y(2.4),W,0.2*P);g.fillStyle='#d9b04a';g.fillRect(0,Y(2.4)-3,W,3);
-  // 壁柱（模組兩側）：淺色，帶細直線
-  g.fillStyle='#f4ecd6';g.fillRect(0,Y(14.0),X(0.9),Y(2.6)-Y(14.0));g.fillRect(X(7.1),Y(14.0),X(0.9),Y(2.6)-Y(14.0));
-  g.strokeStyle='rgba(120,95,50,0.55)';g.lineWidth=2;for(const x of[0.9,7.1]){g.beginPath();g.moveTo(X(x),Y(2.6));g.lineTo(X(x),Y(11.8));g.stroke();}
-  // 尖拱壁龕
-  const cx=X(4),x0=X(0.9+0.35),x1=X(7.1-0.35),yb=Y(2.9),ys=Y(8.4),yp=Y(11.2);
-  const arch=(xa,xb,yBase,ySpring,yPeak)=>{const c=(xa+xb)/2;g.beginPath();g.moveTo(xa,yBase);g.lineTo(xa,ySpring);g.bezierCurveTo(xa,ySpring-(ySpring-yPeak)*0.55,c-(xb-xa)*0.12,yPeak+(ySpring-yPeak)*0.18,c,yPeak);g.bezierCurveTo(c+(xb-xa)*0.12,yPeak+(ySpring-yPeak)*0.18,xb,ySpring-(ySpring-yPeak)*0.55,xb,ySpring);g.lineTo(xb,yBase);g.closePath();};
-  arch(x0,x1,yb,ys,yp);g.fillStyle='#cdbd96';g.fill();g.strokeStyle='#b08a3a';g.lineWidth=6;g.stroke();
-  arch(x0+7,x1-7,yb,ys,yp+9);g.strokeStyle='#7a5a2a';g.lineWidth=2;g.stroke();
-  // 壁龕下半：藍色磁磚＋綠松石八芒星
-  g.fillStyle='#1c4696';g.fillRect(x0+12,Y(4.4),x1-x0-24,Y(2.9)-Y(4.4)-6);
-  for(let i=0;i<4;i++){const sx=X(1.9+i*1.4),sy=Y(3.65);g.fillStyle='#18a3b4';star8(g,sx,sy,0.42*P,0);g.fill();g.strokeStyle='#d9b04a';g.lineWidth=1.5;g.stroke();g.fillStyle='#f4f0e0';star8(g,sx,sy,0.16*P,Math.PI/8);g.fill();}
-  // 尖拱花窗：深藍玻璃、象牙白窗櫺、綠松石外框
-  arch(X(2.55),X(5.45),Y(4.9),Y(8.0),Y(9.5));g.fillStyle='#14223d';g.fill();g.strokeStyle='#18a3b4';g.lineWidth=7;g.stroke();g.strokeStyle='#e8dfc4';g.lineWidth=3;g.stroke();
-  g.strokeStyle='#e8dfc4';g.lineWidth=3;g.beginPath();g.moveTo(cx,Y(4.9));g.lineTo(cx,Y(9.3));for(const yy of[6.2,7.4]){g.moveTo(X(2.6),Y(yy));g.lineTo(X(5.4),Y(yy));}g.stroke();
-  g.beginPath();g.arc(cx,Y(8.55),0.34*P,0,TAU);g.stroke();
-  // 拱心：八芒星
-  g.fillStyle='#18a3b4';star8(g,cx,Y(10.2),0.5*P,0);g.fill();g.strokeStyle='#d9b04a';g.lineWidth=3;g.stroke();g.fillStyle='#E30A17';g.beginPath();g.arc(cx,Y(10.2),0.12*P,0,TAU);g.fill();
-  // 八芒星磁磚飾帶（鈷藍底、綠松石＋象牙白八芒星、金邊）
-  g.fillStyle='#1c4696';g.fillRect(0,Y(13.4),W,Y(11.8)-Y(13.4));
-  for(let i=0;i<4;i++){const sx=X(1+i*2),sy=Y(12.6);g.fillStyle='#18a3b4';star8(g,sx,sy,0.7*P,0);g.fill();g.strokeStyle='#f4f0e0';g.lineWidth=3;g.stroke();g.fillStyle='#1c4696';star8(g,sx,sy,0.42*P,Math.PI/8);g.fill();g.strokeStyle='#d9b04a';g.lineWidth=2;g.stroke();g.fillStyle='#f4f0e0';star8(g,sx,sy,0.2*P,0);g.fill();g.fillStyle='#E30A17';g.beginPath();g.arc(sx,sy,0.07*P,0,TAU);g.fill();}
-  g.fillStyle='#d9b04a';g.fillRect(0,Y(13.4)-4,W,5);g.fillRect(0,Y(11.8)-1,W,5);
-  // 檐口＋小尖拱垛口
-  g.fillStyle='#8a7548';g.fillRect(0,Y(14.0),W,0.35*P);g.fillStyle='#efe7d2';g.fillRect(0,Y(13.65),W,0.25*P);
-  for(let i=0;i<8;i++){const xa=X(i),xb=X(i+1)-3;arch(xa+4,xb,Y(14.0),Y(15.0),Y(15.9));g.fillStyle='#18a3b4';g.fill();g.strokeStyle='#d9b04a';g.lineWidth=2;g.stroke();}
+function facadeTex(){   // 2 m 寬 × 16 m 高一格（每公尺 64 px）：以「橫向線條帶」為主，左右完全可以無縫相接（沒有大型的單一圖案）
+  const W=128,H=1024,t=newTex('xxFacade',W,H),g=t.getContext(),r=rng(88),P=64,Y=m=>H-m*P;
+  const band=(m0,m1,c)=>{g.fillStyle=c;g.fillRect(0,Y(m1),W,(m1-m0)*P+0.5);};
+  const courses=(m0,m1)=>{band(m0,m1,'#efe5cc');const n=Math.round((m1-m0)/0.31);for(let i=0;i<n;i++){const a=m0+i*(m1-m0)/n,b=m0+(i+1)*(m1-m0)/n;band(a,b,i%2?'#e9dec0':'#f2e9d2');g.fillStyle='rgba(120,95,50,0.40)';g.fillRect(0,Y(b),W,2);}};
+  const stripes=(m0,n,h)=>{for(let i=0;i<n;i++)band(m0+i*h,m0+(i+1)*h,i%2?'#efe5cc':'#b5483a');};
+  const gold=(m0,m1)=>band(m0,m1,'#d9b04a');
+  band(0,0.25,'#5a3d22');stripes(0.25,5,0.44);gold(2.45,2.6);band(2.6,2.7,'#6b4a2a');          // 基座：土耳其紅／乳白石條（ablaq）
+  courses(2.7,5.2);gold(5.2,5.3);
+  band(5.3,6.5,'#1c4696');band(5.42,5.46,'#f4f0e0');band(6.34,6.38,'#f4f0e0');                      // 鈷藍帶：金色小菱形（每公尺 1 個）
+  for(let k=0;k<2;k++){const cx=(k+0.5)*P,cy=Y(5.9),d=0.3*P;g.fillStyle='#18a3b4';g.beginPath();g.moveTo(cx-d,cy);g.lineTo(cx,cy-d);g.lineTo(cx+d,cy);g.lineTo(cx,cy+d);g.closePath();g.fill();g.strokeStyle='#d9b04a';g.lineWidth=2;g.stroke();g.fillStyle='#f4f0e0';g.beginPath();g.arc(cx,cy,0.06*P,0,TAU);g.fill();}
+  gold(6.5,6.6);courses(6.6,8.4);gold(8.4,8.5);
+  band(8.5,9.5,'#18a3b4');g.strokeStyle='#f4f0e0';g.lineWidth=3;g.beginPath();for(let i=0;i<=8;i++){const x=i*W/8,y=i%2?Y(9.3):Y(8.7);i?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();   // 綠松石帶：白色鋸齒線
+  gold(9.5,9.6);courses(9.6,11.4);gold(11.4,11.5);
+  stripes(11.5,4,0.35);gold(12.9,13.0);                                                              // 第二道紅白石條
+  band(13.0,14.3,'#1c4696');                                                                          // 鈷藍帶：八芒星（每公尺 1 顆）
+  for(let k=0;k<2;k++){const cx=(k+0.5)*P,cy=Y(13.65),Ro=0.5*P;g.fillStyle='#18a3b4';star8(g,cx,cy,Ro,0);g.fill();g.strokeStyle='#f4f0e0';g.lineWidth=2.5;g.stroke();g.fillStyle='#1c4696';star8(g,cx,cy,Ro*0.6,Math.PI/8);g.fill();g.strokeStyle='#d9b04a';g.lineWidth=1.5;g.stroke();g.fillStyle='#f4f0e0';star8(g,cx,cy,Ro*0.28,0);g.fill();}
+  gold(14.3,14.4);band(14.4,14.65,'#8a7548');band(14.65,14.75,'#efe7d2');                            // 檐口
+  band(14.75,16.0,'#efe5cc');                                                                         // 小尖拱列（每公尺 1 個）
+  for(let k=0;k<2;k++){const xa=k*P+7,xb=(k+1)*P-7,c=(xa+xb)/2,yb=Y(14.85),ys=Y(15.4),yp=Y(15.95);g.beginPath();g.moveTo(xa,yb);g.lineTo(xa,ys);g.bezierCurveTo(xa,ys-(ys-yp)*0.5,c-5,yp+(ys-yp)*0.2,c,yp);g.bezierCurveTo(c+5,yp+(ys-yp)*0.2,xb,ys-(ys-yp)*0.5,xb,ys);g.lineTo(xb,yb);g.closePath();g.fillStyle='#18a3b4';g.fill();g.strokeStyle='#d9b04a';g.lineWidth=2;g.stroke();}
+  for(let q=0;q<5000;q++){g.fillStyle=q%2?'rgba(255,255,255,0.07)':'rgba(90,70,35,0.08)';const s2=1+r()*2;g.fillRect(r()*W,r()*H,s2,s2);}
   t.update();return t;
 }
 const stoneMat=candy('#e6dcc0',0.55),friezeMat=tm(friezeTex(),1),capMat=candy('#f3ecd8',0.6),facadeMat=tm(facadeTex(),1);
-// 看台後牆（球場的「外牆」）：盒子的大面貼 facadeTex，按公尺換算 UV（8 m × 16 m 一格）
-const facadeBox=(name,w,h,d)=>{const f=V4(0,0,w/8,h/16);return MB.CreateBox(name,{width:w,height:h,depth:d,faceUV:[f,f,V4(0,0,0.05,0.05),V4(0,0,0.05,0.05),V4(0,0,0.05,0.05),V4(0,0,0.05,0.05)]});};
+// 看台後牆（球場的「外牆」）：盒子的大面貼 facadeTex，按公尺換算 UV（2 m × 16 m 一格，橫線條為主）。u0＝這一塊在整圈弧牆上的起點（公尺），讓相鄰的牆塊紋理接續
+const FACADE_W=2,facadeBox=(name,w,h,d,u0)=>{u0=(u0||0)/FACADE_W;const f=V4(u0,0,u0+w/FACADE_W,h/16);return MB.CreateBox(name,{width:w,height:h,depth:d,faceUV:[f,f,V4(0,0,0.05,0.05),V4(0,0,0.05,0.05),V4(0,0,0.05,0.05),V4(0,0,0.05,0.05)]});};
 function inward(ax,az,bx,bz){const dx=bx-ax,dz=bz-az,l=Math.hypot(dx,dz);let nx=-dz/l,nz=dx/l;const mx=(ax+bx)/2,mz=(az+bz)/2;if(nx*(0-mx)+nz*(40-mz)<0){nx=-nx;nz=-nz;}return [nx,nz];}   // 朝向場內(0,40)的法線
 let wsN=0;
 function wallSeg(ax,az,bx,bz,h,th,fence,outfield,ext){
@@ -222,7 +212,7 @@ function fan(F,thA,thB,tiers,gap,topA,topB,opt){
       ghostBox(F[0]+rm*Math.sin(am),top/2,F[1]+rm*Math.cos(am),w,top,r1-r0+0.2,am,'spectator');}});
   const Rb=gap+tiers*STEP+0.3;
   for(let j=0;j<NB;j++){const am=thA+(thB-thA)*(j+0.5)/NB,bh=topA+(topB-topA)*(j+0.5)/NB+tiers*ROW+1.6,w=2*Rb*Math.sin(Math.abs(thB-thA)/NB/2)+0.5,x=F[0]+Rb*Math.sin(am),z=F[1]+Rb*Math.cos(am);
-    const wl=put(facadeBox('xxFanBack',w,bh,0.7),x,bh/2,z,facadeMat);wl.rotation.y=am;registerBallSolid(wl,'spectator');
+    const wl=put(facadeBox('xxFanBack',w,bh,0.7,-Math.sign(thB-thA)*j*(w-0.5)),x,bh/2,z,facadeMat);wl.rotation.y=am;registerBallSolid(wl,'spectator');   // 朝外那一面的 u 往 −x 增加，所以沿弧牆前進時 u 起點遞減；w−0.5＝相鄰牆塊的間距
     put(MB.CreateBox('xxFanGlow',{width:w,height:0.22,depth:0.3}),x-Math.sin(am)*0.2,bh,z-Math.cos(am)*0.2,glowStrip).rotation.y=am;}
 }
 const SIDE_TOP=3.6,OTOP=4.4;

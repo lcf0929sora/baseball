@@ -3,14 +3,21 @@
  *   attributes（batBox 打擊框、power 打擊威力、speed 跑速、acceleration 起跑、pitchSpeed 球速、
  *               armStrength 臂力、control 控球、defense 守備、stamina 體力；缺項一律當 75 分）、
  *   pitches（除直球外會的變化球：球種名 → 變化量分數，90 分＝程式目前的標準變化量；野手為空）。
+
+ * 聯盟：頂層 leagues 定義有效聯盟（id、name、logo 徽章 webp 路徑）；每支球隊用 league 欄位填聯盟 id。沒有 league 的球隊只能玩單場／練習。
  * 是否先發不寫在這裡，由 index.html 依能力自動安排。
  * 能力：高斯分布平均 75、標準差 9.7（±25 分＝±2.576σ，100 分與 50 分各約 0.5%），限制在 50～100；投手的 batBox／power 平均 60、非投手的 pitchSpeed 平均 60。 */
 window.BASEBALL_TEAM_CONFIG = {
   "version": 1,
+  "leagues": [
+    { "id": "TAIWAN", "name": "台灣聯賽", "logo": "./baseball/league_taiwan.webp" },
+    { "id": "INTL", "name": "國際聯賽", "logo": "./baseball/league_intl.webp" }
+  ],
   "teams": [
     {
       "id": "RED",
       "name": "四川熊貓隊",
+      "league": "INTL",
       "logo": "./baseball/panda.webp",
       "music": {
         "chance": "chance.mp3",
@@ -245,6 +252,7 @@ window.BASEBALL_TEAM_CONFIG = {
     {
       "id": "BLUE",
       "name": "北海道山雀隊",
+      "league": "INTL",
       "logo": "./baseball/tit.webp",
       "music": {
         "chance": "chance.mp3",
@@ -479,6 +487,7 @@ window.BASEBALL_TEAM_CONFIG = {
     {
       "id": "GREY",
       "name": "台中消波塊隊",
+      "league": "TAIWAN",
       "logo": "./baseball/tetra.webp",
       "music": {
         "chance": "chance.mp3",
@@ -713,6 +722,7 @@ window.BASEBALL_TEAM_CONFIG = {
     {
       "id": "ORANGE",
       "name": "苗栗貓隊",
+      "league": "TAIWAN",
       "logo": "./baseball/leocat.webp",
       "music": {
         "chance": "chance.mp3",
@@ -947,6 +957,7 @@ window.BASEBALL_TEAM_CONFIG = {
     {
       "id": "GREEN",
       "name": "黃金海岸無尾熊隊",
+      "league": "INTL",
       "logo": "./baseball/koala.webp",
       "music": {
         "chance": "chance.mp3",
@@ -1181,6 +1192,7 @@ window.BASEBALL_TEAM_CONFIG = {
     {
       "id": "BUSAN",
       "name": "釜山海鷗隊",
+      "league": "INTL",
       "logo": "./baseball/gull.webp",
       "music": {
         "chance": "chance.mp3",
@@ -1415,6 +1427,7 @@ window.BASEBALL_TEAM_CONFIG = {
     {
       "id": "TURKEY",
       "name": "土耳其火雞隊",
+      "league": "INTL",
       "logo": "./baseball/turkey.webp",
       "music": {
         "chance": "chance.mp3",
@@ -1649,6 +1662,7 @@ window.BASEBALL_TEAM_CONFIG = {
     {
       "id": "PERSIMMON",
       "name": "新竹柿子隊",
+      "league": "TAIWAN",
       "logo": "./baseball/pesimmon.webp",
       "music": {
         "chance": "chance.mp3",
@@ -1883,6 +1897,7 @@ window.BASEBALL_TEAM_CONFIG = {
     {
       "id": "BOY",
       "name": "布魯塞爾小童隊",
+      "league": "INTL",
       "logo": "./baseball/boy.webp",
       "music": {
         "chance": "chance.mp3",
@@ -2117,6 +2132,7 @@ window.BASEBALL_TEAM_CONFIG = {
     {
       "id": "WOLF",
       "name": "羅馬母狼隊",
+      "league": "INTL",
       "logo": "./baseball/wolf.webp",
       "music": {
         "chance": "chance.mp3",
@@ -2351,6 +2367,7 @@ window.BASEBALL_TEAM_CONFIG = {
     {
       "id": "MONKEY",
       "name": "高雄獼猴隊",
+      "league": "TAIWAN",
       "logo": "./baseball/monkey.webp",
       "music": {
         "chance": "chance.mp3",
@@ -2585,6 +2602,7 @@ window.BASEBALL_TEAM_CONFIG = {
     {
       "id": "KING",
       "name": "拉斯維加斯老千隊",
+      "league": "INTL",
       "logo": "./baseball/king.webp",
       "music": {
         "chance": "chance.mp3",
@@ -2819,6 +2837,7 @@ window.BASEBALL_TEAM_CONFIG = {
     {
       "id": "BEAN",
       "name": "嘉義綠豆人隊",
+      "league": "TAIWAN",
       "logo": "./baseball/bean.webp",
       "music": {
         "chance": "chance.mp3",
@@ -3053,6 +3072,7 @@ window.BASEBALL_TEAM_CONFIG = {
     {
       "id": "DRAGON",
       "name": "台北天龍隊",
+      "league": "TAIWAN",
       "logo": "./baseball/dragon.webp",
       "music": {
         "chance": "chance.mp3",
@@ -3287,6 +3307,7 @@ window.BASEBALL_TEAM_CONFIG = {
     {
       "id": "POPE",
       "name": "凡蒂岡教皇隊",
+      "league": "INTL",
       "logo": "./baseball/pope.webp",
       "music": {
         "chance": "chance.mp3",
@@ -3521,6 +3542,7 @@ window.BASEBALL_TEAM_CONFIG = {
     {
       "id": "KYIV",
       "name": "基輔無人機隊",
+      "league": "INTL",
       "logo": "./baseball/drone.webp",
       "music": {
         "chance": "chance.mp3",

@@ -14,7 +14,8 @@
  *  球場外（以深藍為主）
  *   · 左外野高牆後是 52 m 寬的廣場，再來是「濱海公路」（雙向四線道，路燈、車燈、棕櫚樹），接著是步道、沙灘、海岸線。
  *   · 海岸線外是大海：由淺青綠漸層到深藍，浪紋、白色浪花；海上有貨輪、油輪、渡輪、帆船、漁船、浮標與燈塔。
- *   · 球場獨佔一個大街廓（旋轉成與海岸平行），四周是馬路；街廓外是整片內陸街區與亮燈的大樓，靠海一側的大樓較矮。
+ *   · 球場獨佔一個街廓（旋轉成與海岸平行），四周是馬路；內陸完全沒有建築：街廓外是整片沙灘與緩緩起伏的沙丘，只有幾條公路（濱海公路、內陸公路，和接在它們之間的道路）與零星的棕櫚樹。
+ *   · 兩條公路各是雙向四線道，路上有車子一直在行駛（來回兩個方向、不同車道速度不同，開到盡頭會繞回另一端）。
  *  啦啦隊專區：一壘／三壘側觀眾席前方各有一座懸挑的大平台（18×7 m，各 15 個站位，球員尺寸），站位座標見 BaseballStadiums.ocean.cheerSlots。
  *  球落入海中：海面不是碰撞物件；球落到海岸線外就下沉、濺起水花並消失（見「球落入海中」一節）。
  *  本檔「不」設定天空／霧／光源。
@@ -309,14 +310,14 @@ const cheerSlots=[],cheerZones=[];
    put(MB.CreateCylinder('xxLightPole',{diameterBottom:1.6,diameterTop:0.9,height:44,tessellation:10},scene),x,22,z,pole);
    const yaw=Math.atan2(-x,40-z),p=put(MB.CreateBox('xxLightPanel',{width:14,height:7,depth:0.8}),x,46,z,lm);p.rotation.y=yaw+Math.PI;p.rotation.x=0.18;});}
 
-// ═════════ ⑧ 球場外：濱海公路、大海、船、都市 ═════════
+// ═════════ ⑧ 球場外：濱海公路、內陸公路、沙灘、大海、船、行駛的車子 ═════════
 // 座標系：u＝沿海岸線方向（與高牆平行），w＝垂直於海岸線、往海為正（海岸線 w=0；高牆在 w=-52；濱海公路中心 w=-18）。
 const nV=[-dM[1],dM[0]],c0=FW[0][0]*nV[0]+FW[0][1]*nV[1]+52;
 const toW=(u,w)=>[u*dM[0]+(w+c0)*nV[0],u*dM[1]+(w+c0)*nV[1]],fromW=(x,z)=>[x*dM[0]+z*dM[1],x*nV[0]+z*nV[1]-c0];
 const YAW=Math.atan2(-dM[1],dM[0]);      // 方塊的長邊(x)沿著 u 方向時的 rotation.y
 const GY=0.08,SEA_Y=0.12,RW=20,SW=4,CX=0,CZ=40;
-const UL=[-646,-550,-454,-358,-262,-166,-70,154,250,346,442,538,634,730,826].sort((a,b)=>a-b);   // 垂直於海岸的道路中心線(u)
-const WL=[-690,-594,-498,-402,-306,-210,-18];                                                  // 平行於海岸的道路中心線(w)；-18＝濱海公路
+const UL=[-358,-70,154,442];   // 垂直於海岸的道路中心線(u)：只留球場街廓兩側的 -70／154，和遠一點的 -358／442
+const WL=[-402,-210,-18];       // 平行於海岸的道路中心線(w)：-18＝濱海公路、-402＝內陸公路（兩條都一路延伸到 ±2200 m）、-210＝球場後方的路
 const isCenter=(i,j)=>UL[i]===-70&&UL[i+1]===154&&WL[j]===-210&&WL[j+1]===-18;
 const CB={u0:-56,u1:140,w0:-196,w1:-32};   // 球場街廓內緣（人行道以內）
 
@@ -346,14 +347,12 @@ function zebraTex(){const S=128,t=newTex('xxZebra',S,S),g=t.getContext(),r=rng(6
 function asphaltTex(){const S=128,t=newTex('xxAsph',S,S),g=t.getContext(),r=rng(7);g.fillStyle='#1b1e26';g.fillRect(0,0,S,S);speck(g,S,r,2500,'rgba(255,255,255,0.04)','rgba(0,0,0,0.10)');t.update();return t;}
 function sidewalkTex(){const W=128,H=256,t=newTex('xxSide',W,H),g=t.getContext(),r=rng(8);g.fillStyle='#4d5361';g.fillRect(0,0,W,H);speck(g,W,r,2500,'rgba(255,255,255,0.05)','rgba(0,0,0,0.10)');g.fillStyle='#9aa1b3';g.fillRect(0,0,W*0.0875,H);
   g.strokeStyle='rgba(0,0,0,0.28)';g.lineWidth=1;g.beginPath();for(let v=0;v<=8;v++){g.moveTo(0,v*H/8);g.lineTo(W,v*H/8);}g.moveTo(W/2,0);g.lineTo(W/2,H);g.stroke();t.update();return t;}
-function paveTex(){const S=512,k=S/16,t=newTex('xxPave',S,S),g=t.getContext(),r=rng(9);g.fillStyle='#232c44';g.fillRect(0,0,S,S);speck(g,S,r,6000,'rgba(255,255,255,0.04)','rgba(0,0,0,0.10)');
-  for(let m=0;m<=16;m+=2){g.strokeStyle=m%4?'rgba(0,0,0,0.12)':'rgba(0,0,0,0.28)';g.lineWidth=m%4?1:2;g.beginPath();g.moveTo(m*k,0);g.lineTo(m*k,S);g.moveTo(0,m*k);g.lineTo(S,m*k);g.stroke();}t.update();return t;}
 function plazaTex(){const S=512,k=S/16,t=newTex('xxPlaza',S,S),g=t.getContext(),r=rng(10);g.fillStyle='#2d3d6a';g.fillRect(0,0,S,S);speck(g,S,r,8000,'rgba(255,255,255,0.05)','rgba(0,0,0,0.10)');
   g.strokeStyle='rgba(0,0,0,0.30)';g.lineWidth=2;for(let m=0;m<=16;m+=2){g.beginPath();g.moveTo(m*k,0);g.lineTo(m*k,S);g.moveTo(0,m*k);g.lineTo(S,m*k);g.stroke();}
   g.fillStyle='rgba(140,200,255,0.75)';g.fillRect(7.9*k,0,0.2*k,S);g.fillRect(0,7.9*k,S,0.2*k);g.fillRect(0,0,0.1*k,S);g.fillRect(S-0.1*k,0,0.1*k,S);g.fillRect(0,0,S,0.1*k);g.fillRect(0,S-0.1*k,S,0.1*k);t.update();return t;}
 function sandTex(){const S=256,t=newTex('xxSand',S,S),g=t.getContext(),r=rng(12),img=g.createImageData(S,S),d=img.data;for(let i=0;i<S*S*4;i+=4){const k=1+(r()-0.5)*0.14;d[i]=214*k;d[i+1]=194*k;d[i+2]=150*k;d[i+3]=255;}g.putImageData(img,0,0);
   for(let n=0;n<60;n++){const x=r()*S,y=r()*S,rr2=10+r()*30;tile(S,x,y,rr2,(dx,dy)=>{g.fillStyle=n%2?'rgba(255,240,200,0.12)':'rgba(150,120,80,0.10)';g.beginPath();g.arc(x+dx,y+dy,rr2,0,TAU);g.fill();});}t.update();return t;}
-const gMat={road:roadTex(),zebra:zebraTex(),asph:asphaltTex(),side:sidewalkTex(),pave:paveTex(),plaza:plazaTex(),sand:sandTex()};
+const gMat={road:roadTex(),zebra:zebraTex(),asph:asphaltTex(),side:sidewalkTex(),plaza:plazaTex(),sand:sandTex()};
 Object.keys(gMat).forEach(k=>{const m=texMat(gMat[k],1);m.backFaceCulling=false;gMat[k]=m;});
 const acc={};
 const gq=(key,pts,uvf)=>{const a=acc[key]||(acc[key]={pos:[],uv:[],idx:[]}),n=a.pos.length/3;pts.forEach(([x,z])=>{a.pos.push(x,GY,z);const q=uvf(x,z);a.uv.push(q[0],q[1]);});a.idx.push(n,n+1,n+2,n,n+2,n+3);};
@@ -370,17 +369,21 @@ function roadSeg(vert,C,a,b){   // vert：沿 w 的路(固定 u=C)；否則沿 u
 }
 for(const U of UL)for(let j=0;j<WL.length-1;j++)roadSeg(true,U,WL[j]+RW/2,WL[j+1]-RW/2);       // 垂直於海岸的路（到濱海公路為止）
 for(const W of WL)for(let i=0;i<UL.length-1;i++)roadSeg(false,W,UL[i]+RW/2,UL[i+1]-RW/2);     // 平行於海岸的路
-// 濱海公路兩端延伸到更遠
-{const uA=UL[0]-RW/2,uB=UL[UL.length-1]+RW/2;for(const [a,b] of [[uA-500,uA],[uB,uB+500]])rectUW('road',a,-18-RW/2,b,-18+RW/2,(u,w)=>[(w-(-18-RW/2))/RW,(u-a)/24]);}
-// 街廓：人行道（路緣在外側）＋內部鋪面（中央街廓內部改鋪廣場並挖空球場佔地）
+// 兩條公路（濱海公路 w=-18、內陸公路 w=-402）一路延伸到 ±2200 m
+{const uA=UL[0]-RW/2,uB=UL[UL.length-1]+RW/2;for(const Wc of[-18,-402])for(const [a,b] of [[-2200,uA],[uB,2200]])rectUW('road',a,Wc-RW/2,b,Wc+RW/2,(u,w)=>[(w-(Wc-RW/2))/RW,(u-a)/24]);}
+// 街廓：只有球場所在的中央街廓有人行道；其他街廓全是沙灘（沙灘貼圖 24 m 一張）
+const UWS=(u,w)=>[u/24,w/24];
 for(let i=0;i<UL.length-1;i++)for(let j=0;j<WL.length-1;j++){
   const u0=UL[i]+RW/2,u1=UL[i+1]-RW/2,w0=WL[j]+RW/2,w1=WL[j+1]-RW/2;
+  if(!isCenter(i,j)){rectUW('sand',u0,w0,u1,w1,UWS);continue;}
   rectUW('side',u0,w0,u1,w0+SW,(u,w)=>[(w-w0)/SW,(u-u0)/8]);rectUW('side',u0,w1-SW,u1,w1,(u,w)=>[(w1-w)/SW,(u-u0)/8]);
   rectUW('side',u0,w0+SW,u0+SW,w1-SW,(u,w)=>[(u-u0)/SW,(w-w0)/8]);rectUW('side',u1-SW,w0+SW,u1,w1-SW,(u,w)=>[(u1-u)/SW,(w-w0)/8]);
-  if(!isCenter(i,j))rectUW('pave',u0+SW,w0+SW,u1-SW,w1-SW,(u,w)=>[u/16,w/16]);
 }
+// 街廓以外的內陸：整片沙灘（內陸公路以內的左右兩側、內陸公路外面一整片到遠方）
+{const uL=UL[0]-RW/2,uR=UL[UL.length-1]+RW/2,wA=WL[0]+RW/2,wB=WL[WL.length-1]-RW/2;
+ rectUW('sand',-2200,-3200,2200,WL[0]-RW/2,UWS);rectUW('sand',-2200,wA,uL,wB,UWS);rectUW('sand',uR,wA,2200,wB,UWS);}
 // 海側：步道（路緣靠公路）＋沙灘
-{const uA=UL[0]-500,uB=UL[UL.length-1]+500;rectUW('side',uA,-8,uB,-4,(u,w)=>[(w+8)/4,u/8]);rectUW('sand',uA,-4,uB,0,UW8);}
+{const uA=-2200,uB=2200;rectUW('side',uA,-8,uB,-4,(u,w)=>[(w+8)/4,u/8]);rectUW('sand',uA,-4,uB,0,UW8);}
 // 中央街廓的廣場：內緣矩形 與 球場佔地多邊形 之間（以 (CX,CZ) 為中心逐角度切片；多邊形頂點與矩形四角都加進取樣角）
 {const ctr=fromW(CX,CZ);
  const castRect=th2=>{const dx=Math.cos(th2),dz=Math.sin(th2),du=dx*dM[0]+dz*dM[1],dw=dx*nV[0]+dz*nV[1];
@@ -469,17 +472,17 @@ Object.values(shipG).forEach(o=>merge(o.arr,o.mat,'xxShips'));
  // 步道護欄（沿海岸一條長欄杆）
  const rl=toW(100,-4.3),rail=put(MB.CreateBox('xxRail',{width:1500,height:0.12,depth:0.12}),rl[0],1.05,rl[1],candy('#e8f1ff',0.7));rail.rotation.y=YAW;
  const rl2=toW(100,-4.3),rail2=put(MB.CreateBox('xxRail2',{width:1500,height:0.1,depth:0.1}),rl2[0],0.5,rl2[1],candy('#9fb7e6',0.5));rail2.rotation.y=YAW;}
-{const heads=[],poles=[],carsR=[],carsW=[],carsA=[],lanes=[-7.5,-2.5,2.5,7.5],rn2=rng(4242);
+{const heads=[],poles=[],rn2=rng(4242);
  const near=(x,z)=>dOut(x,z)>6&&Math.hypot(x-CX,z-CZ)<520;
  const seg=(vert,C,a,b)=>{let c=0;for(let s=a+16;s<=b-16;s+=8,c++){
    const P=off=>vert?toW(C+off,s):toW(s,C+off);
    if(c%6===0)[-12,12].forEach(off=>{const p=P(off);if(!near(p[0],p[1]))return;const pl=MB.CreateBox('xxPole2',{width:0.25,height:8,depth:0.25},scene);pl.position.set(p[0],4,p[1]);poles.push(pl);
      const hd=MB.CreateBox('xxLamp',{width:2.2,height:0.3,depth:0.5},scene);hd.position.set(p[0],8.1,p[1]);hd.rotation.y=vert?YAW+Math.PI/2:YAW;heads.push(hd);});
-   if(rn2()<0.12){const p=P(lanes[(rn2()*4)|0]);if(!near(p[0],p[1]))continue;const cb=MB.CreateBox('xxCar',{width:1.5,height:0.3,depth:0.25},scene);cb.position.set(p[0],0.7,p[1]);cb.rotation.y=vert?YAW+Math.PI/2:YAW;const q=rn2();(q<0.5?carsR:q<0.9?carsW:carsA).push(cb);}}};
+   }};
  for(const U of UL)for(let j=0;j<WL.length-1;j++)seg(true,U,WL[j]+RW/2,WL[j+1]-RW/2);
  for(const W of WL)for(let i=0;i<UL.length-1;i++)seg(false,W,UL[i]+RW/2,UL[i+1]-RW/2);
- merge(poles,M('#1a1f2b'),'xxPoles');merge(heads,M('#ffd9a0',{em:'#ffd9a0'}),'xxLamps');
- merge(carsR,M('#ff2a2a',{em:'#ff2a2a'}),'xxCarsR');merge(carsW,M('#fff1d0',{em:'#fff1d0'}),'xxCarsW');merge(carsA,M('#ffb000',{em:'#ffb000'}),'xxCarsA');}
+ {const uA=UL[0]-RW/2,uB=UL[UL.length-1]+RW/2;for(const Wc of[-18,-402]){seg(false,Wc,-2200,uA);seg(false,Wc,uB,2200);}}   // 兩條公路延伸出去的路段也有路燈
+ merge(poles,M('#1a1f2b'),'xxPoles');merge(heads,M('#ffd9a0',{em:'#ffd9a0'}),'xxLamps');}
 
 
 // ── 球落入海中：海面不是碰撞物件（沒有登錄任何碰撞），球一落到海面（海岸線外）就下沉並濺起水花，沉到海面下後被海面遮住、再整個隱藏；
@@ -510,49 +513,66 @@ Object.values(shipG).forEach(o=>merge(o.arr,o.mat,'xxShips'));
   });
 }
 
-// ── 內陸大樓：街廓（人行道以內）依大小切成約 30 m 的地塊；靠海一側較矮、越內陸越高
-function winTex(style,seed){
-  const S=768,CW=64,CH=128,t=newTex('xxWin'+style,S,S),g=t.getContext(),r=rng(seed),FAC=['#12151f','#0a1224','#1b1620','#070b16','#2a2a32','#202636'][style],pick=a=>a[(r()*a.length)|0];
-  g.fillStyle=FAC;g.fillRect(0,0,S,S);
-  for(let row=0;row<6;row++)for(let c=0;c<12;c++){const x=c*CW,y=row*CH,lit=r();
-    if(style===0){const gr=g.createLinearGradient(0,y+14,0,y+104);if(lit<0.5){gr.addColorStop(0,pick(['#ffd89a','#ffe9c0','#ffc46b','#fff3d6']));gr.addColorStop(1,'#d9a35a');}else{gr.addColorStop(0,'#16213a');gr.addColorStop(1,'#0b1020');}g.fillStyle=gr;g.fillRect(x+8,y+14,48,90);}
-    else if(style===1){g.fillStyle='#10264a';g.fillRect(x,y+10,CW,98);if(lit<0.45){g.fillStyle=pick(['#9fd2ff','#e6f4ff','#7fb8f0']);g.globalAlpha=0.55+r()*0.4;g.fillRect(x+3,y+14,CW-6,90);g.globalAlpha=1;}g.fillStyle=FAC;g.fillRect(x+CW-2,y+10,3,98);}
-    else if(style===2){g.fillStyle=lit<0.42?(r()<0.1?'#8fb6ff':pick(['#ffb86b','#ffd9a0','#ff9d5c'])):'#120f18';g.fillRect(x+14,y+26,36,64);g.fillStyle='#2a2330';g.fillRect(x+4,y+94,56,8);}
-    else if(style===3){const gr=g.createLinearGradient(0,y,0,y+CH-16);if(lit<0.6){gr.addColorStop(0,pick(['#5fe6ff','#8af0ff','#b48bff']));gr.addColorStop(1,'#2a6bd6');}else{gr.addColorStop(0,'#0c1630');gr.addColorStop(1,'#0c1630');}g.fillStyle=gr;g.fillRect(x+16,y,32,CH-16);}
-    else if(style===4){g.fillStyle='#3a3a45';g.fillRect(x+2,y,8,CH-14);g.fillStyle=lit<0.35?'#ffd27a':'#101018';g.fillRect(x+22,y+14,20,96);}
-    else{g.fillStyle=lit<0.85?pick(['#fff6e0','#eaf4ff','#ffe9b8']):'#1a2236';g.fillRect(x+6,y+10,52,100);}
-    g.fillStyle='#05070c';g.fillRect(x,y+CH-14,CW,14);}
-  t.update();return t;
+// ── 內陸：只有沙灘、沙丘、公路與零星的棕櫚樹，沒有任何建築。
+//    roadSegsUW＝所有公路中心線（u,w 座標）；dRoadUW＝到最近公路邊緣的距離；inCenter＝是否落在球場街廓（含外面那圈路）附近。
+const roadSegsUW=[[-2200,-18,2200,-18],[-2200,-402,2200,-402],[UL[0],-210,UL[UL.length-1],-210],...UL.map(U=>[U,WL[0],U,WL[WL.length-1]])];
+const dRoadUW=(u,w)=>{let best=1e9;for(const [a,b,c,d] of roadSegsUW){const dx=c-a,dz=d-b,l2=dx*dx+dz*dz;let t=l2?((u-a)*dx+(w-b)*dz)/l2:0;t=Math.max(0,Math.min(1,t));best=Math.min(best,Math.hypot(u-(a+dx*t),w-(b+dz*t)));}return best-RW/2;};
+const inCenter=(u,w,m)=>u>CB.u0-m-24&&u<CB.u1+m+24&&w>CB.w0-m-24&&w<CB.w1+m+24;
+{ // 沙丘：壓扁的半球，避開公路與球場
+  const rd=rng(909),dn=[];
+  for(let n=0,tries=0;n<64&&tries<3000;tries++){const u=-1600+rd()*3200,w=-1200+rd()*1100,d=30+rd()*50;
+    if(w>-60||inCenter(u,w,d/2)||dRoadUW(u,w)<d/2+10){continue;}
+    const p=toW(u,w),s=MB.CreateSphere('xxDune',{diameter:1,segments:8},scene);s.position.set(p[0],0,p[1]);s.scaling.set(d,2.5+rd()*3,d*(0.6+rd()*0.5));s.rotation.y=rd()*TAU;dn.push(s);n++;}
+  merge(dn,candy('#d8c08c',0.5),'xxDunes');
 }
-{const MATS=[0,1,2,3,4,5].map(i=>texMat(winTex(i,100+i*17),0.95)),G=MATS.map(()=>[]),ROOF=V4(0.01,0.002,0.03,0.014),rn=rng(20261026);
- const NEON=['#ff2d95','#19d3ff','#ffb000','#7cff4f','#b86bff'],neonG=NEON.map(()=>[]),spireG=[],beaconG=[];
- const snap=(v,m)=>Math.max(m,Math.round(v/m)*m);
- function box(u,w,wu,wd,h,y0,st){const uw=wu/24,ud=wd/24,vh=h/24,ou=((rn()*12)|0)/12,ov=((rn()*6)|0)/6,p=toW(u,w);
-   const b=MB.CreateBox('xxB',{width:wu,height:h,depth:wd,faceUV:[V4(ou,ov,ou+uw,ov+vh),V4(ou,ov,ou+uw,ov+vh),V4(ou,ov,ou+ud,ov+vh),V4(ou,ov,ou+ud,ov+vh),ROOF,ROOF]},scene);
-   b.position.set(p[0],y0+h/2,p[1]);b.rotation.y=YAW;G[st].push(b);}
- function cylB(u,w,dia,h,y0,st){const cells=Math.max(6,Math.round(Math.PI*dia/2)),ou=((rn()*12)|0)/12,ov=((rn()*6)|0)/6,p=toW(u,w);
-   const b=MB.CreateCylinder('xxC',{diameter:dia,height:h,tessellation:28,faceUV:[V4(0,0,1,1),V4(ou,ov,ou+cells/12,ov+h/24),ROOF]},scene);b.position.set(p[0],y0+h/2,p[1]);G[st].push(b);}
- function crown(u,w,wu,wd,h){const ci=(rn()*NEON.length)|0,p=toW(u,w);
-   if(h>=96){const n=MB.CreateBox('xxNeon',{width:wu+0.6,height:1.2,depth:wd+0.6},scene);n.position.set(p[0],h-3,p[1]);n.rotation.y=YAW;neonG[ci].push(n);}
-   if(h>=130&&rn()<0.75){const sh=10+rn()*30,sp=MB.CreateCylinder('xxSpire',{diameter:0.7,height:sh,tessellation:6},scene);sp.position.set(p[0],h+sh/2,p[1]);spireG.push(sp);
-     const bc=MB.CreateSphere('xxBeacon',{diameter:1.6,segments:6},scene);bc.position.set(p[0],h+sh,p[1]);beaconG.push(bc);}}
- const styleFor=h=>{const a=h<50?[2,4,0,5,2]:h<110?[0,1,5,2,4,1]:[1,3,5,0,1,3];return a[(rn()*a.length)|0];};
- const okRect=(u,w,wu,wd,m)=>{for(const su of[-1,0,1])for(const sw of[-1,0,1]){const p=toW(u+su*wu/2,w+sw*wd/2);if(dOut(p[0],p[1])<m)return false;}return true;};
- for(let i=0;i<UL.length-1;i++)for(let j=0;j<WL.length-1;j++){
-   if(isCenter(i,j))continue;
-   const u0=UL[i]+RW/2+SW,u1=UL[i+1]-RW/2-SW,w0=WL[j]+RW/2+SW,w1=WL[j+1]-RW/2-SW,iw=u1-u0,ih=w1-w0,nx=Math.max(1,Math.floor(iw/32)),nz=Math.max(1,Math.floor(ih/32)),cw=iw/nx,ch=ih/nz;
-   for(let a=0;a<nx;a++)for(let b=0;b<nz;b++){
-     const wu=snap(cw-2-rn()*3,2),wd=snap(ch-2-rn()*3,2),u=u0+cw*(a+0.5),w=w0+ch*(b+0.5),p=toW(u,w);
-     if(Math.hypot(p[0]-CX,p[1]-CZ)>560||!okRect(u,w,wu+2,wd+2,10))continue;
-     const hw=-w,coast=w>-120,base=coast?18+hw*0.1:30+hw*0.08,sp=coast?44+hw*0.25:70+hw*0.3;     // 靠海一側較矮
-     const h=snap(base+sp*Math.pow(rn(),1.7),4);
-     if(h>=64&&rn()<0.45){const hp=snap(8+rn()*8,4);box(u,w,wu,wd,hp,0,[4,0][(rn()*2)|0]);box(u,w,wu-8,wd-8,h,hp,styleFor(h));crown(u,w,wu-8,wd-8,h+hp);continue;}
-     if(h>=80&&rn()<0.16){const dia=Math.min(wu,wd)*0.9;cylB(u,w,dia,h,0,styleFor(h));crown(u,w,dia,dia,h);continue;}
-     const st=styleFor(h);box(u,w,wu,wd,h,0,st);
-     if(h>=96&&rn()<0.5){const w3=snap(wu*0.62,2),d3=snap(wd*0.62,2),h3=snap(h*0.18,4);box(u,w,w3,d3,h3,h,st);crown(u,w,w3,d3,h+h3);}else crown(u,w,wu,wd,h);
-   }}
- G.forEach((arr,i)=>merge(arr,MATS[i],'xxBuildings'+i));neonG.forEach((arr,i)=>merge(arr,M(NEON[i],{em:NEON[i]}),'xxNeon'));
- merge(spireG,M('#2b3040'),'xxSpires');merge(beaconG,M('#ff2a2a',{em:'#ff2a2a'}),'xxBeacons');}
+{ // 內陸的棕櫚樹：零星散落在沙灘上
+  const rp=rng(333),trunk=[],frond=[];
+  for(let n=0,tries=0;n<90&&tries<4000;tries++){const u=-1000+rp()*2000,w=-760+rp()*700;
+    if(w>-48||inCenter(u,w,6)||dRoadUW(u,w)<9)continue;
+    const p=toW(u,w),h=6+rp()*3,lean=(rp()-0.5)*0.3;
+    const tr=MB.CreateCylinder('xxTrunk',{diameterBottom:0.5,diameterTop:0.3,height:h,tessellation:7},scene);tr.position.set(p[0],h/2,p[1]);tr.rotation.z=lean;trunk.push(tr);
+    const tx=p[0]-Math.sin(lean)*h*0.5,ty=h-0.1,tz=p[1];
+    for(let k=0;k<8;k++){const a=k*TAU/8+rp()*0.3,f=MB.CreateBox('xxFrond',{width:3.6,height:0.06,depth:0.7},scene);f.position.set(tx+Math.cos(a)*1.6,ty+0.2,tz+Math.sin(a)*1.6);f.rotation.y=-a;f.rotation.z=-0.38;frond.push(f);}
+    n++;}
+  merge(trunk,candy('#7a5a3a',0.4),'xxPalmTrunksInland');merge(frond,candy('#2f9a5a',0.5),'xxPalmFrondsInland');
+}
+
+// ── 公路上行駛的車子：每種顏色一個「車子原型」(頂點色，已烘好陰影、車燈、車窗、輪胎)，其他車用 instance 複製；
+//    濱海公路與內陸公路各四個車道（兩個方向，每條車道速度固定、不同車道速度不同），開到 ±1800 m 的盡頭就繞回另一端。
+{
+  const palette=['#d9333f','#e8e8ea','#2f6fe0','#1d1f22','#c9c9cd','#f0c43a','#2c7a4a','#8a8d93','#ff7a2f','#7a3fb0'],rc=rng(515);
+  const rgb=h=>hex2rgb(h).map(v=>v/255),sc=(c,k)=>[c[0]*k,c[1]*k,c[2]*k];
+  const carMat=M('#000000',{em:'#ffffff'});carMat.disableLighting=true;carMat.backFaceCulling=false;   // 不受光：顏色就是頂點色（車燈本來就該亮）
+  const buildCar=hex=>{
+    const P=[],N=[],K=[],I=[],bc=rgb(hex);
+    const quad=(a,b,c,d,n,col)=>{const i=P.length/3;for(const p of[a,b,c,d]){P.push(p[0],p[1],p[2]);N.push(n[0],n[1],n[2]);K.push(col[0],col[1],col[2],1);}I.push(i,i+1,i+2,i,i+2,i+3);};
+    const box=(x0,x1,y0,y1,z0,z1,top,side,front,back)=>{   // x＝車頭方向
+      quad([x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1],[0,1,0],top);
+      quad([x1,y0,z0],[x1,y0,z1],[x1,y1,z1],[x1,y1,z0],[1,0,0],front);
+      quad([x0,y0,z1],[x0,y0,z0],[x0,y1,z0],[x0,y1,z1],[-1,0,0],back);
+      quad([x0,y0,z1],[x0,y1,z1],[x1,y1,z1],[x1,y0,z1],[0,0,1],side);
+      quad([x1,y0,z0],[x1,y1,z0],[x0,y1,z0],[x0,y0,z0],[0,0,-1],side);};
+    box(-2.2,2.2,0.3,1.0,-0.9,0.9,bc,sc(bc,0.78),sc(bc,0.62),sc(bc,0.62));                         // 車身
+    const gl=rgb('#2a3a52');box(-1.15,1.05,1.0,1.55,-0.78,0.78,sc(bc,0.92),gl,gl,gl);              // 車廂（玻璃）
+    const wh=rgb('#0a0a0c');for(const xw of[-1.35,1.35])for(const sz of[-1,1])box(xw-0.4,xw+0.4,0,0.55,sz>0?0.78:-0.98,sz>0?0.98:-0.78,wh,wh,wh,wh);   // 四個輪子
+    const hl=rgb('#fff3c0'),tl=rgb('#ff2a2a');
+    for(const sz of[-1,1]){box(2.2,2.28,0.5,0.75,sz*0.55-0.15,sz*0.55+0.15,hl,hl,hl,hl);box(-2.28,-2.2,0.55,0.78,sz*0.6-0.14,sz*0.6+0.14,tl,tl,tl,tl);}   // 車頭燈（白）、車尾燈（紅）
+    const m=new BABYLON.Mesh('xxCarProto',scene),vd=new BABYLON.VertexData();vd.positions=P;vd.normals=N;vd.colors=K;vd.indices=I;vd.applyToMesh(m);m.material=carMat;m.isPickable=false;return m;};
+  const protos=[],cars=[],U0=-1800,LEN=3600;
+  const protoFor=pi=>{if(!protos[pi]){protos[pi]=buildCar(palette[pi]);return {m:protos[pi],fresh:true};}return {m:protos[pi].createInstance('xxCar'),fresh:false};};
+  const addRoad=(Wc,perLane)=>[[-7.5,-1,15],[-2.5,-1,21],[2.5,1,16],[7.5,1,22]].forEach(([off,dir,spd])=>{
+    const gap=LEN/perLane;
+    for(let k=0;k<perLane;k++){const pi=(rc()*palette.length)|0,c=protoFor(pi);
+      cars.push({m:c.m,u:U0+gap*k+(rc()-0.5)*gap*0.45,w:Wc+off,dir,spd});}});
+  addRoad(-18,26);addRoad(-402,14);                                                                 // 濱海公路每車道 26 輛、內陸公路每車道 14 輛
+  cars.forEach(c=>{c.m.rotation.y=YAW+(c.dir>0?0:Math.PI);});
+  const first=cars[0].m;
+  const obs=scene.onBeforeRenderObservable.add(()=>{
+    if(first.isDisposed()){scene.onBeforeRenderObservable.remove(obs);return;}   // 換球場時自動移除
+    const dt=Math.min(0.05,(scene.getEngine().getDeltaTime()/1000)||0.016);
+    for(const c of cars){c.u+=c.dir*c.spd*dt;if(c.u>U0+LEN)c.u-=LEN;else if(c.u<U0)c.u+=LEN;const p=toW(c.u,c.w);c.m.position.set(p[0],0.1,p[1]);}
+  });
+}
 
 // ═════════ ⑨ 全壘打規則 ═════════
 ctx.setRules({fenceR:118.9,fenceH:WALL_H,arcDeg:45,simLimit:175,fenceAt});

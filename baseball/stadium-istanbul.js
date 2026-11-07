@@ -105,7 +105,41 @@ function friezeTex(){   // 6 m 一格：鈷藍底、綠松石八芒星磁磚（�
   for(const x of [0,W]){g.fillStyle='#f4f0e0';g.beginPath();g.moveTo(x-22,cy);g.lineTo(x,cy-22);g.lineTo(x+22,cy);g.lineTo(x,cy+22);g.closePath();g.fill();g.fillStyle='#18a3b4';g.beginPath();g.moveTo(x-10,cy);g.lineTo(x,cy-10);g.lineTo(x+10,cy);g.lineTo(x,cy+10);g.closePath();g.fill();}
   t.update();return t;
 }
-const stoneMat=candy('#e6dcc0',0.55),friezeMat=tm(friezeTex(),1),capMat=candy('#f3ecd8',0.6);
+function facadeTex(){   // 8 m 寬 × 16 m 高一格（每公尺 64 px）：土耳其紅白石條基座＋尖拱壁龕（伊茲尼克磁磚＋花窗）＋八芒星磁磚飾帶＋小尖拱垛口
+  const W=512,H=1024,t=newTex('xxFacade',W,H),g=t.getContext(),r=rng(88),P=64,Y=m=>H-m*P,X=m=>m*P;
+  g.fillStyle='#efe5cc';g.fillRect(0,0,W,H);for(let q=0;q<18000;q++){g.fillStyle=q%2?'rgba(255,255,255,0.10)':'rgba(90,70,35,0.10)';const s2=1+r()*2;g.fillRect(r()*W,r()*H,s2,s2);}
+  // 基座：紅白相間的石條（ablaq）＋深色線腳
+  for(let i=0;i<5;i++){g.fillStyle=i%2?'#efe5cc':'#b5483a';g.fillRect(0,Y(0.44*(i+1)),W,0.44*P+1);}
+  g.fillStyle='#6b4a2a';g.fillRect(0,Y(2.4),W,0.2*P);g.fillStyle='#d9b04a';g.fillRect(0,Y(2.4)-3,W,3);
+  // 壁柱（模組兩側）：淺色，帶細直線
+  g.fillStyle='#f4ecd6';g.fillRect(0,Y(14.0),X(0.9),Y(2.6)-Y(14.0));g.fillRect(X(7.1),Y(14.0),X(0.9),Y(2.6)-Y(14.0));
+  g.strokeStyle='rgba(120,95,50,0.55)';g.lineWidth=2;for(const x of[0.9,7.1]){g.beginPath();g.moveTo(X(x),Y(2.6));g.lineTo(X(x),Y(11.8));g.stroke();}
+  // 尖拱壁龕
+  const cx=X(4),x0=X(0.9+0.35),x1=X(7.1-0.35),yb=Y(2.9),ys=Y(8.4),yp=Y(11.2);
+  const arch=(xa,xb,yBase,ySpring,yPeak)=>{const c=(xa+xb)/2;g.beginPath();g.moveTo(xa,yBase);g.lineTo(xa,ySpring);g.bezierCurveTo(xa,ySpring-(ySpring-yPeak)*0.55,c-(xb-xa)*0.12,yPeak+(ySpring-yPeak)*0.18,c,yPeak);g.bezierCurveTo(c+(xb-xa)*0.12,yPeak+(ySpring-yPeak)*0.18,xb,ySpring-(ySpring-yPeak)*0.55,xb,ySpring);g.lineTo(xb,yBase);g.closePath();};
+  arch(x0,x1,yb,ys,yp);g.fillStyle='#cdbd96';g.fill();g.strokeStyle='#b08a3a';g.lineWidth=6;g.stroke();
+  arch(x0+7,x1-7,yb,ys,yp+9);g.strokeStyle='#7a5a2a';g.lineWidth=2;g.stroke();
+  // 壁龕下半：藍色磁磚＋綠松石八芒星
+  g.fillStyle='#1c4696';g.fillRect(x0+12,Y(4.4),x1-x0-24,Y(2.9)-Y(4.4)-6);
+  for(let i=0;i<4;i++){const sx=X(1.9+i*1.4),sy=Y(3.65);g.fillStyle='#18a3b4';star8(g,sx,sy,0.42*P,0);g.fill();g.strokeStyle='#d9b04a';g.lineWidth=1.5;g.stroke();g.fillStyle='#f4f0e0';star8(g,sx,sy,0.16*P,Math.PI/8);g.fill();}
+  // 尖拱花窗：深藍玻璃、象牙白窗櫺、綠松石外框
+  arch(X(2.55),X(5.45),Y(4.9),Y(8.0),Y(9.5));g.fillStyle='#14223d';g.fill();g.strokeStyle='#18a3b4';g.lineWidth=7;g.stroke();g.strokeStyle='#e8dfc4';g.lineWidth=3;g.stroke();
+  g.strokeStyle='#e8dfc4';g.lineWidth=3;g.beginPath();g.moveTo(cx,Y(4.9));g.lineTo(cx,Y(9.3));for(const yy of[6.2,7.4]){g.moveTo(X(2.6),Y(yy));g.lineTo(X(5.4),Y(yy));}g.stroke();
+  g.beginPath();g.arc(cx,Y(8.55),0.34*P,0,TAU);g.stroke();
+  // 拱心：八芒星
+  g.fillStyle='#18a3b4';star8(g,cx,Y(10.2),0.5*P,0);g.fill();g.strokeStyle='#d9b04a';g.lineWidth=3;g.stroke();g.fillStyle='#E30A17';g.beginPath();g.arc(cx,Y(10.2),0.12*P,0,TAU);g.fill();
+  // 八芒星磁磚飾帶（鈷藍底、綠松石＋象牙白八芒星、金邊）
+  g.fillStyle='#1c4696';g.fillRect(0,Y(13.4),W,Y(11.8)-Y(13.4));
+  for(let i=0;i<4;i++){const sx=X(1+i*2),sy=Y(12.6);g.fillStyle='#18a3b4';star8(g,sx,sy,0.7*P,0);g.fill();g.strokeStyle='#f4f0e0';g.lineWidth=3;g.stroke();g.fillStyle='#1c4696';star8(g,sx,sy,0.42*P,Math.PI/8);g.fill();g.strokeStyle='#d9b04a';g.lineWidth=2;g.stroke();g.fillStyle='#f4f0e0';star8(g,sx,sy,0.2*P,0);g.fill();g.fillStyle='#E30A17';g.beginPath();g.arc(sx,sy,0.07*P,0,TAU);g.fill();}
+  g.fillStyle='#d9b04a';g.fillRect(0,Y(13.4)-4,W,5);g.fillRect(0,Y(11.8)-1,W,5);
+  // 檐口＋小尖拱垛口
+  g.fillStyle='#8a7548';g.fillRect(0,Y(14.0),W,0.35*P);g.fillStyle='#efe7d2';g.fillRect(0,Y(13.65),W,0.25*P);
+  for(let i=0;i<8;i++){const xa=X(i),xb=X(i+1)-3;arch(xa+4,xb,Y(14.0),Y(15.0),Y(15.9));g.fillStyle='#18a3b4';g.fill();g.strokeStyle='#d9b04a';g.lineWidth=2;g.stroke();}
+  t.update();return t;
+}
+const stoneMat=candy('#e6dcc0',0.55),friezeMat=tm(friezeTex(),1),capMat=candy('#f3ecd8',0.6),facadeMat=tm(facadeTex(),1);
+// 看台後牆（球場的「外牆」）：盒子的大面貼 facadeTex，按公尺換算 UV（8 m × 16 m 一格）
+const facadeBox=(name,w,h,d)=>{const f=V4(0,0,w/8,h/16);return MB.CreateBox(name,{width:w,height:h,depth:d,faceUV:[f,f,V4(0,0,0.05,0.05),V4(0,0,0.05,0.05),V4(0,0,0.05,0.05),V4(0,0,0.05,0.05)]});};
 function inward(ax,az,bx,bz){const dx=bx-ax,dz=bz-az,l=Math.hypot(dx,dz);let nx=-dz/l,nz=dx/l;const mx=(ax+bx)/2,mz=(az+bz)/2;if(nx*(0-mx)+nz*(40-mz)<0){nx=-nx;nz=-nz;}return [nx,nz];}   // 朝向場內(0,40)的法線
 let wsN=0;
 function wallSeg(ax,az,bx,bz,h,th,fence,outfield,ext){
@@ -166,7 +200,7 @@ function stand(ax,az,bx,bz,out,tiers,gap,top0,ext,caps){
   crowdMesh('xxStand',pos,uv,idxR,idxT);
   const ang=Math.atan2(-dz,dx),mx=(ax+bx)/2,mz=(az+bz)/2,half=Math.ceil(tiers/2);
   [[0,half],[half,tiers]].forEach(([a,b])=>{if(b<=a)return;const o0=gap+a*STEP,o1=gap+b*STEP,topH=top0+(b-1)*ROW,oc=(o0+o1)/2;ghostBox(mx+nx*oc,topH/2,mz+nz*oc,L,topH,o1-o0+0.1,ang,'spectator');});
-  const backOff=gap+tiers*STEP+0.3,bh=top0+tiers*ROW+1.6,bw=put(MB.CreateBox('xxStandBack',{width:L,height:bh,depth:0.6}),mx+nx*backOff,bh/2,mz+nz*backOff,concrete);
+  const backOff=gap+tiers*STEP+0.3,bh=top0+tiers*ROW+1.6,bw=put(facadeBox('xxStandBack',L,bh,0.6),mx+nx*backOff,bh/2,mz+nz*backOff,facadeMat);
   bw.rotation.y=ang;registerBallSolid(bw,'spectator');
   put(MB.CreateBox('xxStandGlow',{width:L,height:0.22,depth:0.3}),mx+nx*(backOff-0.3),bh,mz+nz*(backOff-0.3),glowStrip).rotation.y=ang;
   if(caps){const d0=gap-0.1,d1=backOff+0.3,eh=top0+(tiers-1)*ROW+0.5;
@@ -188,7 +222,7 @@ function fan(F,thA,thB,tiers,gap,topA,topB,opt){
       ghostBox(F[0]+rm*Math.sin(am),top/2,F[1]+rm*Math.cos(am),w,top,r1-r0+0.2,am,'spectator');}});
   const Rb=gap+tiers*STEP+0.3;
   for(let j=0;j<NB;j++){const am=thA+(thB-thA)*(j+0.5)/NB,bh=topA+(topB-topA)*(j+0.5)/NB+tiers*ROW+1.6,w=2*Rb*Math.sin(Math.abs(thB-thA)/NB/2)+0.5,x=F[0]+Rb*Math.sin(am),z=F[1]+Rb*Math.cos(am);
-    const wl=put(MB.CreateBox('xxFanBack',{width:w,height:bh,depth:0.7}),x,bh/2,z,concrete);wl.rotation.y=am;registerBallSolid(wl,'spectator');
+    const wl=put(facadeBox('xxFanBack',w,bh,0.7),x,bh/2,z,facadeMat);wl.rotation.y=am;registerBallSolid(wl,'spectator');
     put(MB.CreateBox('xxFanGlow',{width:w,height:0.22,depth:0.3}),x-Math.sin(am)*0.2,bh,z-Math.cos(am)*0.2,glowStrip).rotation.y=am;}
 }
 const SIDE_TOP=3.6,OTOP=4.4;
@@ -374,9 +408,13 @@ function hAt(x,z){
   return GY+sst(36,240,D)*(8+52*sst(80,620,D))*sh*land(z);
 }
 const distOut=(x,z)=>{const dx=x-EC[0],dz=z-EC[1];return Math.hypot(dx,dz)-rhoT(Math.atan2(dz,dx));};
+// 大橋引橋參數：橋面頂 61.2 m，兩端各接一段高架引橋，以 8% 坡度往下，一直到撞上山坡（zpN／zpF）進隧道口
+const BRG={Bx:-230,g:0.08,yTop:61.2,zN:690-ZS-20,zF:1180-ZS+20};
+BRG.roadY=z=>BRG.yTop-BRG.g*(z<BRG.zN?BRG.zN-z:(z>BRG.zF?z-BRG.zF:0));
 const slopeAt=(x,z)=>{const e=3;return Math.hypot(hAt(x+e,z)-hAt(x-e,z),hAt(x,z+e)-hAt(x,z-e))/(2*e);};
+{let z=BRG.zN;for(;z>-900;z-=2)if(BRG.roadY(z)-1.6<=hAt(BRG.Bx,z)+0.5)break;BRG.zpN=z;z=BRG.zF;for(;z<1010;z+=2)if(BRG.roadY(z)-1.6<=hAt(BRG.Bx,z)+0.5)break;BRG.zpF=z;}   // 引橋撞上山坡的位置
 {
-  const NAT=240,KT=64,ROUT=1500,cityT=(()=>{const S=256,t=newTex('xxCityGround',S,S),g=t.getContext(),r=rng(404),img=g.createImageData(S,S),d=img.data;
+  const NAT=240,KT=64,ROUT=1000,cityT=(()=>{const S=256,t=newTex('xxCityGround',S,S),g=t.getContext(),r=rng(404),img=g.createImageData(S,S),d=img.data;
     for(let i=0;i<S*S*4;i+=4){const k=1+(r()-0.5)*0.10;d[i]=236*k;d[i+1]=230*k;d[i+2]=214*k;d[i+3]=255;}g.putImageData(img,0,0);
     for(let n=0;n<70;n++){const x=r()*S,y=r()*S,rr=8+r()*26;tile(S,x,y,rr,(dx,dy)=>{g.fillStyle=n%2?'rgba(120,100,60,0.10)':'rgba(255,255,240,0.10)';g.beginPath();g.arc(x+dx,y+dy,rr,0,TAU);g.fill();});}
     for(let n=0;n<3500;n++){g.fillStyle=n%2?'rgba(255,255,255,0.12)':'rgba(70,55,30,0.16)';const s2=1+r()*2;g.fillRect(r()*S,r()*S,s2,s2);}
@@ -400,8 +438,8 @@ const slopeAt=(x,z)=>{const e=3;return Math.hypot(hAt(x+e,z)-hAt(x-e,z),hAt(x,z+
  for(let L=0;L<26;L++){const y0=L*S/26+r()*6,k=2+((r()*3)|0),ph=r()*TAU,amp=3+r()*5;for(const [c,off] of [['rgba(255,255,255,0.40)',0],['rgba(0,50,120,0.22)',3]]){g.strokeStyle=c;g.lineWidth=1.6;g.beginPath();for(let x=0;x<=S;x+=4){const y=y0+off+amp*Math.sin(x/S*TAU*k+ph);x?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();}}
  for(let n=0;n<160;n++){const x=r()*S,y=r()*S;tile(S,x,y,6,(dx,dy)=>{g.fillStyle='rgba(255,255,255,0.7)';g.fillRect(x+dx,y+dy,2+r()*3,1.2);});}t.update();
  const sm=M('#000000');sm.emissiveTexture=t;sm.disableLighting=true;sm.backFaceCulling=false;
- const stops=[[690,[1,1,1]],[694,[0.80,0.97,0.96]],[708,[0.30,0.80,0.84]],[740,[0.12,0.56,0.76]],[800,[0.06,0.38,0.66]],[900,[0.04,0.25,0.52]],[1000,[0.04,0.25,0.52]],[1080,[0.06,0.38,0.66]],[1140,[0.12,0.56,0.76]],[1168,[0.30,0.80,0.84]],[1180,[0.80,0.97,0.96]],[1186,[1,1,1]]];
- const pos=[],uv=[],col=[],idx=[],nor=[];stops.forEach(([z,c])=>[-3200,3200].forEach(x=>{pos.push(x,SEA_Y,z-ZS);uv.push(x/64,z/64);col.push(c[0],c[1],c[2],1);nor.push(0,1,0);}));
+ const SEA_R=990,stops=[[690,[1,1,1]],[694,[0.80,0.97,0.96]],[708,[0.30,0.80,0.84]],[740,[0.12,0.56,0.76]],[800,[0.06,0.38,0.66]],[900,[0.04,0.25,0.52]],[1000,[0.04,0.25,0.52]],[1080,[0.06,0.38,0.66]],[1140,[0.12,0.56,0.76]],[1168,[0.30,0.80,0.84]],[1180,[0.80,0.97,0.96]],[1186,[1,1,1]]];
+ const pos=[],uv=[],col=[],idx=[],nor=[];stops.forEach(([z,c])=>{const hw=Math.sqrt(Math.max(0,SEA_R*SEA_R-(z-ZS-EC[1])**2));[-hw,hw].forEach(x=>{pos.push(x,SEA_Y,z-ZS);uv.push(x/64,z/64);col.push(c[0],c[1],c[2],1);nor.push(0,1,0);});});   // 海面只鋪到離球場中心 990 m 以內
  for(let i=0;i<stops.length-1;i++){const a=i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2);}
  const sea=new BABYLON.Mesh('xxStrait',scene),vd=new BABYLON.VertexData();vd.positions=pos;vd.normals=nor;vd.uvs=uv;vd.colors=col;vd.indices=idx;vd.applyToMesh(sea);sea.material=sm;sea.isPickable=false;}
 
@@ -453,7 +491,7 @@ function mosque(x,z,s,rot,nMin){
   cyl(mG.gold,p[0],top+17.35*s+2.5*s,p[1],0.5*s,0.5*s,5*s,8);sph(mG.gold,p[0],top+17.3*s,p[1],1.6*s);
   const mp=[[23,-23],[-23,-23],[23,23],[-23,23],[23,0],[-23,0]];for(let k=0;k<nMin;k++){const q=P(mp[k][0],mp[k][1]);minaret(q[0],q[1],s*0.5,y0+1);}
 }
-[[-170,820,1.4,0,6],[150,880,1.5,0.4,4],[-20,960,1.7,0.2,4],[330,790,1.1,0.8,2],[-360,770,1.2,-0.5,2],[430,90,1.0,0.3,2],[-440,-40,1.0,1.1,2],[270,-300,1.1,0.2,4],[-260,-330,1.1,0.9,2],[-200,900,1.2,0,4],[260,850,1.0,0,2]].forEach(m=>mosque(...m));
+[[-130,820,1.4,0,6],[150,880,1.5,0.4,4],[-20,960,1.7,0.2,4],[330,790,1.1,0.8,2],[-360,770,1.2,-0.5,2],[430,90,1.0,0.3,2],[-440,-40,1.0,1.1,2],[270,-300,1.1,0.2,4],[-360,-330,1.1,0.9,2],[-200,900,1.2,0,4],[260,850,1.0,0,2]].forEach(m=>mosque(...m));
 // 加拉達塔：石造圓塔＋陽台＋錐形尖頂
 {const gx=-80,gz=790,y0=terrainMin(gx,gz,9)-0.2;mosqueAt.push([gx,gz,30]);
  cyl(mG.stone,gx,y0+18,gz,19,17,36,24);cyl(mG.stone,gx,y0+39,gz,19,19,6,24);cyl(mG.drum,gx,y0+42.4,gz,23,23,1,24);
@@ -465,6 +503,8 @@ function mosque(x,z,s,rot,nMin){
 function placeCells(x0,x1,z0,z1,step,dens){
   for(let x=x0;x<x1;x+=step)for(let z=z0;z<z1;z+=step){
     const px=x+(rnc()-0.5)*step*0.5,pz=z+(rnc()-0.5)*step*0.5;if(distOut(px,pz)<34||land(pz)<0.2)continue;
+    if(Math.hypot(px-EC[0],pz-EC[1])>985)continue;   // 離球場中心超過 1 km 的地方不放東西
+    {const dB=Math.abs(px-BRG.Bx);if(dB<34&&((pz<BRG.zN+10&&pz>BRG.zpN-8)||(pz>BRG.zF-10&&pz<BRG.zpF+8)))continue;}   // 大橋引橋底下的房子／樹拆掉
     if(mosqueAt.some(m=>Math.hypot(px-m[0],pz-m[1])<m[2]))continue;if(slopeAt(px,pz)>0.55)continue;
     const dist=Math.hypot(px-EC[0],pz-EC[1]);if(rnc()>dens-dist*0.00035)continue;
     if(rnc()<0.16){(rnc()<0.5?pine:cypress)(px,pz,0.9+rnc()*0.5);continue;}
@@ -473,15 +513,37 @@ function placeCells(x0,x1,z0,z1,step,dens){
 }
 placeCells(-800,800,-440,690-ZS+20,22,0.78);placeCells(-760,760,1190-ZS,1440-ZS,40,0.7);
 
-// ── 博斯普魯斯大橋（懸索橋）：橋面、兩座橋塔、主纜、吊索
-{const Bx=-230,z0=690-ZS,z1=1180-ZS,deckY=60,tz=[780-ZS,1090-ZS],towerH=104,bm=[],cm=[],dm=[],steel=candy('#b7c0c8',0.5),red=candy('#cf5a3e',0.5);
- box(dm,Bx,deckY,(z0+z1)/2,26,2.4,z1-z0+40,0);
+// ── 博斯普魯斯大橋（白色懸索橋）：橋面、兩座橋塔、主纜、吊索；兩端各接一段高架引橋（8% 坡度、每 40 m 一組橋墩），
+//    一路往下，直到撞上山坡，在山坡上開隧道口（白色擋土牆＋黑色洞口），道路就這樣接到陸地上；引橋底下的房子已拆除。
+{const Bx=BRG.Bx,z0=690-ZS,z1=1180-ZS,deckY=60,tz=[780-ZS,1090-ZS],towerH=104,bm=[],cm=[],dm=[],pm=[],am=[],lm=[],um=[],
+  white=candy('#f4f6f8',0.8),asph=candy('#2b2e33',0.35),laneM=candy('#f2d24a',0.8),darkM=candy('#08090c',0.05);
+ const tbox=(arr,x,y,z,w,h,d,rx)=>{const b=MB.CreateBox('xxPart',{width:w,height:h,depth:d},scene);b.position.set(x,y,z);if(rx)b.rotation.x=rx;arr.push(b);return b;};
+ // 主橋面（白色）＋柏油路面＋護欄＋中央黃色虛線
+ box(dm,Bx,deckY,(z0+z1)/2,26,2.4,z1-z0+40,0);box(am,Bx,deckY+1.26,(z0+z1)/2,22,0.12,z1-z0+40,0);
+ for(const sx of[-1,1])box(dm,Bx+sx*12.7,deckY+1.8,(z0+z1)/2,0.5,1.2,z1-z0+40,0);
+ for(let z=z0-12;z<=z1+12;z+=14)box(lm,Bx,deckY+1.34,z,0.35,0.05,6,0);
  for(const z of tz){for(const sx of[-1,1])box(bm,Bx+sx*14,towerH/2,z,4.2,towerH,4.2,0);for(const y of[deckY+12,towerH-10,towerH-2])box(bm,Bx,y,z,32,2.6,3.6,0);}
  const cableY=z=>{if(z<=tz[0]){const t=(tz[0]-z)/(tz[0]-z0);return towerH-2-(towerH-2-(deckY+2))*t*t;}if(z>=tz[1]){const t=(z-tz[1])/(z1-tz[1]);return towerH-2-(towerH-2-(deckY+2))*t*t;}
    const zm=(tz[0]+tz[1])/2,hw=(tz[1]-tz[0])/2,t=(z-zm)/hw;return deckY+10+(towerH-2-deckY-10)*t*t;};
  for(const sx of[-1,1]){let pz=z0,py=cableY(z0);for(let z=z0+12;z<=z1+0.1;z+=12){const y=cableY(z),len=Math.hypot(12,y-py),b=MB.CreateBox('xxCable',{width:0.8,height:0.8,depth:len},scene);b.position.set(Bx+sx*13,(py+y)/2,(pz+z)/2);b.rotation.x=-Math.atan2(y-py,12);cm.push(b);
    if(Math.abs(z-tz[0])>6&&Math.abs(z-tz[1])>6)box(cm,Bx+sx*13,(y+deckY+1.2)/2,z,0.3,y-deckY-1.2,0.3,0);pz=z;py=y;}}
- merge(bm,red,'xxBridgeTowers');merge(cm,steel,'xxBridgeCables');merge(dm,steel,'xxBridgeDeck');}
+ // 兩端的引橋：dirS＝-1 往球場那一側（−z）、+1 往對岸（+z）；zStart＝橋面端點、zp＝撞上山坡的位置
+ const rxA=Math.atan(BRG.g);
+ for(const [zStart,zp,dirS] of [[BRG.zN,BRG.zpN,-1],[BRG.zF,BRG.zpF,1]]){
+   const rx=dirS<0?-rxA:rxA;   // 往 −z 走是往下，也就是 y 隨 z 增加，rotation.x 為負（和主纜同一個約定）
+   for(let a=zStart,k=0;dirS<0?a>zp:a<zp;a+=dirS*20,k++){
+     const b=dirS<0?Math.max(a-20,zp):Math.min(a+20,zp),zc=(a+b)/2,len=Math.abs(b-a)+0.4,ry=BRG.roadY(zc);
+     tbox(dm,Bx,ry-0.8,zc,26,1.6,len,rx);tbox(am,Bx,ry+0.06,zc,22,0.12,len,rx);for(const sx of[-1,1])tbox(dm,Bx+sx*12.7,ry+0.6,zc,0.5,1.2,len,rx);
+     if(k%2===0)tbox(lm,Bx,ry+0.14,zc,0.35,0.05,8,rx);}
+   for(let z=zStart+dirS*40;dirS<0?z>zp+6:z<zp-6;z+=dirS*40){                       // 橋墩：兩根方柱＋橫梁，落在地面（或山坡）上
+     const bot=BRG.roadY(z)-1.6,gy=Math.min(hAt(Bx-8,z),hAt(Bx+8,z)),h=bot-gy;if(h<1.5)continue;
+     for(const sx of[-1,1])box(pm,Bx+sx*8,gy+(h+1)/2-0.5,z,3,h+1,3,0);box(pm,Bx,bot-0.9,z,22,1.8,3.6,0);}
+   // 隧道口：大面白色擋土牆（嵌進山坡）、兩根門柱＋門楣、黑色洞口
+   const yR=BRG.roadY(zp),zf=zp,zb=zp+dirS*4;
+   box(pm,Bx,(yR+16)/2-5,zb,64,yR+26,8,0);
+   for(const sx of[-1,1])box(pm,Bx+sx*12.5,yR+5.6,zf-dirS*0.4,3,11.2,1.2,0);box(pm,Bx,yR+11.6,zf-dirS*0.4,28,2.6,1.2,0);
+   box(um,Bx,yR+5.2,zf-dirS*0.25,22,10.2,0.3,0);box(am,Bx,yR+0.09,zf-dirS*8,22,0.12,16,0);}
+ merge(bm,white,'xxBridgeTowers');merge(cm,white,'xxBridgeCables');merge(dm,white,'xxBridgeDeck');merge(pm,white,'xxBridgePiers');merge(am,asph,'xxBridgeAsphalt');merge(lm,laneM,'xxBridgeLanes');merge(um,darkM,'xxTunnelMouths');}
 
 // ── 海峽裡的船：貨輪、油輪、渡輪、帆船、漁船
 const shipG={},sMat={};const sm_=(h,k)=>sMat[h]||(sMat[h]=candy(h,k==null?0.35:k));

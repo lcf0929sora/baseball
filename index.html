@@ -6860,11 +6860,45 @@ function setAerialView(on){
     cam.maxZ=aerialSaved.maxZ;cam.minZ=aerialSaved.minZ;scene.fogMode=aerialSaved.fogMode;skyDome.scaling.setAll(aerialSaved.sky);aerialSaved=null;
   }
 }
+// 空拍鏡頭自動避障：從鏡頭朝球場關鍵點（本壘、投手丘、三個壘包、外野三點）射線，球場的看台／燈塔等球場物件擋住任何一點，
+// 就把俯角調高到射線不再被擋為止；沒被擋時慢慢降回預設俯角（AERIAL.elev）。檢查每 0.25 s 一次，俯角平滑變化，鏡頭不會跳動。
+const AERIAL_MAXEL=85*Math.PI/180,AERIAL_STEP=3*Math.PI/180;
+let aerialSet=null,aerialSetOf=null;
+function aerialPoints(){
+  const pts=[V(0,1,0),V(0,1,18.44)];
+  try{for(let b=1;b<=3;b++)if(BASEP[b])pts.push(V(BASEP[b].x,1,BASEP[b].z));}catch{}
+  const R=(typeof FENCE_R==='number'&&FENCE_R>20?FENCE_R:105)*0.7;
+  [-35,0,35].forEach(d=>{const a=d*Math.PI/180;pts.push(V(R*Math.sin(a),1,R*Math.cos(a)));});
+  return pts;
+}
+function aerialBlocked(elev,ang){
+  const o=stadiumOwned;if(!o||!o.meshes.length)return false;
+  if(aerialSetOf!==o){aerialSet=new Set(o.meshes);aerialSetOf=o;}
+  const ch=Math.cos(elev)*AERIAL.R,pos=V(AERIAL.cx+ch*Math.sin(ang),Math.sin(elev)*AERIAL.R,AERIAL.cz-ch*Math.cos(ang));
+  const pred=m=>aerialSet.has(m)&&m.isVisible&&m.visibility>0.3&&(!m.material||!(m.material.alpha<=0.3));
+  for(const p of aerialPoints()){
+    const d=p.subtract(pos),L=d.length();if(L<2)continue;
+    const hit=scene.pickWithRay(new BABYLON.Ray(pos,d.scale(1/L),L-0.8),pred,true);
+    if(hit&&hit.hit)return true;
+  }
+  return false;
+}
 function pregameCam(dt){
   const g=pregame;g.ang+=dt*2*Math.PI/AERIAL.period;
-  const ch=Math.cos(AERIAL.elev)*AERIAL.R;
+  if(g.elevC===undefined){g.elevC=g.elevT=AERIAL.elev;g.elevChk=0;}
+  g.elevChk-=dt;
+  if(g.elevChk<=0){
+    g.elevChk=0.25;const ang=g.ang+0.05;let e=g.elevT;
+    try{
+      if(aerialBlocked(e,ang)){let n=0;while(e<AERIAL_MAXEL&&n++<40&&aerialBlocked(e,ang))e+=AERIAL_STEP;e=Math.min(AERIAL_MAXEL,e+AERIAL_STEP);}   // 被擋：升到不被擋，再多留一格餘裕
+      else if(e>AERIAL.elev+1e-6&&!aerialBlocked(Math.max(AERIAL.elev,e-AERIAL_STEP*2),ang))e=Math.max(AERIAL.elev,e-AERIAL_STEP);   // 沒被擋：慢慢降回預設俯角
+    }catch(err){e=g.elevT;}
+    g.elevT=e;
+  }
+  g.elevC+=clamp(g.elevT-g.elevC,-8*Math.PI/180*dt,30*Math.PI/180*dt);   // 升得快（先脫離遮擋）、降得慢
+  const el=g.elevC,ch=Math.cos(el)*AERIAL.R;
   camFollow=null;camTgt=V(AERIAL.cx,3,AERIAL.cz);
-  cam.position.set(AERIAL.cx+ch*Math.sin(g.ang),Math.sin(AERIAL.elev)*AERIAL.R,AERIAL.cz-ch*Math.cos(g.ang));
+  cam.position.set(AERIAL.cx+ch*Math.sin(g.ang),Math.sin(el)*AERIAL.R,AERIAL.cz-ch*Math.cos(g.ang));
 }
 // 入場動畫鏡頭：固定自動切換（俯瞰 → 內野 → 外野 → 投捕），不提供手動選單
 let introCamS=null;

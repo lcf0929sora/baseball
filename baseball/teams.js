@@ -18,7 +18,6 @@ window.BASEBALL_TEAM_CONFIG = {
       "id": "RED",
       "name": "四川熊貓隊",
       "league": "INTL",
-      "stadium": "dream",
       "logo": "./baseball/panda.webp",
       "music": {
         "chance": "chance.mp3",
@@ -254,7 +253,7 @@ window.BASEBALL_TEAM_CONFIG = {
       "id": "BLUE",
       "name": "北海道山雀隊",
       "league": "INTL",
-      "stadium": "otsu",
+      "stadium": "乙子園",
       "logo": "./baseball/tit.webp",
       "music": {
         "chance": "chance.mp3",
@@ -490,7 +489,7 @@ window.BASEBALL_TEAM_CONFIG = {
       "id": "GREY",
       "name": "台中消波塊隊",
       "league": "TAIWAN",
-      "stadium": "ocean",
+      "stadium": "海洋",
       "logo": "./baseball/tetra.webp",
       "music": {
         "chance": "chance.mp3",
@@ -726,7 +725,6 @@ window.BASEBALL_TEAM_CONFIG = {
       "id": "ORANGE",
       "name": "苗栗貓隊",
       "league": "TAIWAN",
-      "stadium": "dream",
       "logo": "./baseball/leocat.webp",
       "music": {
         "chance": "chance.mp3",
@@ -962,7 +960,6 @@ window.BASEBALL_TEAM_CONFIG = {
       "id": "GREEN",
       "name": "黃金海岸無尾熊隊",
       "league": "INTL",
-      "stadium": "ocean",
       "logo": "./baseball/koala.webp",
       "music": {
         "chance": "chance.mp3",
@@ -1198,7 +1195,6 @@ window.BASEBALL_TEAM_CONFIG = {
       "id": "BUSAN",
       "name": "釜山海鷗隊",
       "league": "INTL",
-      "stadium": "ocean",
       "logo": "./baseball/gull.webp",
       "music": {
         "chance": "chance.mp3",
@@ -1434,7 +1430,7 @@ window.BASEBALL_TEAM_CONFIG = {
       "id": "TURKEY",
       "name": "土耳其火雞隊",
       "league": "INTL",
-      "stadium": "istanbul",
+      "stadium": "伊斯坦堡",
       "logo": "./baseball/turkey.webp",
       "music": {
         "chance": "chance.mp3",
@@ -1670,7 +1666,6 @@ window.BASEBALL_TEAM_CONFIG = {
       "id": "PERSIMMON",
       "name": "新竹柿子隊",
       "league": "TAIWAN",
-      "stadium": "dream",
       "logo": "./baseball/pesimmon.webp",
       "music": {
         "chance": "chance.mp3",
@@ -1906,7 +1901,6 @@ window.BASEBALL_TEAM_CONFIG = {
       "id": "BOY",
       "name": "布魯塞爾小童隊",
       "league": "INTL",
-      "stadium": "night",
       "logo": "./baseball/boy.webp",
       "music": {
         "chance": "chance.mp3",
@@ -2142,7 +2136,7 @@ window.BASEBALL_TEAM_CONFIG = {
       "id": "WOLF",
       "name": "羅馬母狼隊",
       "league": "INTL",
-      "stadium": "colosseum",
+      "stadium": "羅馬",
       "logo": "./baseball/wolf.webp",
       "music": {
         "chance": "chance.mp3",
@@ -2378,7 +2372,6 @@ window.BASEBALL_TEAM_CONFIG = {
       "id": "MONKEY",
       "name": "高雄獼猴隊",
       "league": "TAIWAN",
-      "stadium": "ocean",
       "logo": "./baseball/monkey.webp",
       "music": {
         "chance": "chance.mp3",
@@ -2614,7 +2607,6 @@ window.BASEBALL_TEAM_CONFIG = {
       "id": "KING",
       "name": "拉斯維加斯老千隊",
       "league": "INTL",
-      "stadium": "dream",
       "logo": "./baseball/king.webp",
       "music": {
         "chance": "chance.mp3",
@@ -2850,7 +2842,6 @@ window.BASEBALL_TEAM_CONFIG = {
       "id": "BEAN",
       "name": "嘉義綠豆人隊",
       "league": "TAIWAN",
-      "stadium": "night",
       "logo": "./baseball/bean.webp",
       "music": {
         "chance": "chance.mp3",
@@ -3086,7 +3077,6 @@ window.BASEBALL_TEAM_CONFIG = {
       "id": "DRAGON",
       "name": "台北天龍隊",
       "league": "TAIWAN",
-      "stadium": "night",
       "logo": "./baseball/dragon.webp",
       "music": {
         "chance": "chance.mp3",
@@ -3322,7 +3312,6 @@ window.BASEBALL_TEAM_CONFIG = {
       "id": "POPE",
       "name": "凡蒂岡教皇隊",
       "league": "INTL",
-      "stadium": "colosseum",
       "logo": "./baseball/pope.webp",
       "music": {
         "chance": "chance.mp3",
@@ -3558,7 +3547,6 @@ window.BASEBALL_TEAM_CONFIG = {
       "id": "KYIV",
       "name": "基輔無人機隊",
       "league": "INTL",
-      "stadium": "night",
       "logo": "./baseball/drone.webp",
       "music": {
         "chance": "chance.mp3",

@@ -715,8 +715,8 @@ button.pg-row.sel.pcon{box-shadow:none}
       <div class="settings-label" style="margin-top:22px">聲音</div>
       <div class="shadow-options snd" role="group" aria-label="音樂開關"><span class="snd-name">音樂（應援曲）</span><button type="button" data-snd-cat="music" data-on="1">開</button><button type="button" data-snd-cat="music" data-on="0">關</button></div>
       <div class="shadow-options snd" role="group" aria-label="音效開關"><span class="snd-name">音效（揮棒、擊球）</span><button type="button" data-snd-cat="sfx" data-on="1">開</button><button type="button" data-snd-cat="sfx" data-on="0">關</button></div>
-      <div class="shadow-options snd" role="group" aria-label="觀眾音效開關"><span class="snd-name">觀眾音效（尖叫聲）</span><button type="button" data-snd-cat="crowd" data-on="1">開</button><button type="button" data-snd-cat="crowd" data-on="0">關</button></div>
-      <p class="settings-note">音樂：應援曲與出局曲。音效：揮棒、擊球、接球等一般音效。觀眾音效：高飛球、三振、得分、安打、全壘打、贏球的尖叫聲與歡呼。音檔由球隊 JSON 指定，沒定義或找不到檔案就沒有聲音。</p>
+      <div class="shadow-options snd" role="group" aria-label="觀眾音效開關"><span class="snd-name">觀眾音效（尖叫聲、現場環境音）</span><button type="button" data-snd-cat="crowd" data-on="1">開</button><button type="button" data-snd-cat="crowd" data-on="0">關</button></div>
+      <p class="settings-note">音樂：應援曲與出局曲。音效：揮棒、擊球、接球等一般音效。觀眾音效：高飛球、三振、得分、安打、全壘打、贏球的尖叫聲與歡呼，以及球場的現場環境噪音（循環）。音樂另含各球場的開場音樂（進入空拍到第一棒出現）。音檔由球隊 JSON 指定，沒定義或找不到檔案就沒有聲音。</p>
       <div class="settings-label" style="margin-top:22px">聯盟聯賽存檔</div>
       <div id="lgSaveList"></div>
       <p class="settings-note">聯賽存檔放在這個瀏覽器的 localStorage（每個聯盟一份）。有存檔時，按「聯盟聯賽」會直接進入聯賽畫面；要重新選隊請在這裡刪除存檔。</p>
@@ -1219,7 +1219,7 @@ function chooseStadium(id){
 function loadStadiumList(){
   const s=document.createElement('script');s.src=STADIUM_BASE+'stadiums.js?v='+Date.now();s.charset='utf-8';
   s.onload=()=>{const a=window.BaseballStadiumList;
-    stadiumList=Array.isArray(a)?a.filter(x=>x&&x.id&&/^[\w.\-]+\.js$/.test(String(x.file||''))).map(x=>({id:String(x.id),name:String(x.name||x.id),file:String(x.file)})):[];
+    stadiumList=Array.isArray(a)?a.filter(x=>x&&x.id&&/^[\w.\-]+\.js$/.test(String(x.file||''))).map(x=>({id:String(x.id),name:String(x.name||x.id),file:String(x.file),opening:x.opening||null,ambient:x.ambient||null})):[];
     renderStadiumCards();updateTeamSelectionPrompt();};
   s.onerror=()=>{stadiumList=[];console.warn('找不到 '+STADIUM_BASE+'stadiums.js，使用內建預設球場');};
   document.head.appendChild(s);
@@ -3573,7 +3573,17 @@ function sharedBaseTrailing(r){return occupiesBase(r,r.base)&&runners.some(q=>q!
 // 野手永遠追不到、殺不到、觸殺也不成立 → 持球者站著等。另外 beginRun／手動起跑沒清 r.overrun，
 // 回頭又往二壘跑的跑者 SAFE 泡泡消失了、保護旗標卻還在（不同步），同樣讓野手不追。
 function overrunProtected(r){return !!r&&!!r.overrun&&!r.out&&!r.exiting&&(r.state==='overrun'||r.state==='back');}
-function runnerProtected(r){return !!r&&(overrunProtected(r)||(!!r.safe&&r.base<r.safe)||safeGrace(r));}   // safeGrace：判 safe 後 2 秒且沒有跑壘慾望
+// 一壘邊線保護區：打者跑者踩過一壘後（r.o===0、r.base===1），只要人還在「本壘—一壘連線延伸線」兩側 FIRST_ZONE_W 公尺內
+// （從一壘前 1 m 到延伸線 FIRST_ZONE_LEN m），不論目前是衝刺、煞車、停留、折返還是剛改跑二壘，一律不可被觸殺／封殺／追殺；
+// 離開這個區域（真的跑向二壘）才解除。避免「衝壘後想回壘、保護被 state 切換拿掉就被觸殺」。
+const FIRST_ZONE_W=3.0,FIRST_ZONE_LEN=16;
+function firstLineProtected(r){
+  if(!r||r.out||r.exiting||r.o!==0||r.base!==1)return false;
+  if(!(r.state==='run'||r.state==='back'||r.state==='overrun'||r.state==='stop'))return false;
+  const p=tagPt(r),B=BASEP[1],k=Math.SQRT1_2,dx=p.x-B.x,dz=p.z-B.z,al=(dx+dz)*k,lat=Math.abs((dx-dz)*k);
+  return al>=-1&&al<=FIRST_ZONE_LEN&&lat<=FIRST_ZONE_W;
+}
+function runnerProtected(r){return !!r&&(overrunProtected(r)||firstLineProtected(r)||(!!r.safe&&r.base<r.safe)||safeGrace(r));}   // safeGrace：判 safe 後 2 秒且沒有跑壘慾望
 function runnerKillable(r){return !!r&&!r.out&&!r.exiting&&r.state!=='score'&&!runnerProtected(r)&&(RUNNER_LIVE.includes(r.state)||sharedBaseTrailing(r));}
 function canChase(r){return runnerKillable(r);}
 // 取消 SAFE 標籤（頭上泡泡）：跑者離開保護、準備往下一壘時呼叫。safeOn 不動：腳還在壘包上時重設會讓 updateSafeTouch 又彈出 SAFE，離壘 >0.6 m 時它自己會重置
@@ -3958,7 +3968,34 @@ function maybeJump(d,c){
   const riseT=Math.sqrt(2*c.jumpH/JUMP_G);
   if(c.t<=riseT+1/60)startJump(d,c.jumpH);
 }
+// 死球（進觀眾席／界外死球區）後：原本的追球者繼續走到球旁（球最後的位置），到了或超過 8 秒才停；不會停在半路
+function deadBallDone(){if(!FL||!FL.dead||!FL.deadChase||!FL.deadChase.length)return true;return FL.deadChaseT>=4||FL.deadChase.every(d=>d.knockedDown>0||!d.walking&&FL.deadChaseT>0.3);}
+function deadBallChase(dt){
+  if(!defenseActive||!FL||!FL.dead||!FL.deadChase||!FL.deadChase.length||FL.deadChaseT>=4)return;
+  FL.deadChaseT+=dt;
+  const pts=FL.sim&&FL.sim.pts,last=pts&&pts.length?pts[pts.length-1]:null,bx=ball.isVisible?ball.position.x:(last?last[0]:0),bz=ball.isVisible?ball.position.z:(last?last[2]:0);
+  FL.deadChase.forEach(d=>{
+    if(!d||d.knockedDown>0||!d.root)return;
+    const fc=fenceClampXZ(bx,bz,1.2);moveActorToward(d,fc.x,fc.z,dt,100,0.9,true);
+  });
+}
+// 找不到球保底：球在無人持有的狀態下，
+//   ‧ 球本身幾乎沒動（< 8 cm），而且「最近的守備員也沒有在靠近」連續 7 秒（球還在場內只是還沒被撿到、守備員正在跑過去 → 不算，每次靠近 0.3 m 就重新計時；
+//     守備員卡住、追球分派失效、球卡在牆上／場景物件上，守備員到不了或不去 → 才算），或
+//   ‧ 守備回合從開始到現在超過 35 秒球都沒被任何人接到／撿起來
+// 一律判死球（跑者依既有規則獲判 2 個壘），直接進下一個 play，避免遊戲卡住。
+function lostBallWatch(dt){
+  if(practiceMode||!defenseActive||!FL||FL.dead||FL.res.foul||FL.res.hr||FL.res.deadBallAward||fieldingStage!=='idle'||!ball.isVisible)return;
+  const bp=ball.position,L=FL.lostRef;
+  let nd=Infinity;[...defenders,pitcherDef,catcherDef].forEach(q=>{if(!q||!q.root||q.knockedDown>0)return;const d=Math.hypot(bp.x-q.root.position.x,bp.z-q.root.position.z);if(d<nd)nd=d;});
+  if(!L||Math.hypot(bp.x-L.x,bp.y-L.y,bp.z-L.z)>0.08){FL.lostRef={x:bp.x,y:bp.y,z:bp.z};FL.lostT=0;FL.lostBestD=nd;}   // 球還在動：重新計時
+  else if(nd<(FL.lostBestD??Infinity)-0.3){FL.lostBestD=nd;FL.lostT=0;}                                              // 有人正在靠近：重新計時
+  else FL.lostT=(FL.lostT||0)+dt;
+  FL.unfieldedT=(FL.unfieldedT||0)+dt;
+  if(FL.lostT>7||FL.unfieldedT>35){console.warn('找不到球保底：判死球',FL.lostT,FL.unfieldedT);declareDeadBall();}
+}
 function updateDefense(dt){
+  lostBallWatch(dt);
   stepTags(dt);updateDefenderKnockdowns(dt);
   [...defenders,pitcherDef].forEach(d=>{if(d.knockedDown>0){d.walking=false;d.v=0;keepRootAboveGround(d.root);return;}stepJump(d,dt);d.root.position.y=d.jy;});
   if(catcherDef.fielding){if(catcherDef.knockedDown>0){catcherDef.walking=false;catcherDef.v=0;keepRootAboveGround(catcher);}
@@ -3978,7 +4015,7 @@ function updateDefense(dt){
     all.forEach(q=>{
       if(live)defenseIc.set(q,interceptPt(q));
       else{const stopDist=fieldingApproachStopDistance(q,ball.position,0),dist=Math.max(0,Math.hypot(ball.position.x-q.root.position.x,ball.position.z-q.root.position.z)-stopDist);
-        defenseIc.set(q,{x:ball.position.x,z:ball.position.z,eta:etaRun(q,dist),t:0,stopDist:stopDist});}
+        defenseIc.set(q,{x:ball.position.x,z:ball.position.z,eta:etaRun(q,dist),t:0,stopDist:stopDist,perp:Math.hypot(ball.position.x-q.root.position.x,ball.position.z-q.root.position.z)});}
       {const c=defenseIc.get(q);if(live&&c&&Number.isFinite(c.eta)&&c.eta<90)selectCatchMode(q,c,rmTargets,dt);else q.rmode='stand';}   // 停住／行進間接球模式（含兩種模式的阻殺評估）
     });
     const icOf=q=>defenseIc.get(q);
@@ -3988,7 +4025,7 @@ function updateDefense(dt){
     //  · 不再是最佳接球員的內野手立刻停止追球、回去補位（assignCovers 以所有追球者為例外重新分配）。
     // 最多三人同時追球：最佳接球員、投手（若他是最佳）、外野手後援。
     const pool=all.filter(q=>!defenseStopped.has(q));
-    const val=q=>{const c=icOf(q);const late=live?Math.max(0,(c.etaRun??c.eta)-c.t):(c.etaRun??c.eta);const hp=c.y===undefined?0:(c.y>STAND_REACH&&c.jumpH===0?1.5:0);return late+(live?0.5*c.t:0)+c.perp*0.02+hp;};   // 時間差為主；都來得及時，「誰先攔到球」（攔截時間 t 最小）優先，不再用離球路遠近（會讓較晚才攔到的人搶走最佳身分）
+    const val=q=>{const c=icOf(q);const late=live?Math.max(0,(c.etaRun??c.eta)-c.t):(c.etaRun??c.eta);const hp=c.y===undefined?0:(c.y>STAND_REACH&&c.jumpH===0?1.5:0);const v=late+(live?0.5*c.t:0)+(c.perp||0)*0.02+hp;return Number.isFinite(v)?v:1e6+Math.hypot(ball.position.x-q.root.position.x,ball.position.z-q.root.position.z);};   // 非有限值（球軌跡結束後沒有 perp、eta 為無限大）不可讓所有人的成本都變成 NaN → 改用離球距離排序，保證一定選得出追球者   // 時間差為主；都來得及時，「誰先攔到球」（攔截時間 t 最小）優先，不再用離球路遠近（會讓較晚才攔到的人搶走最佳身分）
     const pickBest=(list,prev)=>{let b=null,bv=Infinity;for(const q of list){const v=val(q);if(v<bv){bv=v;b=q;}}return(b&&prev&&list.includes(prev)&&val(prev)<=bv+0.12)?prev:b;};
     const isOF=q=>OF_NAMES.includes(q.name);
     const npPool=pool.filter(q=>q!==pitcherDef),bNP=pickBest(npPool,bestNP);bestNP=bNP;
@@ -4089,6 +4126,7 @@ function updateDefense(dt){
     }
   // 行進間接球後的動量滑行（穩球、換手、傳球期間）：必須在上面的移動分派之後、下面的朝向與步態動畫之前執行，
   // 這樣步態動畫看到的 walking／v 是滑行中的真實狀態（不會被移動分派重設成 false 而看起來像滑行）
+  deadBallChase(dt);
   allFielders().forEach(f=>{if(f.carryV>0)stepCarry(f,dt);});
   // ===== 身體傾斜與朝向／視線（共用幾何模型）=====
   // 身體向後最多 30°，頭部相對身體向上最多 55°；兩者可合計追蹤約 85° 的高仰角球路。
@@ -4525,6 +4563,79 @@ function crowdTick(dt){
   if(crowdCur){try{crowdCur.t.el.pause();}catch{}crowdCur=null;}
   const t=list[Math.floor(Math.random()*list.length)];
   try{t.el.currentTime=0;t.el.volume=CROWD.vol;const p=t.el.play();if(p&&p.catch)p.catch(e=>{if(e&&e.name!=='NotAllowedError'&&e.name!=='AbortError')t.bad=true;});crowdCur={t,pri:CROWD.pri[kind]};}catch{}
+}
+
+// ================= 球場專屬音訊：開場音樂＋現場環境噪音 =================
+// 在 ./baseball/stadiums.js 的球場項目加 opening／ambient（也可寫在球場 JS 註冊的物件上，清單優先）：
+//   {id:'night',name:'中央球場',file:'stadium-night.js',opening:'night-open.mp3',ambient:['night-crowd.ogg','night-crowd.m4a']}
+//   opening＝開場音樂：進入環繞空拍畫面時開始播（漸入），第一棒打者出現（入場動畫結束）時漸出停止。由設定內「音樂」開關控制。
+//   ambient＝現場環境噪音：進入環繞空拍畫面起循環播放到離開比賽；首尾以 overlap 交疊漸入漸出，聽不出接縫。由「觀眾音效」開關控制。
+// 值可寫單一路徑，或「同一首的多種格式」陣列（mp3／ogg／m4a／aac／wav／opus／flac／webm…），依瀏覽器 canPlayType 選第一個能播的。
+// 路徑規則同音樂：相對於 ./baseball/，或 http(s):// ./ ../ / 開頭。沒定義或讀不到檔案＝沒有聲音。
+const SAUD={openVol:0.6,openFadeIn:1.5,openFadeOut:1.5,ambVol:0.4,ambOverlap:3.0,ambFadeIn:2.0,ambFadeOut:1.5};
+const SA={key:'',open:null,amb:null,openWant:false,ambWant:false,retryT:0};
+const AUD_MIME={mp3:'audio/mpeg',ogg:'audio/ogg; codecs="vorbis"',oga:'audio/ogg',opus:'audio/ogg; codecs="opus"',m4a:'audio/mp4; codecs="mp4a.40.2"',mp4:'audio/mp4',aac:'audio/aac',wav:'audio/wav',flac:'audio/flac',webm:'audio/webm'};
+function audPick(v){   // 從單一路徑／多格式陣列挑第一個瀏覽器能播的 URL
+  const urls=(Array.isArray(v)?v:[v]).map(x=>musicUrl(x)).filter(Boolean);if(!urls.length)return '';
+  const a=document.createElement('audio');
+  for(const u of urls){const ext=(u.split(/[?#]/)[0].split('.').pop()||'').toLowerCase(),mt=AUD_MIME[ext];if(!mt||!a.canPlayType||a.canPlayType(mt)!=='')return u;}
+  console.warn('此瀏覽器可能不支援這些音檔格式：'+urls.join('、'));return urls[0];
+}
+function saMakeEl(url,loop){const el=new Audio();el.preload='auto';el.loop=loop;el.volume=0;el.addEventListener('error',()=>{el._bad=true;console.warn('球場音訊檔無法載入，略過：'+url);});el.src=url;return el;}
+function saDispose(){
+  [SA.open&&SA.open.el].concat(SA.amb?SA.amb.els:[]).forEach(el=>{if(el){try{el.pause();el.removeAttribute('src');el.load();}catch{}}});
+  SA.open=null;SA.amb=null;
+}
+function saSetup(){   // 依目前載入的球場建立（或換掉）音訊物件
+  const id=stadiumLoadedId||'',ent=stadiumList.find(x=>x.id===id)||null,reg=(window.BaseballStadiums&&window.BaseballStadiums[id])||{};
+  const o=ent&&ent.opening||reg.opening||(reg.audio&&reg.audio.opening)||null,a=ent&&ent.ambient||reg.ambient||(reg.audio&&reg.audio.ambient)||null;
+  const ou=id&&o?audPick(o):'',au=id&&a?audPick(a):'',key=id+'|'+ou+'|'+au;
+  if(key===SA.key)return;SA.key=key;saDispose();
+  if(ou)SA.open={el:saMakeEl(ou,true),vol:0,url:ou};
+  if(au){const els=[saMakeEl(au,false),saMakeEl(au,false)];SA.amb={els,g:[0,0],on:[false,false],end:[false,false],fadeT:[1,1],cur:0,master:0,url:au};}
+}
+function stadiumAudioStart(){SA.openWant=true;SA.ambWant=true;saSetup();}   // 進入環繞空拍畫面
+function stadiumAudioOpenEnd(){SA.openWant=false;}                        // 第一棒打者出現：開場音樂漸出
+function stadiumAudioStop(){SA.openWant=false;SA.ambWant=false;}          // 離開比賽
+function saPlay(el){try{const p=el.play();if(p&&p.catch)p.catch(e=>{if(e&&e.name!=='NotAllowedError'&&e.name!=='AbortError')el._bad=true;});}catch{}}
+function stadiumAudioTick(dt){
+  const inGame=!practiceMode&&!gameOver&&st!=='title'&&soundOn;
+  SA.retryT-=dt;const retry=SA.retryT<=0;if(retry)SA.retryT=1;   // 瀏覽器需先有使用者操作才能播放；被擋就每秒重試
+  // 開場音樂
+  const o=SA.open;
+  if(o&&!o.el._bad){
+    const tgt=(SA.openWant&&inGame&&SND.music)?SAUD.openVol:0,rate=SAUD.openVol/(tgt>o.vol?SAUD.openFadeIn:SAUD.openFadeOut)*dt;
+    o.vol=o.vol<tgt?Math.min(tgt,o.vol+rate):Math.max(tgt,o.vol-rate);
+    try{o.el.volume=clamp(o.vol,0,1);}catch{}
+    if(tgt>0&&o.el.paused&&retry)saPlay(o.el);
+    if(tgt===0&&o.vol===0&&!o.el.paused){o.el.pause();if(!SA.openWant)try{o.el.currentTime=0;}catch{}}
+  }
+  // 環境噪音：兩個播放器交替，接近尾端時下一個從頭漸入、目前這個漸出（overlap）
+  const m=SA.amb;
+  if(m&&!m.els.some(e=>e._bad)){
+    const want=SA.ambWant&&inGame&&SND.crowd;
+    m.master=want?Math.min(1,m.master+dt/SAUD.ambFadeIn):Math.max(0,m.master-dt/SAUD.ambFadeOut);
+    if(want){
+      const c=m.cur,ce=m.els[c];
+      if(!m.on[c]){m.on[c]=true;m.end[c]=false;m.fadeT[c]=SAUD.ambFadeIn;try{ce.currentTime=0;}catch{}saPlay(ce);}
+      else if(ce.paused&&retry&&!ce.ended&&!m.end[c])saPlay(ce);
+      const dur=ce.duration;
+      if(Number.isFinite(dur)&&dur>0){
+        const ov=Math.min(SAUD.ambOverlap,dur/3);
+        if(!m.end[c]&&ce.currentTime>=dur-ov){   // 接近尾端：啟動下一個播放器交疊
+          const n=1-c,ne=m.els[n];m.end[c]=true;m.fadeT[c]=Math.max(0.2,ov);
+          m.on[n]=true;m.end[n]=false;m.fadeT[n]=Math.max(0.2,ov);m.g[n]=0;try{ne.currentTime=0;}catch{}saPlay(ne);m.cur=n;}
+      }else if(!ce.loop){ce.loop=true;}   // 長度未知：退回單檔原生循環
+    }
+    for(let i=0;i<2;i++){
+      if(!m.on[i])continue;
+      const e=m.els[i],tg=(m.end[i]||!want)?0:1,st_=dt/Math.max(0.2,m.fadeT[i]);
+      m.g[i]=m.g[i]<tg?Math.min(tg,m.g[i]+st_):Math.max(tg,m.g[i]-st_);
+      try{e.volume=clamp(SAUD.ambVol*m.master*m.g[i],0,1);}catch{}
+      if(m.end[i]&&m.g[i]<=0){e.pause();m.on[i]=false;m.end[i]=false;}   // 交疊結束：舊的停掉
+    }
+    if(!want&&m.master<=0){m.els.forEach(e=>{if(!e.paused)e.pause();});m.on=[false,false];m.end=[false,false];m.g=[0,0];m.cur=0;}
+  }
 }
 
 // ================= audio =================
@@ -5821,7 +5932,7 @@ function cancelPlayRuns(){if(playRuns>0){for(let i=0;i<playRuns&&runLog.length;i
 function putOut(r,how,defender=null){
   if(r.out||r.state==='score')return;
   if(how==='tag'&&safeGrace(r))return;   // 判 safe 後 2 秒保護期（沒有跑壘慾望）不能被觸殺
-  if(overrunProtected(r)&&(how==='tag'||how==='force'||how==='appeal'))return;   // 衝過一壘後留在延伸線上（含回壘途中）＝安全：任何觸殺／封殺／回壘訴求都不成立
+  if((overrunProtected(r)||firstLineProtected(r))&&(how==='tag'||how==='force'||how==='appeal'))return;   // 衝過一壘後留在延伸線上（含回壘途中）＝安全：任何觸殺／封殺／回壘訴求都不成立
   if(how==='force'&&r.safeOn===r.to)return;     // 腳已先踩到要去的壘（已顯示 SAFE）：球後到，不能再封殺
   if(how==='appeal'&&r.safeOn===r.base)return;  // 已踩回原壘：回壘訴求不成立
   if(r.safe&&r.base<r.safe)return;   // 保送獲得的安全進壘權：還沒踏上獲得的壘包前不會被出局
@@ -6491,7 +6602,7 @@ function checkPlayEnd(dt){
   playClock+=dt;
   const live=runners.filter(r=>!r.out&&!r.exiting&&r.state!=='score'),onB=live.map(settledBase);
   const sig=live.map((r,i)=>r.o+'@'+onB[i]).join(',')+'/'+(runners.length-live.length);
-  const normalStill=(fieldingStage==='done'||!!(FL&&FL.dead))&&onB.every(b=>b>0);   // 死球：跑者都站上獲判的壘即可結束
+  const normalStill=(fieldingStage==='done'||!!(FL&&FL.dead&&deadBallDone()))&&onB.every(b=>b>0);   // 死球：跑者都站上獲判的壘即可結束
   const wpLanded=!!(FL&&FL.wp&&FL.sim&&FL.sim.landed&&ft>=FL.sim.landed.t);
   const wpRunnersStayed=live.every(r=>!r.isB&&r.base===r.o&&!['run','back','score'].includes(r.state));
   const wildPitchNoAdvance=fieldingStage==='done'&&wpLanded&&ballPointInInfield(ball.position)&&wpRunnersStayed;
@@ -6835,7 +6946,7 @@ function windDirText(w){if(!(w.windMps>0))return '無風';const n=['北','東北
 function renderWeatherHud(){const h=$('weatherHud');if(!h)return;h.innerHTML='<span>'+WEATHER.icon+' <b>'+WEATHER.cond+'</b></span><span>風速 <b>'+WEATHER.windMps.toFixed(1)+'</b> m/s</span><span>風向 <b>'+windDirText(WEATHER)+'</b></span>';}
 function showWeatherHud(on){const h=$('weatherHud');if(!h)return;if(on)renderWeatherHud();h.hidden=!on;}
 function startPregame(){
-  odReset();setBatterVisible(false);
+  stadiumAudioStart();odReset();setBatterVisible(false);
   chg={phase:'pregame',t:0,mv:[],banOff:true,team:pitchingTeam()};
   st='change';stT=0;chase=false;camFollow=null;
   resetDefense();catcher.position.set(0,0,CZ);
@@ -6923,6 +7034,7 @@ function pregamePlayBall(){   // 按 PLAY BALL：才開始入場動畫（裁判�
   startIntro();
 }
 function beginPlayBall(){   // 入場動畫結束：正式開打
+  stadiumAudioOpenEnd();   // 第一棒打者要出現了：開場音樂漸出
   pregame=null;setAerialView(false);$('pregame').classList.remove('show');showWeatherHud(false);
   chg=null;$('app').classList.remove('practice-mode','changing-sides');
   chase=false;FL=null;P=null;camFollow=null;ball.isVisible=false;
@@ -7117,7 +7229,7 @@ function enterReady(){rcClear();pkAICool=0;
   batterWalkUpCheck();
   pkOnReady();
 }
-function showModeSelection(){lgGame=null;homeMe=false;INNINGS=9;$('backToTeams').textContent='返回選擇球隊';pregame=null;setAerialView(false);if($('pregame'))$('pregame').classList.remove('show');odReset();umpSetOn(false);outSongPend=false;outSongDelay=0;outSongFlag=1;outSongTriggered=false;lastBatKey='';
+function showModeSelection(){stadiumAudioStop();lgGame=null;homeMe=false;INNINGS=9;$('backToTeams').textContent='返回選擇球隊';pregame=null;setAerialView(false);if($('pregame'))$('pregame').classList.remove('show');odReset();umpSetOn(false);outSongPend=false;outSongDelay=0;outSongFlag=1;outSongTriggered=false;lastBatKey='';
   endRunTrain();
   practiceMode=false;zone.isVisible=true;zg.isVisible=true;practiceShotSettled=false;selectedGameMode=null;st='title';mode='bat';chase=false;FL=null;P=null;camFollow=null;lockerRoomView=false;
   hideMissIndicator();clearSafeIndicators();
@@ -7820,6 +7932,8 @@ function pointOnTrajectory(pts,t){
   const f=clamp(t*60,0,pts.length-1.000001),i=Math.floor(f),u=f-i,a=pts[i],b=pts[Math.min(i+1,pts.length-1)];
   return V(a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u,a[2]+(b[2]-a[2])*u);
 }
+// 球離開比賽場地：水平距離超過球場圍牆半徑（任何角度、任何高度）；本壘後方、界外區在牆內不算
+const ballOutOfPlayXZ=(x,z)=>Math.hypot(x,z)>fenceRadius(x,z)+0.3;
 function simulateDeflectedBall(start,velocity){
   let x=start.x,y=Math.max(BALL_R,start.y),z=start.z,vx=velocity.x,vy=velocity.y,vz=velocity.z,t=0,apex=y,landed=null,hitT=null,wall=false,stop=false,n=0,dead=null;   // dead＝球進入死球區（觀眾席／記分板／飛出外野牆）的時刻
   const h=1/120,pts=[[x,y,z]],K=0.0055,bounces=[];
@@ -7829,6 +7943,7 @@ function simulateDeflectedBall(start,velocity){
     const hit=solidHit(px,py,pz,x,y,z);
     if(hit){const vn=vx*hit.x+vy*hit.y+vz*hit.z;if(vn<-1e-6){const f=clamp(hit.hitTime===undefined?1:hit.hitTime,0,1),cx=px+(x-px)*f,cy=py+(y-py)*f,cz=pz+(z-pz)*f;vx=(vx-1.5*vn*hit.x)*0.82;vy=(vy-1.5*vn*hit.y)*0.82;vz=(vz-1.5*vn*hit.z)*0.82;x=cx+hit.x*(hit.pushOut||0.003);y=cy+hit.y*(hit.pushOut||0.003);z=cz+hit.z*(hit.pushOut||0.003);if(hit.isOutfieldFence)wall=true;if(hitT===null)hitT=t-h+h*f;if(!dead&&(hit.ballRuleKind==='spectator'||hit.ballRuleKind==='scoreboard'))dead={t:t-h+h*f,kind:hit.ballRuleKind};}}
     if(!dead&&y>FENCE_H+BALL_R&&Math.hypot(x,z)>fenceRadius(x,z)&&Math.abs(Math.atan2(x,z))*180/Math.PI<=OUTFIELD_ARC_DEG)dead={t,kind:'outfieldBoundary'};
+    if(!dead&&ballOutOfPlayXZ(x,z))dead={t,kind:'outOfPlay'};   // 球被球員弄出去之後，任何角度只要滾／彈到牆外（含界外區）＝死球
     groundResolve(y,vx,vy,vz,BALL_R,h);   // 共用地面物理
     if(_g.hit&&!landed)landed={x:x,z:z,t:t};if(_g.bounce)bounces.push(t);
     y=_g.y;vx=_g.vx;vy=_g.vy;vz=_g.vz;if(_g.stop)stop=true;
@@ -8099,6 +8214,9 @@ function looseBallWatchdog(dt){
   if(bp.y<1.1&&sp<5&&bd<0.9){FL.scoopT=(FL.scoopT||0)+dt;if(FL.scoopT>=0.30){FL.scoopBy=best;FL.scoopT=0;}}   // ② 球在手邊
   else FL.scoopT=0;
   if(FL.looseT>2.5&&bp.y<1.3&&sp<8&&bd<1.8&&!FL.scoopBy){FL.scoopBy=best;FL.looseT=1.5;}   // ③ 太久沒撿到
+  // ④ 卡住保底：球停在原地超過 6 秒而且最近的野手還離球 3 m 以上（球在撿不到的地方），或漏接後超過 20 秒還沒撿起來 → 判死球，跑者依規則獲判 2 個壘，直接進下一個 play
+  if(bp.y<0.5&&sp<0.5)FL.restT=(FL.restT||0)+dt;else FL.restT=0;
+  if(!FL.scoopBy&&((FL.restT>6&&bd>3)||FL.looseT>20)&&!FL.res.foul)declareDeadBall();
 }
 function looseBallFrom(hitPoint,velocity,impactTime,o={}){
   const d=o.d||null;FL.looseT=0;FL.scoopT=0;FL.scoopBy=null;
@@ -8146,7 +8264,7 @@ function endThrowStage(){   // 傳球階段結束（球變成游離球）：清�
 // 不低於目前已到（或正跑向）的壘。獲判的壘用既有的 r.safe（保送／妨礙跑壘同一機制）：跑向該壘途中不能被觸殺、封殺。
 function declareDeadBall(){
   if(!FL||FL.dead||!simLive)return;
-  FL.dead=true;FL.muffLoose=false;
+  FL.dead=true;FL.muffLoose=false;FL.deadChase=[defenseChaser,...defenseCo].filter(Boolean);FL.deadChaseT=0;   // 死球後原本追球的野手仍要把球追到、站到球旁（最多 8 秒），其餘人停手
   defenseChaser=null;defenseCo=[];defenseStopped.clear();defenseIc.clear();defenseTarget=null;baseCover={};stopFieldingActors();
   runners.slice().sort((a,b)=>b.base-a.base).forEach(r=>{
     if(r.out||r.exiting||r.state==='score'||r.manual)return;
@@ -8515,6 +8633,7 @@ function gameFrame(dt){
     const a=s.pts[i],b=s.pts[i+1];
     ball.position.set(a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f);
     if(FL.deadAt!=null&&ft>=FL.deadAt&&!FL.dead&&defenseActive)declareDeadBall();   // 游離球進入死球區
+    else if(defenseActive&&!FL.dead&&!FL.res.foul&&!FL.res.hr&&!FL.res.deadBallAward&&(FL.muffLoose||FL.pko||FL.fromThrow)&&ball.isVisible&&ballOutOfPlayXZ(ball.position.x,ball.position.z))declareDeadBall();   // 保底：不論軌跡預測，只要球實際位置已在場外就是死球
     deferredFlightContact=true;
   }else if(st==='result'){
     stT+=dt;
@@ -8534,7 +8653,7 @@ function gameFrame(dt){
   if(land.isEnabled())land.scaling.setAll(1+0.15*Math.sin(performance.now()/150));
   // 打者雙手後拉：投手動作時往捕手方向收，球投出後維持
   if(st==='windup')ld=Math.max(ld,ss((pclock+W)/W/0.7));else if(st==='pitch')ld=1;else ld=Math.max(0,ld-dt*3);
-  musicTick(dt);crowdTick(dt);
+  musicTick(dt);crowdTick(dt);stadiumAudioTick(dt);
   boxK=boxScale({x:aimX,y:aimY});   // 框大小由球棒（甜蜜點）目前所在位置決定，隨滑鼠移動即時改變；揮棒時 aimLock 鎖住，判定與畫面一致
   // 打者身體傾角：依擊球點橫向位置（打擊＝準心；投球＝CPU 打者看球的預測過板位置）
   {// 近身球閃躲：出手後 DODGE.react 秒才反應；只能依「當下球的位置與速度」線性外推到過板面，不知道變化球之後的走向（變化球可能預判錯誤而被打到）
@@ -8952,7 +9071,7 @@ function maybeJumpAlong(d,traj){
 // 牽制傳球的彈開／漏接：共用 simulateDeflectedBall 重算球路，交給活球流程（與野手漏接同一套物理）
 function pkDeflectSim(point,vel){
   const tail=simulateDeflectedBall(V(point.x,Math.max(BALL_R,point.y),point.z),vel);
-  return {pts:tail.pts,landed:tail.landed,apex:0.5,cross:null,wall:tail.wall,hitT:tail.hitT,tEnd:tail.tEnd,bounces:tail.bounces};
+  return {pts:tail.pts,landed:tail.landed,apex:0.5,cross:null,wall:tail.wall,hitT:tail.hitT,tEnd:tail.tEnd,bounces:tail.bounces,dead:tail.dead};
 }
 // 球在這一幀的移動線段與守壘員的手套／身體做共用碰撞（需在手套位置更新後呼叫，與擊球、投球同一時序）
 function pkResolveContact(){
@@ -9357,7 +9476,7 @@ function pkLive(sim,t0=0){
   pkClear();
   hbpView=false;walkCam=false;
   pReset();
-  FL={sim:sim,res:{foul:false,hr:false,lp:sim.landed},hd:V(0,0,-1),shown:true,dt:0,dist:1,tShow:99,wp:true,pko:true,muffed:false};
+  FL={sim:sim,res:{foul:false,hr:false,lp:sim.landed},hd:V(0,0,-1),shown:true,dt:0,dist:1,tShow:99,wp:true,pko:true,muffed:false,fromThrow:true,deadAt:sim.dead?sim.dead.t:null};   // 牽制暴傳出界＝死球（從出手當下的壘起算判 2 個壘）
   land.setEnabled(false);wpOpt={pko:true};
   pitcherDef.homeFeet=pSh.map(m=>m.position.clone());
   const lastP=sim.pts[sim.pts.length-1],lp=sim.landed||{x:lastP[0],z:lastP[2]};

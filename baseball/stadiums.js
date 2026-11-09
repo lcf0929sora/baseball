@@ -31,5 +31,8 @@ window.BaseballStadiumList=[
    opening:'opening.mp3',   // 開場音樂（改成你的檔名；也可寫陣列 ['a.ogg','a.m4a'] 提供多種格式）
    ambient:'crowd.m4a'},   // 現場環境噪音（循環、交疊漸入漸出）
   {id:'war',name:'戰爭球場（被炸毀的廢墟）',file:'stadium-war.js',
-   opening:'opening.mp3'}   // 開場音樂；沒有觀眾，所以不設 ambient（人群噪音不適合）。想要戰場環境音（風聲、遠處爆炸）的話，加一行 ambient:'你的檔名.m4a'
+   opening:'opening.mp3'},   // 開場音樂；沒有觀眾，所以不設 ambient（人群噪音不適合）。想要戰場環境音（風聲、遠處爆炸）的話，加一行 ambient:'你的檔名.m4a',
+  {id:'zhubei',name:'竹北球場（遠百旁）',file:'stadium-zhubei.js',
+   opening:'opening.mp3',   // 開場音樂
+   ambient:'crowd.m4a'}   // 現場環境噪音（循環、交疊漸入漸出）
 ];

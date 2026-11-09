@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
+<!doctype html><html lang="zh-Hant"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>夜戰打擊場</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;900&family=Teko:wght@500;700&display=swap">
@@ -601,6 +601,8 @@ button.pg-row.sel.pcon{box-shadow:none}
         <button type="button" data-view-deg="90">90°</button>
       </div>
       <p class="settings-note">擊球後鏡頭相對地面的俯角：15° 接近平視、90° 為正上方俯視。預設 45°。不論角度，球飛到外野時都會停在畫面中央。</p>
+      <div class="settings-label" style="margin-top:22px">語言 / Language</div>
+      <div class="shadow-options snd" role="group" aria-label="語言 / Language"><button type="button" data-lang="zh">中文</button><button type="button" data-lang="en">English</button></div>
       <div class="settings-label" style="margin-top:22px">聲音</div>
       <div class="shadow-options snd" role="group" aria-label="音樂開關"><span class="snd-name">音樂（應援曲）</span><button type="button" data-snd-cat="music" data-on="1">開</button><button type="button" data-snd-cat="music" data-on="0">關</button></div>
       <div class="shadow-options snd" role="group" aria-label="音效開關"><span class="snd-name">音效（揮棒、擊球）</span><button type="button" data-snd-cat="sfx" data-on="1">開</button><button type="button" data-snd-cat="sfx" data-on="0">關</button></div>
@@ -626,11 +628,60 @@ button.pg-row.sel.pcon{box-shadow:none}
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babylonjs/6.49.0/babylon.js"></script>
 <script src="./baseball/teams.js"></script>
+<script src="./baseball/lang-en.js" onerror="console.info('lang-en.js 不存在：英文模式只翻譯球隊／球場名稱')"></script>
 <script src="./baseball/testmode.js" onerror="console.info('testmode.js 不存在：測試模式未啟用')"></script>
 <script>
 (function(){
 'use strict';
 const $=id=>document.getElementById(id);
+// ═══════════ 語言（中文／English）═══════════
+// 內部邏輯一律用中文字串；英文模式只在「顯示」層翻譯：畫面文字（MutationObserver）、計分板、語音。字典在 ./baseball/lang-en.js。
+const LANG=(()=>{let v=null;try{v=localStorage.getItem('baseball.lang');}catch(e){}if(v==='zh'||v==='en')return v;const l=String((navigator.languages&&navigator.languages[0])||navigator.language||'').toLowerCase();return /^zh/.test(l)?'zh':'en';})();
+document.documentElement.lang=LANG==='en'?'en':'zh-Hant';
+const CJK_RE=/[　-鿿＀-￯]/,TR_CACHE=new Map();
+function TR(s){
+  if(LANG!=='en'||typeof s!=='string'||!CJK_RE.test(s))return s;
+  const D=window.BaseballLangEN;if(!D)return s;
+  const hit=TR_CACHE.get(s);if(hit!==undefined)return hit;
+  const m=s.match(/^(\s*)([\s\S]*?)(\s*)$/),core=m[2];
+  let r=D.exact[core];
+  if(r===undefined){
+    r=core;
+    D.rules.forEach(([re,to])=>{r=r.replace(re,to);});
+    D.keys.forEach(k=>{if(r.indexOf(k)>=0)r=r.split(k).join(D.pieces[k]);});
+    if(r!==core){D.punct.forEach(([a,b])=>{if(r.indexOf(a)>=0)r=r.split(a).join(b);});r=r.replace(/ {2,}/g,' ').replace(/\( /g,'(').replace(/ \)/g,')').trim();}
+  }
+  r=m[1].replace(/\u3000/g,' ')+r+m[3].replace(/\u3000/g,' ');
+  if(TR_CACHE.size>4000)TR_CACHE.clear();
+  TR_CACHE.set(s,r);return r;
+}
+// 球隊／球員／聯盟／球場資料：英文模式優先用 nameEn（introEn），沒有就維持原本的名字；中文模式沒有 name 時才用 nameEn
+function i18nPick(o){
+  if(!o||typeof o!=='object')return;
+  if(LANG==='en'){if(o.nameEn)o.name=o.nameEn;if(o.introEn!=null)o.intro=o.introEn;}
+  else if(!o.name&&o.nameEn)o.name=o.nameEn;
+}
+function i18nConfig(c){
+  if(!c)return;
+  (c.leagues||[]).forEach(i18nPick);
+  (c.teams||[]).forEach(t=>{i18nPick(t);(t.players||[]).forEach(i18nPick);});
+}
+if(LANG==='en'){
+  const trNode=n=>{const v=n.nodeValue;if(v&&CJK_RE.test(v)){const t=TR(v);if(t!==v)n.nodeValue=t;}};
+  const ATTR=['aria-label','title','placeholder','alt'];
+  const trEl=e=>{ATTR.forEach(a=>{const v=e.getAttribute&&e.getAttribute(a);if(v&&CJK_RE.test(v)){const t=TR(v);if(t!==v)e.setAttribute(a,t);}});};
+  const walk=n=>{
+    if(n.nodeType===3){trNode(n);return;}
+    if(n.nodeType!==1||n.tagName==='SCRIPT'||n.tagName==='STYLE')return;
+    trEl(n);for(let c=n.firstChild;c;c=c.nextSibling)walk(c);
+  };
+  const obs=new MutationObserver(ms=>{for(const m of ms){
+    if(m.type==='characterData')trNode(m.target);
+    else if(m.type==='attributes')trEl(m.target);
+    else m.addedNodes.forEach(walk);}});
+  const startTr=()=>{walk(document.body);document.title=TR(document.title);obs.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['aria-label','title','placeholder','alt']});};
+  startTr();
+}
 const TM={};const tm=(n,...a)=>TM[n]?TM[n](...a):undefined;   // 外掛掛勾表：testmode.js 載入後才會有內容；沒有外掛時所有 tm() 呼叫都是空操作
 const V=(x,y,z)=>new BABYLON.Vector3(x,y,z);
 const C=(r,g,b)=>new BABYLON.Color3(r,g,b);
@@ -930,7 +981,7 @@ function updScoreboard(){
     if(sig===sbSig)return;sbSig=sig;
     const sz=tex.getSize(),W=sz.width,H=sz.height,g=tex.getContext();
     if(SB_RENDER){SB_RENDER(g,sbState(),W,H);tex.update();return;}   // 球場 JS 自訂畫法
-    const txt=(t,x,y,size,color,align,font)=>{g.font='bold '+size+'px '+(font||SB_NUM);g.fillStyle=color;g.textAlign=align||'center';g.textBaseline='middle';g.fillText(t,x,y);};
+    const txt=(t,x,y,size,color,align,font)=>{g.font='bold '+size+'px '+(font||SB_NUM);g.fillStyle=color;g.textAlign=align||'center';g.textBaseline='middle';g.fillText(TR(t),x,y);};
     // 板面：近黑色板面＋白色外框（傳統手掛數字板的配色）
     g.fillStyle='#070a08';g.fillRect(0,0,W,H);
     g.strokeStyle='#e9e6dc';g.lineWidth=10;g.strokeRect(8,8,W-16,H-16);
@@ -1095,7 +1146,7 @@ function chooseStadium(id){
 function loadStadiumList(){
   const s=document.createElement('script');s.src=STADIUM_BASE+'stadiums.js?v='+Date.now();s.charset='utf-8';
   s.onload=()=>{const a=window.BaseballStadiumList;
-    stadiumList=Array.isArray(a)?a.filter(x=>x&&x.id&&/^[\w.\-]+\.js$/.test(String(x.file||''))).map(x=>({id:String(x.id),name:String(x.name||x.id),file:String(x.file),opening:x.opening||null,ambient:x.ambient||null})):[];
+    stadiumList=Array.isArray(a)?a.filter(x=>x&&x.id&&/^[\w.\-]+\.js$/.test(String(x.file||''))).map(x=>({id:String(x.id),name:String((LANG==='en'?(x.nameEn||x.name):(x.name||x.nameEn))||x.id),file:String(x.file),opening:x.opening||null,ambient:x.ambient||null})):[];
     renderStadiumCards();updateTeamSelectionPrompt();};
   s.onerror=()=>{stadiumList=[];console.warn('找不到 '+STADIUM_BASE+'stadiums.js，使用內建預設球場');};
   document.head.appendChild(s);
@@ -1487,6 +1538,7 @@ let teamConfig={version:1,teams:[]},chosenHomeId=null,chosenAwayId=null;   // �
 let playerTeamChosen=false,opponentTeamChosen=false;   // 選隊：左鍵＝選（先玩家、再電腦）；右鍵＝取消（先取消電腦、再取消玩家）
 function validTeamConfig(c){
  if(!c||!Array.isArray(c.teams)||c.teams.length<2)throw new Error('JavaScript 球隊資料至少需要兩支球隊');
+ i18nConfig(c);
  c.teams.forEach(t=>{if(!t.id||!t.name)throw new Error('每隊都需要 id 與 name');if(!Array.isArray(t.players)||t.players.length<9||t.players.length>35)throw new Error('每隊球員必須介於 9 至 35 人');});
  return c;
 }
@@ -8181,17 +8233,25 @@ function announceBatter(){
   const bt=battingTeam(),idx=(activeBatterIndex[bt]||0)%9,b=currentBatter();if(!b)return;
   const key=inn+'|'+bt+'|'+idx+'|'+(b.id||b.name);
   if(key===lastBatKey)return;lastBatKey=key;
-  const say=()=>speakZh('第'+ZH_NUM[idx+1]+'棒',1,()=>speakZh(b.name||'',1,null,550));
+  const say=()=>speakZh(LANG==='en'?'Number '+(idx+1)+' batter':'第'+ZH_NUM[idx+1]+'棒',1,()=>speakZh(b.name||'',1,null,550));
   // 語音合成會搶／壓低音檔：出局歌還在播就等它播完（最多 20 秒）才播報，避免出局歌被蓋掉或中斷
   const o=musicTracks.out,playing=()=>o&&!o.bad&&!o.el.paused&&!o.el.ended;
   if(!playing()){say();return;}
   let n=0;const iv=setInterval(()=>{if(!playing()||++n>80||gameOver||st==='title'){clearInterval(iv);if(!gameOver&&st!=='title'&&lastBatKey===key)say();}},250);
 }
-function speakZh(text,rate,onend,delay){   // 中文女聲優先；瀏覽器沒有中文語音就不播
+let femaleEnVoice=null;
+function pickFemaleEnVoice(){
+  if(femaleEnVoice)return femaleEnVoice;
+  try{const en=((window.speechSynthesis&&speechSynthesis.getVoices())||[]).filter(v=>/^en/i.test(v.lang));
+    const fem=/(female|zira|samantha|susan|hazel|karen|moira|tessa|victoria|fiona|jenny|aria|emma|libby|sonia|catherine|linda|heather|ava|allison|kate|serena|google (us|uk) english)/i;
+    femaleEnVoice=en.find(v=>fem.test(v.name))||en[0]||null;}catch{}
+  return femaleEnVoice;
+}
+function speakZh(text,rate,onend,delay){   // 中文模式：中文女聲優先（沒有中文語音就不播）；英文模式：英文女聲，文字先經 TR 翻成英文
   if(!soundOn||!SND.sfx||!text)return;
   const go=()=>{try{const ss=window.speechSynthesis;if(!ss)return;
-    const v=pickFemaleZhVoice();if(!v)return;
-    const t=new SpeechSynthesisUtterance(text);t.voice=v;t.lang=v.lang;
+    const en=LANG==='en',v=en?pickFemaleEnVoice():pickFemaleZhVoice();if(!v)return;
+    const t=new SpeechSynthesisUtterance(en?TR(text):text);t.voice=v;t.lang=v.lang;
     t.rate=rate||1;t.pitch=1.1;t.volume=0.9;if(onend)t.onend=onend;ss.speak(t);}catch{}};
   if(delay)setTimeout(go,delay);else go();
 }
@@ -8207,7 +8267,7 @@ function pickMaleVoice(){
   }catch{}
   return maleVoice;
 }
-try{if(window.speechSynthesis)speechSynthesis.onvoiceschanged=()=>{maleVoice=null;femaleZhVoice=null;pickMaleVoice();pickFemaleZhVoice();};}catch{}
+try{if(window.speechSynthesis)speechSynthesis.onvoiceschanged=()=>{maleVoice=null;femaleZhVoice=null;femaleEnVoice=null;pickMaleVoice();pickFemaleZhVoice();pickFemaleEnVoice();};}catch{}
 function umpSound(kind){
   if(!soundOn||!SND.sfx)return;
   try{const ss=window.speechSynthesis;if(ss){ss.cancel();const t=new SpeechSynthesisUtterance(kind==='safe'?'Safe!':kind==='out'?'Out!':kind==='K'?'Strike out!':'Strike!');const mv=pickMaleVoice();if(mv){t.voice=mv;t.lang=mv.lang;}else t.lang='en-US';t.rate=1.05;t.pitch=0.6;t.volume=0.9;ss.speak(t);}}catch{}
@@ -10043,6 +10103,11 @@ $('menuBtn').addEventListener('click',()=>{$('settings').hidden=false;});
 $('closeSettings').addEventListener('click',()=>{$('settings').hidden=true;});
 $('settings').addEventListener('click',e=>{if(e.target===$('settings'))$('settings').hidden=true;});
 
+document.querySelectorAll('[data-lang]').forEach(b=>{const on=b.dataset.lang===LANG;b.classList.toggle('active',on);b.setAttribute('aria-pressed',on?'true':'false');
+  b.addEventListener('click',()=>{const L=b.dataset.lang;if(L===LANG)return;
+    if(st!=='title'&&!confirm('切換語言會重新載入頁面，目前進行中的比賽會中斷。\nChanging the language reloads the page and ends the game in progress.'))return;
+    try{localStorage.setItem('baseball.lang',L);}catch(e){}
+    location.reload();});});
 function syncSndButtons(){document.querySelectorAll('[data-snd-cat]').forEach(b=>{const on=(b.dataset.on==='1')===!!SND[b.dataset.sndCat];b.classList.toggle('active',on);b.setAttribute('aria-pressed',on?'true':'false');});}
 document.querySelectorAll('[data-snd-cat]').forEach(b=>b.addEventListener('click',()=>{SND[b.dataset.sndCat]=b.dataset.on==='1';if(SND[b.dataset.sndCat])ac();syncSndButtons();}));
 syncSndButtons();

@@ -16,7 +16,7 @@
  *   · 被轟炸後的城市：街道上有彈坑、燒毀的汽車與碎石；街廓裡是半倒的大樓、只剩外殼的建築和瓦礫堆；
  *     到處有黑煙柱和火光（粒子特效），遠處也有幾道大煙柱。
  *  空襲（每隔隨機分鐘）
- *   · 球場上空會隨機發生兩種事件之一（80% 無人機、20% 導彈）：(1) 一小群（14~24 架）「沙西德」型三角翼自殺無人機飛過，球場四周看台上的機槍陣地對空掃射（曳光彈），
+ *   · 球場上空會隨機發生兩種事件之一（80% 無人機、20% 導彈）：(1) 一小群（6~10 架）「沙西德」型三角翼自殺無人機飛過，球場四周看台上的機槍陣地對空掃射（曳光彈），
  *     打爆其中一部分（空中爆炸、殘骸冒煙墜落、落地爆炸）；(2) 幾枚巡航導彈拖著火焰和長長的煙跡飛過，有些最後俯衝落進城裡爆炸。
  *     第一次大約在載入後 25~60 秒，之後每隔 1~4 分鐘隨機發生。為了從打擊／守備視角看得到，飛行器的尺寸比實物放大。
  *  本檔「不」設定天空／霧／光源——那些由主程式的天氣系統決定。沒有觀眾，所以不提供 cheerSlots。
@@ -342,14 +342,6 @@ const craters=[];
 // 捕手後方（本壘後方、擋球牆前）的幾個彈坑：場上彈坑的煙全部改到這裡冒（在打擊視角攝影機 z=-6.8 的後面，不會擋到視線）
 const homeVents=[[-13,-12.5,5.5],[14,-13.5,6],[-5,-17.5,4.5],[6,-17.5,4.5],[-27,-16,7],[28,-17,7]];
 homeVents.forEach((v,i)=>{put(MB.CreateGround('xxCrater',{width:v[2],height:v[2]},scene),v[0],0.045+i*0.001,v[1],craterMats[i%3]).rotation.y=i*1.7;});
-// 凹凸不平的地面：內外野散落 24 個低矮的碎石塊／土塊／隆起（高 0.1~0.35 m，方向各異），球打到會往奇怪的方向彈。
-// 它們同時是外觀和碰撞（registerBallSolid，只有球會撞、人不會），所以形狀要跟碰撞方盒一致：不傾斜、只轉 y。
-{const rb=rng(5151),bumpMats=[M('#2d2823'),M('#3b342d'),M('#4a4743'),M('#2a2623')];let n=0;
- for(let tries=0;n<24&&tries<800;tries++){const x=(rb()*2-1)*90,z=-4+rb()*104,deg=Math.atan2(x,z)*180/Math.PI;
-   if(Math.abs(deg)>=44||Math.hypot(x,z)>fenceAt(deg)-5)continue;
-   if(baseSpots.some(b=>Math.hypot(x-b[0],z-b[1])<b[2]-1))continue;
-   const kind=rb(),h=kind<0.25?0.28+rb()*0.1:0.1+rb()*0.18,w=kind<0.3?2+rb()*1.4:0.5+rb()*1.2,d=kind<0.3?0.6+rb()*0.6:0.4+rb()*1.0;
-   const m=put(MB.CreateBox('xxBump',{width:w,height:h,depth:d},scene),x,h/2-0.015,z,bumpMats[(rb()*bumpMats.length)|0]);m.rotation.y=rb()*TAU;registerBallSolid(m);n++;}}
 const FB=newBatch();   // 場上的碎石、焦黑的座椅殘骸、扭曲的鐵片（只有外觀、都很矮）
 {const rc=rng(9191);
  for(const c of craters){const n=4+Math.round(c.d*0.8);for(let i=0;i<n;i++){const a=rc()*TAU,r=c.d*0.3+rc()*c.d*0.35,s=0.2+rc()*0.5,k=0.12+rc()*0.22;
@@ -434,8 +426,12 @@ SB.toMesh('xxRuinStands',vcMat);RB.toMesh('xxRuinBits',vcMat);FB.toMesh('xxField
 // ═════════ ⑨ 煙與火（粒子系統）═════════
 // 粒子系統不在「換球場自動清掉」的範圍內，所以全部記在 PSL，下面的 observer 一看到 anchor 被清掉就自己 dispose。
 const anchor=put(MB.CreateBox('xxWarAnchor',{size:0.1},scene),0,-5,0,null);anchor.isVisible=false;
+// 偵錯開關（要在切換到這個球場「之前」在瀏覽器主控台設定，例如 window.BaseballWarDebug={noPS:true}）：
+//   noPS＝完全不建立粒子系統；noBoom＝不要爆炸的閃光球；noTracer＝不要曳光彈；noGuns＝機槍不開火；noShadowFix＝不做「從陰影清單移除特效物件」的處理。
+const DBG=window.BaseballWarDebug||{};
 const PSL=[],C4=(r,g,b,a)=>new BABYLON.Color4(r,g,b,a);
-function mkPS(name,cap,emitter,additive){const ps=new BABYLON.ParticleSystem(name,cap,scene);ps.particleTexture=puffTex;ps.emitter=emitter;ps.updateSpeed=1/60;   // updateSpeed=1/60 → 生命週期／速度都以「秒」計
+const dummyPS=()=>new Proxy({},{get:(t,p)=>p in t?t[p]:(p==='addSizeGradient'||p==='start'||p==='stop'||p==='dispose'?()=>{}:undefined),set:(t,p,v)=>{t[p]=v;return true;}});
+function mkPS(name,cap,emitter,additive){if(DBG.noPS)return dummyPS();const ps=new BABYLON.ParticleSystem(name,cap,scene);ps.particleTexture=puffTex;ps.emitter=emitter;ps.updateSpeed=1/60;   // updateSpeed=1/60 → 生命週期／速度都以「秒」計
   ps.blendMode=additive?BABYLON.ParticleSystem.BLENDMODE_ADD:BABYLON.ParticleSystem.BLENDMODE_STANDARD;PSL.push(ps);return ps;}
 function smokeColumn(x,y,z,sc,rate,wind){const ps=mkPS('xxSmoke',Math.round(Math.min(260,(rate||12)*11)),V3(x,y,z));
   ps.minEmitBox=V3(-1.2*sc,0,-1.2*sc);ps.maxEmitBox=V3(1.2*sc,0,1.2*sc);
@@ -508,21 +504,21 @@ function buildMissile(){const b=newBatch(),body=hexRGB('#e9e8e2'),band=hexRGB('#
 function buildTracer(){const b=newBatch();b.box(0,0,0,0.14,0.14,5.5,0,[1,0.78,0.3]);b.box(0,0,0,0.3,0.3,1.4,0,[1,0.5,0.15]);return b.toMesh('xxTracerProto',flatMat);}
 const POOL=(proto,n,sc)=>{proto.position.set(0,-500,0);proto.scaling.set(sc,sc,sc);const a=[];for(let i=0;i<n;i++){const m=proto.createInstance('xxFly'+i);m.scaling.set(sc,sc,sc);m.setEnabled(false);a.push(m);}return a;};
 const droneProto=buildDrone(),missileProto=buildMissile(),tracerProto=buildTracer();
-const dronePool=POOL(droneProto,64,2.6),missilePool=POOL(missileProto,8,2.2),tracerPool=POOL(tracerProto,110,1);
+const dronePool=POOL(droneProto,16,2.6),missilePool=POOL(missileProto,6,2.2),tracerPool=POOL(tracerProto,48,1);
 tracerProto.scaling.set(1,1,1);
 
 // 爆炸：每個一顆閃光球＋火球粒子＋煙粒子（共 10 組輪流用）
 const booms=[];let boomI=0;
-for(let i=0;i<10;i++){const mat=M('#000000',{em:'#ffcf8a',alpha:1});mat.disableLighting=true;mat.backFaceCulling=false;
+for(let i=0;i<5;i++){const mat=M('#000000',{em:'#ffcf8a',alpha:1});mat.disableLighting=true;mat.backFaceCulling=false;
   const fl=MB.CreateSphere('xxBoomFlash',{diameter:1,segments:8},scene);fl.material=mat;fl.isPickable=false;fl.setEnabled(false);
-  const pos=V3(0,-200,0),fire=mkPS('xxBoomFire',110,pos,true),smoke=mkPS('xxBoomSmoke',90,pos);
+  const pos=V3(0,-200,0),fire=mkPS('xxBoomFire',70,pos,true),smoke=mkPS('xxBoomSmoke',60,pos);
   fire.manualEmitCount=0;fire.emitRate=0;fire.color1=C4(1,0.86,0.4,1);fire.color2=C4(1,0.4,0.1,1);fire.colorDead=C4(0.2,0.03,0,0);fire.minLifeTime=0.5;fire.maxLifeTime=1.3;
   fire.direction1=V3(-1,-0.3,-1);fire.direction2=V3(1,1,1);fire.gravity=V3(0,-2,0);fire.minEmitBox=fire.maxEmitBox=V3(0,0,0);
   smoke.manualEmitCount=0;smoke.emitRate=0;smoke.color1=C4(0.08,0.08,0.08,0.75);smoke.color2=C4(0.3,0.26,0.22,0.6);smoke.colorDead=C4(0.2,0.2,0.2,0);smoke.minLifeTime=3;smoke.maxLifeTime=5.5;
   smoke.direction1=V3(-0.6,0.3,-0.6);smoke.direction2=V3(0.6,1,0.6);smoke.gravity=V3(0.8,1.0,0.3);smoke.minEmitBox=smoke.maxEmitBox=V3(0,0,0);
   fire.start();smoke.start();booms.push({fl,mat,pos,fire,smoke,t:9,dur:1,size:1});}
 function spawnBoom(x,y,z,size){const b=booms[boomI=(boomI+1)%booms.length];b.t=0;b.dur=0.4+size*0.012;b.size=size;b.pos.set(x,y,z);
-  b.fl.position.set(x,y,z);b.fl.scaling.set(size*0.3,size*0.3,size*0.3);b.fl.setEnabled(true);b.mat.alpha=1;
+  b.fl.position.set(x,y,z);b.fl.scaling.set(size*0.15,size*0.15,size*0.15);if(!DBG.noBoom)b.fl.setEnabled(true);b.mat.alpha=1;
   b.fire.minSize=size*0.1;b.fire.maxSize=size*0.28;b.fire.minEmitPower=size*0.3;b.fire.maxEmitPower=size*0.9;b.fire.manualEmitCount=Math.round(14+size*1.1);
   b.smoke.minSize=size*0.18;b.smoke.maxSize=size*0.4;b.smoke.minEmitPower=size*0.05;b.smoke.maxEmitPower=size*0.2;b.smoke.manualEmitCount=Math.round(8+size*0.5);}
 // 殘骸的尾煙（橘色火星→黑煙）、導彈的白色長煙跡
@@ -532,14 +528,21 @@ function trailPS(kind){const ps=mkPS('xxTrail',kind==='missile'?560:100,V3(0,-30
   else{ps.color1=C4(1,0.62,0.2,0.95);ps.color2=C4(0.16,0.15,0.14,0.85);ps.colorDead=C4(0.1,0.1,0.1,0);ps.minSize=2.4;ps.maxSize=4.2;ps.minLifeTime=2.2;ps.maxLifeTime=3.8;ps.minEmitPower=0.2;ps.maxEmitPower=1;ps.direction1=V3(-0.3,0.3,-0.3);ps.direction2=V3(0.3,1,0.3);ps.gravity=V3(0.5,0.6,0.2);
     if(ps.addSizeGradient){ps.addSizeGradient(0,2.4,4);ps.addSizeGradient(1,6,10);}}
   ps.start();return ps;}
-const wreckTrails=[],missileTrails=[];for(let i=0;i<8;i++){wreckTrails.push(trailPS('wreck'));missileTrails.push(trailPS('missile'));}
+const wreckTrails=[],missileTrails=[];for(let i=0;i<4;i++)wreckTrails.push(trailPS('wreck'));for(let i=0;i<6;i++)missileTrails.push(trailPS('missile'));
 const impactFx=[];for(let i=0;i<3;i++){const pos=V3(0,-300,0),f=mkPS('xxImpactFire',130,pos,true),s=mkPS('xxImpactSmoke',240,pos);
   f.minEmitBox=V3(-4,0,-4);f.maxEmitBox=V3(4,0,4);f.color1=C4(1,0.66,0.16,1);f.color2=C4(1,0.3,0.05,1);f.colorDead=C4(0.25,0.02,0,0);f.minSize=5;f.maxSize=11;f.minLifeTime=0.8;f.maxLifeTime=1.6;f.emitRate=0;f.direction1=V3(-0.3,1,-0.3);f.direction2=V3(0.3,1,0.3);f.minEmitPower=2;f.maxEmitPower=5;f.gravity=V3(0,2,0);
   s.minEmitBox=V3(-4,0,-4);s.maxEmitBox=V3(4,0,4);s.color1=C4(0.06,0.06,0.06,0.85);s.color2=C4(0.26,0.22,0.19,0.65);s.colorDead=C4(0.2,0.2,0.2,0);s.minSize=12;s.maxSize=22;s.minLifeTime=8;s.maxLifeTime=14;s.emitRate=0;s.direction1=V3(-0.3,1,-0.3);s.direction2=V3(0.4,1,0.3);s.minEmitPower=2;s.maxEmitPower=4;s.gravity=V3(1,0.6,0.3);
   if(s.addSizeGradient){s.addSizeGradient(0,10,16);s.addSizeGradient(1,34,56);}
   f.start();s.start();impactFx.push({pos,f,s,t:0,on:false});}
 
-// ── 事件排程：第一次在載入後 25~60 秒，之後每隔 60~240 秒（1~4 分鐘）隨機發生；80% 無人機群（14~24 架）、20% 導彈
+// 若主程式有陰影（ShadowGenerator），特效物件（無人機、爆炸球、曳光彈、槍口火光）若被加進陰影清單，會在場上投出一大片陰影，
+// 把地面和球都壓成黑的。這裡盡力把它們從所有陰影清單移除，並且關掉它們接收陰影。事件開始時、之後每 2 秒各做一次。
+const FX_RE=/^(xxFly|xxBoomFlash|xxMuzzle|xxGun|xxShahed|xxMissile|xxTracer)/;
+function stripShadows(){if(DBG.noShadowFix)return;try{scene.lights.forEach(l=>{const sg=l.getShadowGenerator&&l.getShadowGenerator();const sm=sg&&sg.getShadowMap&&sg.getShadowMap();
+  if(sm&&sm.renderList){for(let i=sm.renderList.length-1;i>=0;i--)if(FX_RE.test(sm.renderList[i].name))sm.renderList.splice(i,1);}});
+  scene.meshes.forEach(m=>{if(FX_RE.test(m.name))m.receiveShadows=false;});}catch(e){}}
+stripShadows();
+// ── 事件排程：第一次在載入後 25~60 秒，之後每隔 60~240 秒（1~4 分鐘）隨機發生；80% 無人機群（6~10 架）、20% 導彈（3~5 枚）
 const RND=Math.random,ran=(a,b)=>a+RND()*(b-a),D=V3(0,0,0);
 const ST={mode:'wait',wait:ran(25,60),t:0,d:[1,0],p:[0,1],drones:[],missiles:[],sched:[],busy:0};
 const VTR=640,R_START=900,R_END=950;
@@ -548,26 +551,26 @@ function posOf(o,t){const tt=t,al=o.a0+o.spd*tt,lt=o.lat+(o.sway||0)*Math.sin(0.
   return [CX0+ST.d[0]*al+ST.p[0]*lt,o.alt+(o.bob||0)*Math.sin(0.9*tt+o.ph),CZ0+ST.d[1]*al+ST.p[1]*lt];}
 function nearestGun(p,maxD){let bi=-1,bd=maxD;guns.forEach((g,i)=>{const d=Math.hypot(p[0]-g.x,p[1]-g.y,p[2]-g.z);if(d<bd){bd=d;bi=i;}});return bi;}
 function freeFrom(pool){for(const m of pool)if(!m.isEnabled())return m;return null;}
-function fireTracer(gi,target,jit){const g=guns[gi],m=freeFrom(tracerPool);if(!m)return;
+function fireTracer(gi,target,jit){if(DBG.noGuns)return;const g=guns[gi],m=freeFrom(tracerPool);if(!m&&!DBG.noTracer)return;
   const tx=target[0]+(jit?(RND()-0.5)*jit:0),ty=target[1]+(jit?(RND()-0.5)*jit:0),tz=target[2]+(jit?(RND()-0.5)*jit:0);
   const dx=tx-g.x,dy=ty-g.y,dz=tz-g.z,len=Math.hypot(dx,dy,dz)||1;D.set(tx,ty,tz);g.piv.lookAt(D);g.flash=0.06;g.fl.setEnabled(true);g.fl.scaling.setAll?g.fl.scaling.setAll(0.5+RND()*0.9):g.fl.scaling.set(0.8,0.8,0.8);
-  const mx=g.x+dx/len*3.2,my=g.y+dy/len*3.2,mz=g.z+dz/len*3.2;m.position.set(mx,my,mz);m.lookAt(D);m.setEnabled(true);
+  const mx=g.x+dx/len*3.2,my=g.y+dy/len*3.2,mz=g.z+dz/len*3.2;if(DBG.noTracer||!m)return;m.position.set(mx,my,mz);m.lookAt(D);m.setEnabled(true);
   m._v=[dx/len*VTR,dy/len*VTR,dz/len*VTR];m._life=Math.max(0.05,(len-3.2)/VTR);}
 function startDrones(){
-  if(ST.mode==='run')return;dirSetup();ST.mode='run';ST.kind='drone';ST.t=0;ST.sched.length=0;ST.drones.length=0;
-  const N=14+Math.floor(RND()*11),spd=46+RND()*10,lat0=(RND()-0.5)*240,alt0=60+RND()*60;
+  if(ST.mode==='run')return;stripShadows();dirSetup();ST.mode='run';ST.kind='drone';ST.t=0;ST.sched.length=0;ST.drones.length=0;
+  const N=6+Math.floor(RND()*5),spd=46+RND()*10,lat0=(RND()-0.5)*240,alt0=60+RND()*60;
   for(let i=0;i<N;i++){const m=dronePool[i];m.setEnabled(true);
     const o={m,a0:-R_START-RND()*280,spd:spd+(RND()-0.5)*3,lat:lat0+(RND()-0.5)*190,alt:alt0+(RND()-0.5)*52,sway:7,bob:3.5,ph:RND()*TAU,ph2:RND()*TAU,dead:false,done:false,kill:-1,gun:-1};
     o.tEnd=(R_END-o.a0)/o.spd;
-    if(RND()<0.58){for(let t=0;t<o.tEnd;t+=0.5){const p=posOf(o,t);if(nearestGun(p,330)>=0){o.kill=t+RND()*7;break;}}
+    if(RND()<0.5){for(let t=0;t<o.tEnd;t+=0.5){const p=posOf(o,t);if(nearestGun(p,330)>=0){o.kill=t+RND()*7;break;}}
       if(o.kill>=0&&o.kill<o.tEnd){const p=posOf(o,o.kill);o.gun=nearestGun(p,420);if(o.gun<0)o.kill=-1;
-        else for(let j=0;j<5;j++){const arr=o.kill-j*0.07,tg=posOf(o,arr),g=guns[o.gun],dist=Math.hypot(tg[0]-g.x,tg[1]-g.y,tg[2]-g.z);ST.sched.push({t:arr-dist/VTR,gi:o.gun,tg,jit:j?5:0});}}else o.kill=-1;}
+        else for(let j=0;j<3;j++){const arr=o.kill-j*0.09,tg=posOf(o,arr),g=guns[o.gun],dist=Math.hypot(tg[0]-g.x,tg[1]-g.y,tg[2]-g.z);ST.sched.push({t:arr-dist/VTR,gi:o.gun,tg,jit:j?5:0});}}else o.kill=-1;}
     ST.drones.push(o);}
   ST.sched.sort((a,b)=>a.t-b.t);
 }
 function startMissiles(){
-  if(ST.mode==='run')return;dirSetup();ST.mode='run';ST.kind='missile';ST.t=0;ST.sched.length=0;ST.missiles.length=0;
-  const N=3+Math.floor(RND()*4),spd=170+RND()*50,lat0=(RND()-0.5)*160,alt0=140+RND()*120;
+  if(ST.mode==='run')return;stripShadows();dirSetup();ST.mode='run';ST.kind='missile';ST.t=0;ST.sched.length=0;ST.missiles.length=0;
+  const N=3+Math.floor(RND()*3),spd=170+RND()*50,lat0=(RND()-0.5)*160,alt0=140+RND()*120;
   for(let i=0;i<N;i++){const m=missilePool[i];m.setEnabled(true);const imp=RND()<0.5;
     ST.missiles.push({m,a0:-R_START-i*45,spd,lat:lat0+(i-N/2)*34+(RND()-0.5)*10,alt:alt0+(RND()-0.5)*30,sway:0,bob:6,ph:RND()*TAU,ph2:0,limp:imp?340+RND()*260:null,done:false,trail:missileTrails[i%missileTrails.length]});
     const tr=missileTrails[i%missileTrails.length];tr.emitter=m;tr.emitRate=70;}
@@ -580,9 +583,6 @@ function stepEvent(dt){
   // 曳光彈的排程發射
   while(ST.sched.length&&ST.sched[0].t<=t){const s=ST.sched.shift();fireTracer(s.gi,s.tg,s.jit);}
   if(ST.kind==='drone'){
-    // 機槍對空的「壓制射擊」：沒有排程時也隨機朝附近的無人機掃射
-    guns.forEach((g,gi)=>{g.cd-=dt;if(g.cd>0)return;const cand=ST.drones.filter(o=>!o.dead&&!o.done&&Math.hypot(...posOf(o,t).map((v,i)=>v-[g.x,g.y,g.z][i]))<380);
-      if(!cand.length){g.cd=0.4;return;}const o=cand[(RND()*cand.length)|0],lead=posOf(o,t+0.5);for(let j=0;j<3;j++)ST.sched.push({t:t+j*0.07,gi,tg:lead,jit:22});ST.sched.sort((a,b)=>a.t-b.t);g.cd=ran(0.5,1.2);});
     let alive=0;
     for(const o of ST.drones){if(o.done)continue;alive++;
       if(!o.dead){const p=posOf(o,t),q=posOf(o,t+0.05);if(t>o.tEnd){o.m.setEnabled(false);o.done=true;continue;}
@@ -604,12 +604,14 @@ function stepEvent(dt){
   }
 }
 // 每幀：事件、曳光彈、爆炸、槍口火光、衝擊火場
+let shT=0;
 const tObs=scene.onBeforeRenderObservable.add(()=>{
   if(anchor.isDisposed()){scene.onBeforeRenderObservable.remove(tObs);PSL.forEach(p=>{try{p.dispose();}catch(e){}});return;}   // 換球場：粒子系統自己清掉
   const dt=clamp(scene.getEngine().getDeltaTime()/1000,0,0.1);if(dt<=0)return;
+  shT+=dt;if(shT>2){shT=0;stripShadows();}
   if(ST.mode==='wait'){ST.wait-=dt;if(ST.wait<=0){if(RND()<0.8)startDrones();else startMissiles();}}else stepEvent(dt);
   for(const m of tracerPool){if(!m.isEnabled())continue;m._life-=dt;if(m._life<=0){m.setEnabled(false);continue;}m.position.set(m.position.x+m._v[0]*dt,m.position.y+m._v[1]*dt,m.position.z+m._v[2]*dt);}
-  for(const b of booms){if(b.t>=b.dur+0.2)continue;b.t+=dt;const k=b.t/b.dur;if(k>=1){b.fl.setEnabled(false);b.t=b.dur+0.3;continue;}const s=b.size*(0.3+0.9*Math.sqrt(k));b.fl.scaling.set(s,s,s);b.mat.alpha=1-k*k;}
+  for(const b of booms){if(b.t>=b.dur+0.2)continue;b.t+=dt;const k=b.t/b.dur;if(k>=1){b.fl.setEnabled(false);b.t=b.dur+0.3;continue;}const s=b.size*(0.15+0.45*Math.sqrt(k));b.fl.scaling.set(s,s,s);b.mat.alpha=1-k*k;}
   for(const g of guns){if(g.flash>0){g.flash-=dt;if(g.flash<=0)g.fl.setEnabled(false);}}
   for(const f of impactFx){if(!f.on)continue;f.t+=dt;if(f.t>55){f.on=false;f.f.emitRate=0;f.s.emitRate=0;}else if(f.t>30)f.f.emitRate=Math.max(0,50*(1-(f.t-30)/25));}
 });

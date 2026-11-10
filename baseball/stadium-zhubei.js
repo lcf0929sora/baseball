@@ -1,24 +1,22 @@
 /*
- * 竹北球場（id: zhubei）——建在「國立臺灣大學竹北校區足球場」的位置（地圖紅框），旁邊是遠東百貨竹北店（遠百）。
+ * 竹北球場（id: zhubei）——建在「國立臺灣大學竹北校區足球場」的位置（地圖紅框），旁邊是遠東百貨竹北店（大遠百）。
  * 介面規格請參考 stadium-otsu.js（或 stadium-night.js）開頭的「球場外掛開發指南」。
  *
  *  真實位置與比例（依你給的衛星圖）
- *   · 比例尺：用圖中的標準足球場（105 × 68 m，圖上約 245 × 165 px）換算，約 0.425 m／px。
- *   · 紅框約 179 × 152 m，球場放在裡面：本壘板靠西南邊（莊敬一路／光明六路那一側），中外野朝北北東（方位 22°，
- *     也就是平行紅框的長邊），所以打者面向的是北邊的樹林。左右外野看台最遠 ±83 m，中外野看台後牆約 z=109 m，都收在紅框裡。
- *   · 地圖座標 → 球場座標的換算寫在 ③（px2g）；百貨公司、道路都是用地圖像素座標換算出來的，不是憑感覺放。
- *  遠東百貨竹北店（依照片）
- *   · 三個圓柱「鼓形」量體（地圖上的三個圓形屋頂）：最大那個直徑約 47 m，背後有一個比較高的小鼓、另一個小鼓；
- *     鼓身是淺褐色石材板＋橫向帶狀窗，每隔兩層有環繞的陽台欄杆；屋頂是低坡度的深灰藍金屬圓錐頂。
- *   · 底下是階梯狀退縮的米色石材基座（橫向石材帶＋帶狀窗），上層退縮的部分是斜向格柵立面；入口是深色玻璃雨庇；
- *     廣場上有一件紅色抽象雕塑；西側立面有「遠東百貨」招牌。
+ *   · 比例尺：用圖中的標準足球場（105 × 68 m，圖上約 245 × 165 px）換算，約 0.425 m／px；紅框約 178 × 152 m。
+ *   · 旋轉：本壘板放在紅框西南角，三壘線平行紅框左邊（也就是平行東邊的莊敬北路），一壘線平行紅框下緣（平行南邊的莊敬一路／光明六路）；
+ *     中外野因此朝向東北東（方位約 67°，正好是棒球場常用的「東北東」朝向），打者面向的是紅框裡的東北角，東南方向（右手邊）隔著馬路就是百貨公司。
+ *   · 球場、道路、百貨公司都是用地圖像素座標換算（px2uv／px2g），看台、後牆、塔樓全部收在紅框裡（≈ 距邊 4~12 m）。
+ *  遠東百貨竹北店（依三張照片）
+ *   · 外牆是大面積、沒有窗的「卵石馬賽克」石材（灰米色、小石塊拼貼），一樓是深色玻璃帷幕＋褐色柱列＋木格柵雨庇；
+ *     上層一層層退縮的露台，露台邊是褐色木條欄杆、後面是帶狀玻璃，牆上有鐵鏽色（耐候鋼）的百葉；西側立面中央有藍色大字「遠東百貨」。
+ *   · 三個「鼓形」量體（地圖上的三個圓形屋頂）：最大的在南端，下面包著一圈弧形石牆，鼓身分兩層、貼淺褐木紋色的板材、有小窗，
+ *     每層都有環繞陽台（木條欄杆）；屋頂是深灰藍的分格金屬大圓頂，屋簷大幅外伸。北邊兩個較小的鼓坐在退縮的露台上，兩鼓之間有玻璃採光罩。
  *  球場風格（和百貨公司協調）
- *   · 同一組顏色：米色石材、淺褐、古銅色、深灰藍屋頂。看台後牆（也就是球場外牆）是橫向石材帶＋帶狀窗；
- *     本壘後方看台有深灰藍的屋頂雨棚；中外野記分板兩側各有一座「鼓形」塔樓（圓柱、環繞陽台、低坡圓錐頂），呼應百貨公司。
- *     記分板是深石板色底、古銅框、暖白字。
+ *   · 看台後牆（也就是球場外牆）和百貨公司同一種卵石石材，頂端有褐色木條欄杆帶；本壘後方看台有深灰藍的屋頂雨棚；
+ *     中外野記分板兩側各有一座小「鼓形塔」（淺褐木紋板材＋環繞陽台＋深灰藍分格大屋簷圓頂），呼應百貨公司；記分板是深石板色底、古銅框、暖白字。
  *  其他
- *   · 道路：莊敬北路（紅框東側）、莊敬一路與光明六路（紅框南側）；周圍是茂密的樹林（地圖上的綠地）。
- *   · 其餘建築（東側的住宅大樓、其他圓形建築、運動場等）這一版先「不」生成。
+ *   · 道路：莊敬北路（紅框東側）、莊敬一路與光明六路（紅框南側）；周圍是樹林。其餘建築（住宅大樓、其他圓形建築、運動場等）這一版先「不」生成。
  *  本檔「不」設定天空／霧／光源——那些由主程式的天氣系統決定。
  * 閱讀順序：①共用工具 ②貼圖 ③地圖座標 ④地面與外野牆 ⑤看台、雨棚與鼓形塔 ⑥界外牆與休息區 ⑦記分板
  *           ⑧道路與草地 ⑨遠東百貨竹北店 ⑩樹林 ⑪登錄規則
@@ -61,7 +59,7 @@ function newBatch(withUV){
     if(ry){const c=Math.cos(ry),s=Math.sin(ry),nx=x*c+z*s,nz=-x*s+z*c;x=nx;z=nz;}return [x,y,z];};
   function box(cx,cy,cz,w,h,d,ry,col,o){o=o||{};const X=w/2,Y=h/2,Z=d/2,rx=o.rx||0,rz=o.rz||0,uP=o.uP,vP=o.vP,sh=o.sh||[1,0.84,0.84,0.95,0.9];ry=ry||0;   // sh＝[上, +x, -x, +z, -z]
     const W=(x,y,z)=>{const r=rot(x,y,z,ry,rx,rz);return [cx+r[0],cy+r[1],cz+r[2]];},R=(x,y,z)=>rot(x,y,z,ry,rx,rz);
-    const uvW=(p,axis)=>uP?[(axis==='x'?p[0]:p[2])/uP,p[1]/vP]:null,cl=k=>[col[0]*k,col[1]*k,col[2]*k];
+    const ur=o.uvRot||0,uc=Math.cos(ur),us=Math.sin(ur),uvW=(p,axis)=>uP?[(axis==='x'?(p[0]*uc-p[2]*us):(p[0]*us+p[2]*uc))/uP,p[1]/vP]:null,cl=k=>[col[0]*k,col[1]*k,col[2]*k];
     quad(W(-X,Y,-Z),W(X,Y,-Z),W(X,Y,Z),W(-X,Y,Z),R(0,1,0),cl(sh[0]));
     if(o.bottom)quad(W(-X,-Y,-Z),W(-X,-Y,Z),W(X,-Y,Z),W(X,-Y,-Z),R(0,-1,0),cl(0.6));
     let q;
@@ -124,33 +122,50 @@ function crowdTextures(){
     gt.fillStyle=sh;gt.beginPath();gt.ellipse(cx,66,26,15,0,0,TAU);gt.fill();gt.fillStyle=hr;gt.beginPath();gt.arc(cx,66,12,0,TAU);gt.fill();}
   front.update();top.update();return {front,top};
 }
-// 橫向石材帶＋帶狀窗（百貨公司立面與球場外牆共用）：一格＝8 m 寬 × 4 m 高（＝一層樓，64 px/m），可無縫橫向／縱向重複。
-// 由下往上：石材窗台牆(0~1.2 m，橫向石縫)、帶狀玻璃窗(1.2~3.3 m，深色玻璃＋每 1.6 m 一根窗框)、古銅色橫梁(3.3~3.55)、女兒牆(3.55~4)。
-// balcony=true：把橫梁換成陽台欄杆（橫欄＋垂直欄杆），用在鼓形量體。
-function bandTex(name,wall,line,balcony,seed){
-  const W=512,H=256,t=newTex(name,W,H),g=t.getContext(),rnd=rng(seed||7),P=64,Y=m=>H-m*P;
-  g.fillStyle=wall;g.fillRect(0,0,W,H);for(let n=0;n<5000;n++){g.fillStyle=n%2?'rgba(255,255,255,0.08)':'rgba(70,50,30,0.07)';g.fillRect(rnd()*W,rnd()*H,1+rnd()*2,1);}
-  const courses=(m0,m1,step)=>{g.strokeStyle=line;g.lineWidth=1.5;for(let m=m0;m<=m1+1e-6;m+=step){g.beginPath();g.moveTo(0,Y(m));g.lineTo(W,Y(m));g.stroke();}
-    let k=0;for(let m=m0;m<m1-1e-6;m+=step,k++){g.lineWidth=1;for(let x=(k%2?0.5:0);x<8;x+=1.0){g.beginPath();g.moveTo(x*P,Y(m));g.lineTo(x*P,Y(m+step));g.stroke();}}};
-  courses(0,1.2,0.4);                                                                                      // 石材窗台牆
-  const gl=g.createLinearGradient(0,Y(3.3),0,Y(1.2));gl.addColorStop(0,'#6f8798');gl.addColorStop(0.35,'#2e3d4a');gl.addColorStop(1,'#1c2630');
-  g.fillStyle=gl;g.fillRect(0,Y(3.3),W,2.1*P);                                                              // 帶狀玻璃窗
-  g.fillStyle='rgba(255,255,255,0.10)';for(let x=0;x<8;x+=1.6){g.beginPath();g.moveTo(x*P+10,Y(1.2));g.lineTo(x*P+60,Y(3.3));g.lineTo(x*P+80,Y(3.3));g.lineTo(x*P+30,Y(1.2));g.closePath();g.fill();}   // 玻璃反光
-  g.fillStyle='#4b3b2c';for(let x=0;x<8;x+=1.6)g.fillRect(x*P-2,Y(3.3),4,2.1*P);g.fillRect(0,Y(2.25),W,3);g.fillRect(0,Y(3.3),W,4);g.fillRect(0,Y(1.2)-3,W,4);   // 窗框
-  g.fillStyle='rgba(0,0,0,0.25)';g.fillRect(0,Y(3.3)+4,W,8);                                                // 窗上緣的陰影
-  if(balcony){g.fillStyle=wall;g.fillRect(0,Y(4),W,0.7*P);g.fillStyle='#4b3b2c';g.fillRect(0,Y(3.62),W,5);g.fillRect(0,Y(3.3),W,6);
-    g.fillStyle='rgba(60,45,30,0.9)';for(let x=0;x<8;x+=0.2)g.fillRect(x*P,Y(3.62),2,0.32*P);}                // 陽台欄杆
-  else{g.fillStyle='#8c7550';g.fillRect(0,Y(3.55),W,0.25*P);g.fillStyle='rgba(0,0,0,0.18)';g.fillRect(0,Y(3.55)+0.25*P,W,6);courses(3.55,4,0.45);}   // 古銅色橫梁＋女兒牆
+// 卵石馬賽克石材（百貨公司的外牆；球場外牆也用）：灰、米、淺褐、粉褐的小石塊一排排拼貼，深色縫隙。256 px ＝ 4 m。
+function pebbleTex(){
+  const S=256,t=newTex('xxPebble',S,S),g=t.getContext(),rnd=rng(21),pal=['#cdc3b1','#b9ae9d','#a49889','#d8ceba','#a89886','#928779','#c2b39b','#ab917c','#b7a79c','#8e8274'];
+  g.fillStyle='#71675c';g.fillRect(0,0,S,S);
+  const rows=16,rh=S/rows;
+  for(let r=0;r<rows;r++){let x=-rnd()*10;const y=r*rh;
+    while(x<S){let w=7+rnd()*17;if(x+w>S-5&&x+w<S+3)w=S-x;const col=pal[(rnd()*pal.length)|0],k=0.9+rnd()*0.2;
+      const [R,G,B]=[parseInt(col.slice(1,3),16)*k,parseInt(col.slice(3,5),16)*k,parseInt(col.slice(5,7),16)*k].map(v=>Math.min(255,v|0));
+      g.fillStyle='rgb('+R+','+G+','+B+')';const x0=x+1,y0=y+1+rnd()*0.8,ww=w-2,hh=rh-2-rnd()*1.2,rr=2;
+      g.beginPath();g.moveTo(x0+rr,y0);g.arcTo(x0+ww,y0,x0+ww,y0+hh,rr);g.arcTo(x0+ww,y0+hh,x0,y0+hh,rr);g.arcTo(x0,y0+hh,x0,y0,rr);g.arcTo(x0,y0,x0+ww,y0,rr);g.closePath();g.fill();
+      if(x+w>S)for(const dx of[-S]){g.beginPath();g.rect(x0+dx,y0,ww,hh);g.fill();}                                  // 超出右緣的部分接回左邊（無縫）
+      g.fillStyle='rgba(255,255,255,0.10)';g.fillRect(x0+1,y0+1,ww-2,1.5);x+=w;}}
   t.update();return t;
 }
-// 斜向格柵立面（照片左側階梯狀量體上的菱形格網）：米色底、褐色斜線每 0.8 m 一格、橫向分層。
-function latticeTex(){
-  const W=512,H=256,t=newTex('xxLattice',W,H),g=t.getContext(),rnd=rng(15),P=64,Y=m=>H-m*P;
-  g.fillStyle='#d1bf9a';g.fillRect(0,0,W,H);for(let n=0;n<4000;n++){g.fillStyle=n%2?'rgba(255,255,255,0.08)':'rgba(70,50,30,0.07)';g.fillRect(rnd()*W,rnd()*H,1+rnd()*2,1);}
-  g.fillStyle='#a8957a';g.fillRect(0,Y(3.2),W,2.4*P);g.fillStyle='rgba(120,150,175,0.16)';g.fillRect(0,Y(3.2),W,2.4*P);       // 格柵後面的玻璃帷幕（偏亮的灰褐色）
-  g.strokeStyle='#6a4f35';g.lineWidth=4;
-  for(let k=-8;k<18;k++){g.beginPath();g.moveTo(k*0.8*P,Y(3.2));g.lineTo(k*0.8*P+2.4*P,Y(0.8));g.stroke();g.beginPath();g.moveTo(k*0.8*P,Y(0.8));g.lineTo(k*0.8*P+2.4*P,Y(3.2));g.stroke();}
-  g.fillStyle='#c8b58a';g.fillRect(0,Y(4),W,0.8*P);g.fillRect(0,Y(0.8),W,0.8*P);g.fillStyle='#a08a62';g.fillRect(0,Y(4),W,0.12*P);g.fillRect(0,Y(0.8)-0.0,W,0.1*P);   // 上下的橫梁（米色）
+// 淺褐木紋色板材（鼓形量體）：一格＝8 m 寬 × 4 m 高（64 px/m）；橫向木紋條、每格一扇小窗（藍色窗框）
+function woodPanelTex(){
+  const W=512,H=256,t=newTex('xxWoodPanel',W,H),g=t.getContext(),rnd=rng(33),pal=['#d6ac80','#cc9f72','#e0b88e','#bf9065','#d9b28a'];
+  g.fillStyle='#d3a97d';g.fillRect(0,0,W,H);
+  for(let y=0;y<H;){const h=4+rnd()*14;g.fillStyle=pal[(rnd()*pal.length)|0];g.globalAlpha=0.55;g.fillRect(0,y,W,h);y+=h;}g.globalAlpha=1;
+  for(let n=0;n<420;n++){g.strokeStyle='rgba('+(120+rnd()*40|0)+',80,50,0.25)';g.lineWidth=1;const y=rnd()*H,x=rnd()*W;g.beginPath();g.moveTo(x,y);g.lineTo(x+30+rnd()*120,y+(rnd()-0.5)*2);g.stroke();}
+  g.strokeStyle='rgba(90,60,40,0.30)';g.lineWidth=2;for(let x=0;x<W;x+=128){g.beginPath();g.moveTo(x,0);g.lineTo(x,H);g.stroke();}
+  g.fillStyle='#2b6ea8';g.fillRect(196,70,100,124);g.fillStyle='#16243a';g.fillRect(203,77,86,110);g.fillStyle='rgba(120,170,210,0.35)';g.fillRect(203,77,86,40);   // 小窗：藍色窗框＋深色玻璃
+  g.fillStyle='#2b6ea8';g.fillRect(244,77,4,110);g.fillRect(203,128,86,4);
+  t.update();return t;
+}
+// 褐色木條欄杆（陽台、露台邊緣）：垂直木條，64×64 px ＝ 1 m
+function slatTex(){
+  const S=64,t=newTex('xxSlat',S,S),g=t.getContext();g.fillStyle='#4e3523';g.fillRect(0,0,S,S);
+  for(let x=0;x<S;x+=8){g.fillStyle=(x/8)%2?'#7e573a':'#6a4630';g.fillRect(x+1,0,6,S);g.fillStyle='rgba(255,255,255,0.08)';g.fillRect(x+1,0,1,S);}
+  g.fillStyle='#3a271a';g.fillRect(0,0,S,5);g.fillRect(0,S-5,S,5);t.update();return t;
+}
+// 深灰藍的分格金屬屋頂（像太陽能板的格狀）：128 px ＝ 2 m
+function roofSegTex(){
+  const S=128,t=newTex('xxRoofSeg',S,S),g=t.getContext(),rnd=rng(9);g.fillStyle='#3a4757';g.fillRect(0,0,S,S);
+  for(let n=0;n<900;n++){g.fillStyle=n%2?'rgba(255,255,255,0.04)':'rgba(0,0,0,0.06)';g.fillRect(rnd()*S,rnd()*S,2,2);}
+  g.strokeStyle='#5d6f85';g.lineWidth=3;g.strokeRect(1.5,1.5,S-3,S-3);g.strokeStyle='rgba(120,140,165,0.5)';g.lineWidth=1;g.beginPath();g.moveTo(S/2,0);g.lineTo(S/2,S);g.moveTo(0,S/2);g.lineTo(S,S/2);g.stroke();
+  t.update();return t;
+}
+// 粉灰色磚鋪面（廣場）：256 px ＝ 4 m，每塊約 0.6 × 0.3 m
+function brickTex(){
+  const S=256,t=newTex('xxBrick',S,S),g=t.getContext(),rnd=rng(61);g.fillStyle='#8a7d74';g.fillRect(0,0,S,S);
+  const pal=['#b9a89d','#a99a8f','#c8b9ad','#b09f93','#bfaea2'];
+  for(let r=0;r<16;r++){for(let c=0;c<8;c++){const x=c*32+(r%2?16:0)-(r%2?16:0)*0,y=r*16;g.fillStyle=pal[(rnd()*pal.length)|0];
+      const xx=(c*32+(r%2?16:0));g.fillRect(xx+1,y+1,30,14);if(xx+32>S)g.fillRect(xx-S+1,y+1,30,14);}}
   t.update();return t;
 }
 // 深色玻璃入口：窗格＋古銅色框
@@ -169,17 +184,28 @@ function plazaTexture(){   // 米色石板廣場，4 m 一格
   for(let n=0;n<6000;n++){g.fillStyle=n%2?'rgba(255,255,255,0.10)':'rgba(80,60,40,0.08)';g.fillRect(rnd()*S,rnd()*S,1+rnd()*2,1+rnd()*2);}
   g.strokeStyle='rgba(110,90,60,0.55)';g.lineWidth=2;for(let i=0;i<=S;i+=128){g.beginPath();g.moveTo(i,0);g.lineTo(i,S);g.stroke();g.beginPath();g.moveTo(0,i);g.lineTo(S,i);g.stroke();}
   t.update();return t;}
-function signTexture(txt,sub,w,h){const t=newTex('xxSign',w,h),g=t.getContext();g.fillStyle='#f3eee0';g.fillRect(0,0,w,h);g.fillStyle='#b01c26';g.fillRect(0,0,w,Math.round(h*0.12));
-  g.fillStyle='#b01c26';g.textAlign='center';g.textBaseline='middle';g.font='bold '+Math.round(h*0.46)+'px "Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif';g.fillText(txt,w/2,h*0.52);
-  if(sub){g.fillStyle='#6b5a46';g.font='bold '+Math.round(h*0.17)+'px "Noto Sans TC","Microsoft JhengHei",sans-serif';g.fillText(sub,w/2,h*0.86);}t.update();return t;}
+function signTexture(w,h){   // 藍色大字「遠東百貨」＋紅藍白圓形標誌；透明底（用 decalMat 貼在牆上）
+  const t=newTex('xxSign',w,h),g=t.getContext();g.clearRect(0,0,w,h);
+  const cx=h*0.5,cy=h*0.5,r=h*0.34;g.fillStyle='#ffffff';g.beginPath();g.arc(cx,cy,r,0,TAU);g.fill();
+  g.fillStyle='#1f46a0';g.beginPath();g.arc(cx,cy,r,3.5,5.9);g.lineTo(cx,cy);g.fill();g.fillStyle='#d11d2a';g.beginPath();g.arc(cx,cy,r,0.3,3.4);g.lineTo(cx,cy);g.fill();
+  g.fillStyle='#ffffff';g.beginPath();g.arc(cx,cy,r*0.34,0,TAU);g.fill();
+  g.fillStyle='#1f46a0';g.textAlign='left';g.textBaseline='middle';g.font='bold '+Math.round(h*0.62)+'px "Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif';g.fillText('遠東百貨',h*1.0,h*0.52);
+  t.hasAlpha=true;t.update();return t;}
 
-// ═════════ ③ 地圖座標：像素 → 球場座標 ═════════
-// 比例尺 0.425 m/px（標準足球場 105×68 m ≈ 245×165 px）；球場朝向方位 22°（北北東，平行紅框長邊）。
-// px2g(u,v)：圖上 (u,v) 像素 → [x,z]（本壘板為原點，+z＝中外野方向＝北北東，+x＝右手邊＝東南東）。
-// 圖上紅框四個角在球場座標約為 (-89,-36)、(89,-29)、(89,123)、(-89,113)：寬 178 m、深 150 m，下面所有東西都在這個框裡面或框外面對照著放。
-const MAPS={s:0.425,cu:557,cv:368.75,a:22*Math.PI/180,hlat:-0.08,hlon:-42.78};
-const px2g=(u,v)=>{const e=(u-MAPS.cu)*MAPS.s,n=-(v-MAPS.cv)*MAPS.s,a=MAPS.a;return [e*Math.cos(a)-n*Math.sin(a)-MAPS.hlat,e*Math.sin(a)+n*Math.cos(a)-MAPS.hlon];};
-const BETA=Math.atan2(px2g(688,603)[1]-px2g(293,462)[1],px2g(688,603)[0]-px2g(293,462)[0]),SLOPE=Math.tan(BETA);   // 南邊道路相對 x 軸的傾斜（約 2°）
+const decalMat=tex=>{const m=M('#000000');m.emissiveTexture=tex;m.opacityTexture=tex;m.disableLighting=true;m.backFaceCulling=false;return m;};
+
+// ═════════ ③ 地圖座標：像素 → 道路對齊座標 (dU,dV) → 球場座標 (x,z) ═════════
+// 比例尺 0.425 m/px（標準足球場 105×68 m ≈ 245×165 px）。以紅框西南角 P4=(293,462) 為原點，兩個「道路對齊軸」：
+//   U 軸＝方位 22.1°（平行紅框左邊、平行東邊的莊敬北路），V 軸＝方位 112.1°（平行紅框下緣、平行南邊的莊敬一路／光明六路）。
+// 本壘板在 (HAU,HAV)＝(38,44) m：三壘線沿 U 軸、一壘線沿 V 軸（兩條界外線各自平行一條馬路），中外野沿 U+V 的對角線（方位 ≈67°，東北東）。
+// 因此球場座標（+z＝中外野、+x＝右手邊）和 (dU,dV)（以本壘板為原點）的關係是：x＝(dV−dU)/√2，z＝(dU+dV)/√2。
+const MAPS={s:0.425,u0:293,v0:462,al:22.1*Math.PI/180,HAU:38,HAV:44};
+const uv2g=(dU,dV)=>[SQ*(dV-dU),SQ*(dU+dV)];
+const g2uv=(x,z)=>[SQ*(z-x),SQ*(x+z)];
+const px2uv=(u,v)=>{const e=(u-MAPS.u0)*MAPS.s,n=-(v-MAPS.v0)*MAPS.s,a=MAPS.al;return [e*Math.sin(a)+n*Math.cos(a)-MAPS.HAU,e*Math.cos(a)-n*Math.sin(a)-MAPS.HAV];};
+const px2g=(u,v)=>{const a=px2uv(u,v);return uv2g(a[0],a[1]);};
+const TILT=7.6/178;   // 紅框下緣（和南邊的路）相對 V 軸的傾斜：每向東 1 m，往北抬高 0.0427 m
+const BUILD_ROT=-Math.PI/4;   // 盒子的 x 軸沿 V 軸、z 軸沿 U 軸時的 rotation.y
 
 // ═════════ ④ 地面與外野牆（三段直線，與乙子園同規格）═════════
 const grassTex=grassTexture(),dirtTex=dirtTexture();
@@ -205,7 +231,7 @@ const crowd=crowdTextures();
 const cf=M('#000000');cf.emissiveTexture=crowd.front;cf.disableLighting=true;cf.backFaceCulling=false;
 const ct=M('#000000');ct.emissiveTexture=crowd.top;ct.disableLighting=true;ct.backFaceCulling=false;
 const crowdMat=new BABYLON.MultiMaterial('xxCrowd',scene);crowdMat.subMaterials=[cf,ct];
-const stoneT=bandTex('xxStoneBand','#d3c19b','rgba(110,90,60,0.5)',false,3),stoneMat=unlitTex(stoneT);
+const pebbleT=pebbleTex(),stoneMat=unlitTex(pebbleT),slatMat=unlitTex(slatTex());
 function stand(ax,az,bx,bz,tiers,gap,top0,ext){
   const dx=bx-ax,dz=bz-az,L0=Math.hypot(dx,dz),ux=dx/L0,uz=dz/L0;
   let nx=uz,nz=-ux;if(nx*(ax+bx)/2+nz*(az+bz)/2<0){nx=-nx;nz=-nz;}
@@ -224,35 +250,40 @@ function stand(ax,az,bx,bz,tiers,gap,top0,ext){
   const nv=pos.length/3;new BABYLON.SubMesh(0,0,nv,0,idxR.length,m);new BABYLON.SubMesh(1,0,nv,idxR.length,idxT.length,m);
   const ang=Math.atan2(-dz,dx),mx=(ax+bx)/2,mz=(az+bz)/2;
   for(let k=0;k<tiers;k++){const off=gap+k*CROWD_STEP+CROWD_STEP/2,top=top0+k*CROWD_ROW;ghostBox(mx+nx*off,top/2,mz+nz*off,L,top,CROWD_STEP+0.1,ang,'spectator');}
-  const backOff=gap+tiers*CROWD_STEP+0.3,bh=top0+tiers*CROWD_ROW+1.6,f=V4(0,0,L/8,bh/4);   // 後牆：UV 以公尺換算（8 m 寬、4 m 一層）
+  const backOff=gap+tiers*CROWD_STEP+0.3,bh=top0+tiers*CROWD_ROW+1.6,f=V4(0,0,L/4,bh/4);   // 後牆：UV 以公尺換算（卵石石材 4 m 一格）
   const bw=put(MB.CreateBox('xxStandBack',{width:L,height:bh,depth:0.6,faceUV:[f,f,V4(0,0,0.05,0.05),V4(0,0,0.05,0.05),V4(0,0,0.05,0.05),V4(0,0,0.05,0.05)]}),mx+nx*backOff,bh/2,mz+nz*backOff,stoneMat);
   bw.rotation.y=ang;registerBallSolid(bw,'spectator');
-  const cap=put(MB.CreateBox('xxStandCap',{width:L+0.2,height:0.35,depth:0.9}),mx+nx*backOff,bh+0.17,mz+nz*backOff,M('#8c7550'));cap.rotation.y=ang;   // 女兒牆壓頂（古銅色）
+  const cap=put(MB.CreateBox('xxStandCap',{width:L+0.2,height:0.35,depth:0.9}),mx+nx*backOff,bh+0.17,mz+nz*backOff,M('#4e3523'));cap.rotation.y=ang;   // 女兒牆壓頂（深褐木色）
+  const fs=V4(0,0,L/1.0,1.2/1.0),rail=put(MB.CreateBox('xxStandRail',{width:L,height:1.2,depth:0.25,faceUV:[fs,fs,V4(0,0,0.1,0.1),V4(0,0,0.1,0.1),V4(0,0,0.1,0.1),V4(0,0,0.1,0.1)]}),mx+nx*(backOff-0.38),bh-1.0,mz+nz*(backOff-0.38),slatMat);rail.rotation.y=ang;   // 牆面外側的褐色木條欄杆帶（同百貨公司的陽台欄杆）
 }
 for(let i=0;i<3;i++)stand(OF[i][0],OF[i][1],OF[i+1][0],OF[i+1][1],5,1.8,4.6,1.2);
 
-// 鼓形塔：圓柱（淺褐石材帶＋帶狀窗＋陽台欄杆）＋環繞的陽台＋深灰藍低坡圓錐頂，立在中外野記分板兩側。
-const roofSlate=M('#4c5560'),bronze=M('#8c7550'),darkBronze=M('#4b3b2c');
-const drumT=bandTex('xxDrumBand','#c9aa7e','rgba(100,76,48,0.5)',true,9),drumMat=unlitTex(drumT);
-function drum(cx,cz,r,y0,h,coneH,balconyAt){
-  const circ=TAU*r,fl=h/4,f=[V4(0,0,1,1),V4(0,0,circ/8,fl),V4(0,0,1,1)];
-  const c=put(MB.CreateCylinder('xxDrum',{diameter:r*2,height:h,tessellation:48,faceUV:f}),cx,y0+h/2,cz,drumMat);
-  (balconyAt||[]).forEach(y=>put(MB.CreateCylinder('xxDrumRing',{diameter:r*2+2.4,height:0.4,tessellation:48}),cx,y,cz,bronze));      // 環繞陽台板
-  put(MB.CreateCylinder('xxDrumEave',{diameterTop:r*2+1.2,diameterBottom:r*2+3.0,height:0.9,tessellation:48}),cx,y0+h+0.3,cz,darkBronze);   // 屋簷
-  put(MB.CreateCylinder('xxDrumRoof',{diameterTop:r*0.35,diameterBottom:r*2+2.6,height:coneH,tessellation:48}),cx,y0+h+0.75+coneH/2,cz,roofSlate);
-  put(MB.CreateCylinder('xxDrumTip',{diameter:0.5,height:1.6,tessellation:8}),cx,y0+h+0.75+coneH+0.7,cz,bronze);
-  return c;
+// 鼓形量體（百貨公司和球場塔樓共用）：兩層圓柱（淺褐木紋板材＋小窗），每層下緣有環繞陽台（褐色木條欄杆），
+// 屋簷大幅外伸的深灰藍分格圓頂（中央微微隆起）。r＝下層半徑、tiers＝[下層高,上層高]、roofH＝圓頂高。
+const woodT=woodPanelTex(),woodMat=unlitTex(woodT),roofSegT=roofSegTex(),roofSegMat=unlitTex(roofSegT),roofSlate=M('#4c5560'),bronze=M('#8c7550'),darkBronze=M('#4b3b2c');
+function drum(cx,cz,r,y0,tiers,roofH){
+  let y=y0;const rs=[r,r*0.93];
+  tiers.forEach((h,i)=>{const rr=rs[i],circ=TAU*rr,f=[V4(0,0,1,1),V4(0,0,circ/8,h/4),V4(0,0,1,1)];
+    put(MB.CreateCylinder('xxDrum',{diameter:rr*2,height:h,tessellation:56,faceUV:f}),cx,y+h/2,cz,woodMat);
+    const rb=rr+1.2,rf=[V4(0,0,1,1),V4(0,0,TAU*rb/1.0,1.1/1.0),V4(0,0,1,1)];
+    put(MB.CreateCylinder('xxDrumDeck',{diameter:rb*2+0.6,height:0.35,tessellation:56}),cx,y+0.18,cz,darkBronze);                                  // 陽台地板
+    put(MB.CreateCylinder('xxDrumRail',{diameter:rb*2,height:1.1,tessellation:56,faceUV:rf}),cx,y+0.35+0.55,cz,slatMat);                           // 木條欄杆
+    y+=h;});
+  const rt=rs[1],ov=rt+3.2,cf=TAU*ov;                                                                                                        // 屋簷外伸 3.2 m
+  put(MB.CreateCylinder('xxDrumEave',{diameter:rt*2+0.8,height:0.7,tessellation:56}),cx,y+0.35,cz,darkBronze);
+  put(MB.CreateCylinder('xxDrumRoof',{diameterTop:rt*0.5,diameterBottom:ov*2,height:roofH,tessellation:56,faceUV:[V4(0,0,1,1),V4(0,0,cf/2,Math.hypot(ov,roofH)/2),V4(0,0,1,1)]}),cx,y+0.7+roofH/2,cz,roofSegMat);
+  put(MB.CreateCylinder('xxDrumLantern',{diameter:rt*0.5+0.2,height:0.9,tessellation:28}),cx,y+0.7+roofH+0.4,cz,roofSlate);
 }
-[-1,1].forEach(s=>{const c=drum(s*37.7,110.3,7,0,16,3.4,[8]);ghostBox(s*37.7,8,110.3,14,16,14,0,'spectator');});
+[-1,1].forEach(s=>{drum(s*37.7,110.3,6.6,0,[8,7.5],2.6);ghostBox(s*37.7,8,110.3,14,16,14,0,'spectator');});
 
 // 本壘後方看台＋深灰藍屋頂雨棚（懸臂式，只靠後面的古銅色柱子撐）
 stand(-12,-20,12,-20,6,1.4,4.0,2);
 {const RY=13.4,rz=-25.8;
- put(MB.CreateBox('xxHomeRoof',{width:52,height:0.5,depth:10.6}),0,RY,rz,roofSlate);
- put(MB.CreateBox('xxHomeFascia',{width:52.4,height:1.1,depth:0.5}),0,RY-0.1,-20.8,darkBronze);
- put(MB.CreateBox('xxHomeRoofUnder',{width:52,height:0.1,depth:10.6}),0,RY-0.31,rz,M('#2d3238'));
- for(const x of[-24,-12,0,12,24])put(MB.CreateBox('xxHomeCol',{width:0.7,height:RY,depth:0.7}),x,RY/2,-29.9,bronze);
- ghostBox(0,RY,rz,52,0.6,10.6,0,undefined);}
+ put(MB.CreateBox('xxHomeRoof',{width:34,height:0.5,depth:10.6}),0,RY,rz,roofSlate);
+ put(MB.CreateBox('xxHomeFascia',{width:34.4,height:1.1,depth:0.5}),0,RY-0.1,-20.8,darkBronze);
+ put(MB.CreateBox('xxHomeRoofUnder',{width:34,height:0.1,depth:10.6}),0,RY-0.31,rz,M('#2d3238'));
+ for(const x of[-15,-7.5,0,7.5,15])put(MB.CreateBox('xxHomeCol',{width:0.7,height:RY,depth:0.7}),x,RY/2,-29.9,bronze);
+ ghostBox(0,RY,rz,34,0.6,10.6,0,undefined);}
 
 // ═════════ ⑥ 界外牆、擋球牆、球員休息區 ═════════
 const FOUL_OFF=19,foulMat=M('#2b4a43'),stripe=M('#d9c79c'),homeBackZ=-20;
@@ -316,66 +347,77 @@ function drawBoard(g,s,W,H){
 }
 ctx.setScoreboardRenderer(drawBoard);
 
-// ═════════ ⑧ 道路與草地（依地圖）═════════
-// 莊敬北路（紅框東側，貼著紅框的右邊）、莊敬一路（紅框南邊）、光明六路東一段（再往南，雙向各 3 車道、中央綠帶）。
-// 南邊兩條路的方向與紅框下緣平行（相對 x 軸約傾斜 SLOPE）。
+// ═════════ ⑧ 道路與草地（依地圖；全部用道路對齊座標 (dU,dV) 定位）═════════
+// 莊敬北路：dV≈145（紅框東緣之外），寬 16 m，兩側各 3 m 人行道；莊敬一路：紅框下緣南側 8.5 m，寬 11 m；
+// 光明六路東一段：再往南 30 m，兩個單向車道（各 3 車道）中間 7 m 綠帶。南邊兩條路與紅框下緣一起相對 V 軸傾斜 TILT。
 const farT=grassTex.clone();farT.uScale=farT.vScale=3000/32;
 put(MB.CreateGround('xxFarGround',{width:3000,height:3000},scene),0,-0.04,200,texMat(farT,0.86));
-const WALK=newBatch(),zS=x=>SLOPE*x;
-function walk(pts,width,y,col){   // 人行道／綠帶（純色）
-  for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],dx=b[0]-a[0],dz=b[1]-a[1],l=Math.hypot(dx,dz),nx=-dz/l*width/2,nz=dx/l*width/2;
+const WALK=newBatch();
+function walk(pts,width,y,col){   // 人行道／綠帶（純色）。pts＝[[dU,dV],…]
+  for(let i=0;i<pts.length-1;i++){const a=uv2g(...pts[i]),b=uv2g(...pts[i+1]),dx=b[0]-a[0],dz=b[1]-a[1],l=Math.hypot(dx,dz),nx=-dz/l*width/2,nz=dx/l*width/2;
     WALK.quad([a[0]-nx,y,a[1]-nz],[a[0]+nx,y,a[1]+nz],[b[0]+nx,y,b[1]+nz],[b[0]-nx,y,b[1]-nz],[0,1,0],col);}}
 const rd43=unlitTex(roadTexture(4,true)),rd2=unlitTex(roadTexture(2,true)),rd3=unlitTex(roadTexture(3,false));
 const B4=newBatch(true),B2=newBatch(true),B3=newBatch(true);
+const edgeU=dV=>-36.1+TILT*dV;                       // 紅框下緣（以本壘板為原點）在 V=dV 處的 U 值
+const V_E=145;                                        // 莊敬北路中心線的 V 值
 {const stripTo=(b,pts,w,vPer,y)=>{   // 沿折線鋪一條路：u 橫跨路面、v 沿長度
-   let len=0;for(let i=0;i<pts.length;i++){const p=pts[i],a=pts[Math.max(i-1,0)],c=pts[Math.min(i+1,pts.length-1)];if(i)len+=Math.hypot(p[0]-a[0],p[1]-a[1]);let tx=c[0]-a[0],tz=c[1]-a[1];const tl=Math.hypot(tx,tz);tx/=tl;tz/=tl;p.nx=-tz;p.nz=tx;p.len=len;}
-   for(let i=0;i<pts.length-1;i++){const a=pts[i],c=pts[i+1],h=w/2;
+   const P=pts.map(p=>uv2g(...p));let len=0;
+   for(let i=0;i<P.length;i++){const p=P[i],a=P[Math.max(i-1,0)],c=P[Math.min(i+1,P.length-1)];if(i)len+=Math.hypot(p[0]-a[0],p[1]-a[1]);let tx=c[0]-a[0],tz=c[1]-a[1];const tl=Math.hypot(tx,tz);tx/=tl;tz/=tl;p.nx=-tz;p.nz=tx;p.len=len;}
+   for(let i=0;i<P.length-1;i++){const a=P[i],c=P[i+1],h=w/2;
      b.quad([a[0]-a.nx*h,y,a[1]-a.nz*h],[a[0]+a.nx*h,y,a[1]+a.nz*h],[c[0]+c.nx*h,y,c[1]+c.nz*h],[c[0]-c.nx*h,y,c[1]-c.nz*h],[0,1,0],[1,1,1],[0,a.len/vPer],[1,a.len/vPer],[1,c.len/vPer],[0,c.len/vPer]);}};
- const X0=-700,X1=700;
- // 莊敬北路：x≈99，寬 16 m，從南邊的莊敬一路北緣一路往北；兩側各 3 m 人行道
- const zs0=-40+zS(99)+5.5+0.5;
- stripTo(B4,[[99,zs0],[99,300],[99,700]],16,12,0.03);
- walk([[92.5,-26],[92.5,700]],3,0.05,[0.8,0.77,0.7]);walk([[108.5,-26],[108.5,700]],3,0.05,[0.8,0.77,0.7]);
- // 莊敬一路：雙向各 1 車道，寬 11 m，平行紅框南緣
- stripTo(B2,[[X0,-40+zS(X0)],[X1,-40+zS(X1)]],11,12,0.03);
- walk([[X0,-40+zS(X0)+7.2],[X1,-40+zS(X1)+7.2]],3,0.05,[0.8,0.77,0.7]);walk([[X0,-40+zS(X0)-7.2],[X1,-40+zS(X1)-7.2]],3,0.05,[0.8,0.77,0.7]);
- // 光明六路東一段：兩個單向車道（各 3 車道、寬 13.5 m），中間 7 m 綠帶
- stripTo(B3,[[X0,-70+zS(X0)+10.5],[X1,-70+zS(X1)+10.5]],13.5,12,0.03);
- stripTo(B3,[[X0,-70+zS(X0)-10.5],[X1,-70+zS(X1)-10.5]],13.5,12,0.03);
- walk([[X0,-70+zS(X0)],[X1,-70+zS(X1)]],7,0.06,[0.34,0.52,0.3]);
- walk([[X0,-70+zS(X0)+21],[X1,-70+zS(X1)+21]],5,0.05,[0.4,0.55,0.34]);    // 莊敬一路與光明六路之間的綠帶
+ const V0=-520,V1=520,sw=[0.8,0.77,0.7];
+ const lr=(off,w)=>[[edgeU(V0)-8.5+off,V0],[edgeU(V1)-8.5+off,V1]];                         // 與莊敬一路平行的折線（off＝往北為正）
+ stripTo(B2,lr(0,11),11,12,0.03);
+ walk(lr(7.2),3,0.05,sw);walk(lr(-7.2),3,0.05,sw);
+ const bl=off=>[[edgeU(V0)-38.5+off,V0],[edgeU(V1)-38.5+off,V1]];                           // 光明六路（中央綠帶中心線）
+ stripTo(B3,bl(10.5),13.5,12,0.03);stripTo(B3,bl(-10.5),13.5,12,0.03);walk(bl(0),7,0.06,[0.34,0.52,0.3]);
+ walk(lr(-17),5,0.05,[0.4,0.55,0.34]);                                                       // 莊敬一路與光明六路之間的綠帶
+ const u0=edgeU(V_E)-8.5+5.5+0.5;                                                              // 莊敬北路從莊敬一路北緣開始往北
+ stripTo(B4,[[u0,V_E],[500,V_E]],16,12,0.03);
+ walk([[u0,V_E-9.5],[500,V_E-9.5]],3,0.05,sw);walk([[u0,V_E+9.5],[500,V_E+9.5]],3,0.05,sw);
 }
 B4.toMesh('xxRoadN',rd43);B2.toMesh('xxRoadLocal',rd2);B3.toMesh('xxRoadBlvd',rd3);WALK.toMesh('xxWalks',vcMat);
 
-// ═════════ ⑨ 遠東百貨竹北店（依照片；位置依地圖三個圓形屋頂）═════════
-// 地圖上三個圓形屋頂換算成球場座標：大鼓 D1≈(139,3.5) 直徑 47 m；中鼓 D2≈(122,70) 直徑 17 m；北鼓 D3≈(130,93) 直徑 23 m。
-// 基座（5 層，高 20 m）＋ 上層退縮（再 2 層）＋ 最上層再退縮（再 2 層，斜向格柵）；三個鼓形量體從基座頂長出來，北邊那個最高（照片裡後面那個較高的鼓）。
-const D1=px2g(820,590),D2=px2g(843,430),D3=px2g(880,388);
-const stoneStore=unlitTex(bandTex('xxStoreStone','#d3c19b','rgba(110,90,60,0.5)',false,3)),latStore=unlitTex(latticeTex());
-const SB=newBatch(true),LB=newBatch(true),PB=newBatch(),beige=[1,1,1];
-const PX0=116,PX1=198,PZ0=-24,PZ1=104,ROOF1=20;
-SB.box((PX0+PX1)/2,ROOF1/2,(PZ0+PZ1)/2,PX1-PX0,ROOF1,PZ1-PZ0,0,beige,{uP:8,vP:4});                                    // 基座（石材帶＋帶狀窗）
-LB.box(162,ROOF1+4,41,72,8,114,0,beige,{uP:8,vP:4});                                                                       // 上層退縮：斜向格柵
-LB.box(174,ROOF1+12,62,48,8,68,0,beige,{uP:8,vP:4});                                                                       // 再退縮
-const cop=[0.42,0.33,0.24];                                                                                                // 古銅色壓頂與屋頂女兒牆
-PB.box((PX0+PX1)/2,ROOF1+0.4,PZ0+0.3,PX1-PX0+0.6,0.8,0.6,0,cop);PB.box((PX0+PX1)/2,ROOF1+0.4,PZ1-0.3,PX1-PX0+0.6,0.8,0.6,0,cop);
-PB.box(PX0+0.3,ROOF1+0.4,(PZ0+PZ1)/2,0.6,0.8,PZ1-PZ0,0,cop);PB.box(PX1-0.3,ROOF1+0.4,(PZ0+PZ1)/2,0.6,0.8,PZ1-PZ0,0,cop);
-for(const [bx,by,bz,bw,bd] of[[162,ROOF1+8.2,41,72.6,114.6],[174,ROOF1+16.2,62,48.6,68.6]]){PB.box(bx,by,bz-bd/2+0.3,bw,0.8,0.6,0,cop);PB.box(bx,by,bz+bd/2-0.3,bw,0.8,0.6,0,cop);PB.box(bx-bw/2+0.3,by,bz,0.6,0.8,bd,0,cop);PB.box(bx+bw/2-0.3,by,bz,0.6,0.8,bd,0,cop);}
-SB.toMesh('xxStoreBase',stoneStore);LB.toMesh('xxStoreUpper',latStore);PB.toMesh('xxStoreCoping',vcMat);
-drum(D1[0],D1[1],23.5,ROOF1,24,4.6,[ROOF1+6,ROOF1+14]);           // 大鼓（正面那個，直徑 47 m）
-drum(D2[0],D2[1],8.5,ROOF1,20,3.4,[ROOF1+8]);                     // 中鼓
-drum(D3[0],D3[1],11.5,ROOF1,32,4.2,[ROOF1+8,ROOF1+20]);           // 北鼓（最高）
-// 入口：深色玻璃＋古銅色雨庇（西側立面、大鼓南側）
-{const gT=glassTex(),gm=unlitTex(gT),ez=D1[1]-4,f=V4(0,0,1.5,1);
- put(MB.CreateBox('xxStoreGlass',{width:7,height:8.5,depth:24,faceUV:[f,f,f,f,f,f]}),PX0-2.5,4.3,ez,gm);
- put(MB.CreateBox('xxStoreAwning',{width:13,height:0.5,depth:28}),PX0-5.5,9,ez,bronze);
- for(const dz of[-13,13])put(MB.CreateCylinder('xxStoreColumn',{diameter:0.7,height:9,tessellation:12}),PX0-11,4.5,ez+dz,bronze);}
-// 招牌（西側立面）：遠東百貨
-{const sm=unlitTex(signTexture('遠東百貨','FAR EASTERN DEPARTMENT STORES',1024,256)),sp=put(MB.CreatePlane('xxStoreSign',{width:20,height:5},scene),PX0-0.15,ROOF1-5,D3[1]-18,sm);sp.rotation.y=Math.PI/2;}
-// 廣場＋紅色抽象雕塑
-{const pt=plazaTexture();pt.uScale=40/4;pt.vScale=70/4;const pm=unlitTex(pt);
- put(MB.CreateGround('xxStorePlaza',{width:40,height:70},scene),PX0-14,0.06,D1[1]+5,pm);
- const red=M('#c8202a',{em:'#3a0508'}),sc=[D1[0]-36,D1[1]+24],rr=rng(77);
+// ═════════ ⑨ 遠東百貨竹北店（依三張照片；位置依地圖三個圓形屋頂）═════════
+// 以本壘板為原點的 (dU,dV)：大鼓 D1≈(-4,184)、中鼓 D2≈(62,167)、北鼓 D3≈(85,175)。西側長立面（面向莊敬北路）在 dV≈158。
+// 由南往北：D1 下面包著一圈弧形石牆（r=26，高 20 m）＋一樓玻璃帷幕；往北是 5 層的長條石牆基座（高 20 m）；
+// 基座頂上依序退縮出兩層露台（27 m、34 m）、露台邊是褐色木條欄杆＋後面的帶狀玻璃；兩個小鼓坐在露台上，中間是玻璃採光罩。
+const D1=px2uv(820,590),D2=px2uv(843,430),D3=px2uv(880,388);
+const SB=newBatch(true),PB=newBatch(),GB=newBatch(true),RB=newBatch(),beige=[1,1,1],BR=BUILD_ROT;
+const sbox=(b,cU,cV,y,wV,h,dU,col,o)=>{const p=uv2g(cU,cV);b.box(p[0],y,p[1],wV,h,dU,BR,col,Object.assign({uvRot:BR},o||{}));};   // 以 (dU,dV) 定位的盒子：wV＝沿 V 軸的寬、dU＝沿 U 軸的長
+const FV=158,PV1=232,PU0=D1[0],PU1=104,H1=20;
+sbox(SB,(PU0+PU1)/2,(FV+PV1)/2,12.5,PV1-FV,15,PU1-PU0,beige,{uP:4,vP:4});                             // 基座：長條石牆（5~20 m，一樓是玻璃）
+sbox(SB,(30+PU1)/2,(162+PV1)/2,23.5,PV1-162,7,PU1-30,beige,{uP:4,vP:4});                               // 第一層退縮（20~27 m）
+sbox(SB,(50+PU1)/2,(166+PV1)/2,30.5,PV1-166,7,PU1-50,beige,{uP:4,vP:4});                               // 第二層退縮（27~34 m）
+// D1 下面的弧形石牆（r=26，從 5 m 到 20 m）＋ 一樓玻璃帷幕（r=24.5，0~5 m）＋ 柱列＋木格柵雨庇
+{const c=uv2g(D1[0],D1[1]),pf=V4(0,0,TAU*26/4,15/4),gm=unlitTex(glassTex()),gf=V4(0,0,TAU*24.5/4,1.2);
+ put(MB.CreateCylinder('xxStoreBaseWall',{diameter:52,height:15,tessellation:64,faceUV:[V4(0,0,1,1),pf,V4(0,0,1,1)]}),c[0],12.5,c[1],stoneMat);
+ put(MB.CreateCylinder('xxStoreGlassRing',{diameter:49,height:5,tessellation:64,faceUV:[V4(0,0,1,1),gf,V4(0,0,1,1)]}),c[0],2.5,c[1],gm);
+ put(MB.CreateCylinder('xxStoreCanopy',{diameter:57,height:0.5,tessellation:64}),c[0],5.2,c[1],darkBronze);
+ for(let i=0;i<16;i++){const a=i/16*TAU;put(MB.CreateCylinder('xxStoreCol',{diameter:0.7,height:5.2,tessellation:10}),c[0]+Math.cos(a)*27.2,2.6,c[1]+Math.sin(a)*27.2,darkBronze);}}
+// 西側立面：一樓玻璃帷幕（內縮 2.5 m）、褐色柱列、木格柵雨庇、鐵鏽色百葉、露台的木條欄杆與帶狀玻璃、露台植栽
+{const gm=unlitTex(glassTex()),slatB=newBatch(true),slat=[1,1,1],green=[0.32,0.5,0.26];
+ sbox(GB,(PU0+PU1)/2,(FV+2.5+PV1)/2,2.5,PV1-FV-2.5,5,PU1-PU0,[1,1,1],{uP:4,vP:2.5});
+ sbox(PB,(PU0+PU1)/2,FV-1.6,5.2,3.8,0.5,PU1-PU0,[0.29,0.2,0.14]);
+ for(let u=PU0+4;u<PU1;u+=8)sbox(PB,u,FV-2.6,2.6,0.7,5.2,0.7,[0.29,0.2,0.14]);
+ for(const u of[14,44,76])sbox(RB,u,FV-0.7,12.5,1.6,3.4,7,[0.62,0.3,0.16]);                                                 // 鐵鏽色（耐候鋼）百葉
+ sbox(GB,(30+PU1)/2,161.7,22.4,0.6,3.6,PU1-30,[1,1,1],{uP:4,vP:2.5});sbox(GB,(50+PU1)/2,165.7,29.4,0.6,3.6,PU1-50,[1,1,1],{uP:4,vP:2.5});   // 露台後面的帶狀玻璃
+ sbox(slatB,(PU0+PU1)/2,158.4,H1+0.7,0.35,1.4,PU1-PU0,slat,{uP:1,vP:1.4});sbox(slatB,(30+PU1)/2,162.4,27.7,0.35,1.4,PU1-30,slat,{uP:1,vP:1.4});sbox(slatB,(50+PU1)/2,166.4,34.7,0.35,1.4,PU1-50,slat,{uP:1,vP:1.4});   // 木條欄杆
+ sbox(PB,(PU0+PU1)/2,159.8,H1+0.35,1.6,0.7,PU1-PU0,green);sbox(PB,(30+PU1)/2,164.2,27.35,1.8,0.7,PU1-30,green);sbox(PB,(50+PU1)/2,168.2,34.35,1.8,0.7,PU1-50,green);   // 露台植栽
+ slatB.toMesh('xxStoreRail',slatMat);GB.toMesh('xxStoreGlass',gm);}
+SB.toMesh('xxStoreStone',stoneMat);PB.toMesh('xxStoreTrim',vcMat);RB.toMesh('xxStoreLouver',vcMat);
+// 三個鼓（D1 在南端最大；D2、D3 在北端的露台上；D3 較高）
+{const a=uv2g(D1[0],D1[1]),b=uv2g(D2[0],D2[1]),c=uv2g(D3[0],D3[1]);
+ drum(a[0],a[1],23.5,H1,[9,9],4.4);
+ drum(b[0],b[1],8.5,34,[5,4],2.2);
+ drum(c[0],c[1],11.5,34,[5,5],2.8);
+ // 兩個小鼓之間的玻璃採光罩（四角錐）
+ const gp=uv2g(44,192),gl=newBatch();gl.cone(gp[0],27,gp[1],12,6,4,[0.36,0.55,0.6],1,0);gl.toMesh('xxStoreSkylight',vcMat);}
+// 西側立面中央的招牌：藍色大字「遠東百貨」＋圓形標誌（透明底，貼在石牆上）
+{const sg=uv2g(46,FV-0.2),sp=put(MB.CreatePlane('xxStoreSign',{width:26,height:5.2},scene),sg[0],14,sg[1],decalMat(signTexture(1024,200)));sp.rotation.y=BR+Math.PI/2;}   // 平面預設朝 −z；轉 +90° 後朝 −x，再加建築旋轉 → 朝向 −V（莊敬北路那一側）
+// 廣場（粉灰色磚鋪面，貼著長立面與大鼓前）＋ 紅色抽象雕塑
+{const bt=brickTex();bt.uScale=60/4;bt.vScale=90/4;const pc=uv2g(40,150),pg=put(MB.CreateGround('xxStorePlaza',{width:12,height:130},scene),pc[0],0.06,pc[1],unlitTex(bt));pg.rotation.y=BR;
+ const red=M('#c8202a',{em:'#3a0508'}),sc=uv2g(-22,150),rr=rng(77);
  for(let i=0;i<8;i++){const h=5+rr()*5,c=put(MB.CreateCylinder('xxSculpt',{diameter:0.35,height:h,tessellation:8},scene),sc[0]+(rr()-0.5)*3,h/2,sc[1]+(rr()-0.5)*3,red);c.rotation.z=(rr()-0.5)*0.9;c.rotation.x=(rr()-0.5)*0.9;}
  put(MB.CreateBox('xxSculptBase',{width:6,height:0.5,depth:6}),sc[0],0.25,sc[1],M('#9b9482'));}
 
@@ -386,22 +428,28 @@ drum(D3[0],D3[1],11.5,ROOF1,32,4.2,[ROOF1+8,ROOF1+20]);           // 北鼓（�
  const hash=(ix,iz)=>{let h=Math.imul(ix,374761393)+Math.imul(iz,668265263)|0;h=Math.imul(h^h>>>13,1274126177);return((h^h>>>16)>>>0)/4294967296;};
  const vn=(x,z)=>{const ix=Math.floor(x),iz=Math.floor(z),fx=x-ix,fz=z-iz,ux=fx*fx*(3-2*fx),uz=fz*fz*(3-2*fz);
    const a=hash(ix,iz),b=hash(ix+1,iz),c=hash(ix,iz+1),d=hash(ix+1,iz+1);return a+(b-a)*ux+(c-a)*uz+(a-b-c+d)*ux*uz;};
- const inStadium=(x,z)=>x>-96&&x<94&&z>-44&&z<130;                                  // 球場（紅框）
- const onRoad=(x,z)=>{const nz=-40+SLOPE*x;return(z>nz-52&&z<nz+8)||(x>86&&x<116&&z>nz);};   // 莊敬一路、光明六路、莊敬北路（含人行道與綠帶）
- const inStore=(x,z)=>x>104&&x<215&&z>-40&&z<120;                                   // 百貨公司與廣場
  const tree=(b,x,z,sc,rnd)=>{const H=(9+rnd()*8)*sc,R=(4.2+rnd()*2.2)*sc,g=0.30+rnd()*0.2,c=[0.14+rnd()*0.1,g,0.12+rnd()*0.08],ph=rnd()*6.28;
    b.cone(x,0,z,0.55*sc,H*0.45,4,trunkC,1,ph);
    b.cone(x,H*0.42,z,R,H*0.32,8,c,1,ph);b.cone(x,H*0.42,z,R,H*0.26,8,[c[0]*0.72,c[1]*0.78,c[2]*0.8],-1,ph);       // 圓冠（上下兩個錐體）
    b.cone(x+(rnd()-0.5)*R*0.4,H*0.7,z+(rnd()-0.5)*R*0.4,R*0.62,H*0.22,7,[c[0]*1.15,c[1]*1.12,c[2]*1.1],1,ph+0.5);};
- for(let gx=-300;gx<340;gx+=10)for(let gz=-260;gz<430;gz+=10){
-   const x=gx+(rt()-0.5)*8,z=gz+(rt()-0.5)*8;
-   if(inStadium(x,z)||onRoad(x,z)||inStore(x,z))continue;
-   if(x>116&&z>-120&&z<430)continue;                                              // 百貨公司以東：其他建築的位置，先留空
-   const dens=0.15+0.85*vn(x*0.012+4,z*0.012-2);if(rt()>dens*0.95)continue;
+ // 以道路對齊座標判斷禁區：紅框（球場）、三條馬路、百貨公司，以及百貨公司以東（其他建築）
+ const banned=(dU,dV)=>{const du=dU-TILT*dV;                                         // du：把南邊道路拉直之後的 U
+   if(dU>-44&&dU<122&&dV>-50&&dV<138)return true;                                   // 紅框（含球場）
+   if(du<-34&&du>-100)return true;                                                  // 莊敬一路＋光明六路＋之間的綠帶
+   if(dV>128&&dV<162&&dU>-60)return true;                                           // 莊敬北路與人行道
+   if(dV>=150&&dV<245&&dU>-40&&dU<115)return true;                                  // 百貨公司與廣場
+   if(dV>=162&&du>-110)return true;                                                 // 莊敬北路以東（其他建築的位置，先留空）
+   return false;};
+ for(let gx=-320;gx<340;gx+=10)for(let gz=-300;gz<420;gz+=10){
+   const x=gx+(rt()-0.5)*8,z=gz+(rt()-0.5)*8,a=g2uv(x,z);
+   if(banned(a[0],a[1]))continue;
+   const dens=0.35+0.65*vn(x*0.012+4,z*0.012-2);if(rt()>dens*0.9)continue;
    const key=Math.floor(x/150)+','+Math.floor(z/150);let b=TB.get(key);if(!b){b=newBatch();TB.set(key,b);}
    tree(b,x,z,0.8+rt()*0.55,rt);}
  // 行道樹：莊敬北路西側（紅框東緣）與莊敬一路北側，每 14 m 一棵
- const sb=newBatch();for(let z=-20;z<260;z+=14)tree(sb,88.2,z,0.7,rt);for(let x=-85;x<86;x+=14)tree(sb,x,-40+SLOPE*x+9,0.65,rt);
+ const sb=newBatch();
+ for(let dU=-30;dU<150;dU+=14){const p=uv2g(dU,133.5);tree(sb,p[0],p[1],0.7,rt);}
+ for(let dV=-40;dV<130;dV+=14){const p=uv2g(edgeU(dV)-3.5,dV);tree(sb,p[0],p[1],0.65,rt);}
  TB.set('street',sb);
  TB.forEach((b,k)=>{const m=b.toMesh('xxTrees'+k,vcMat);if(m)m.freezeWorldMatrix();});}
 

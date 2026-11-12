@@ -10319,7 +10319,6 @@ function resize(){
   W=w;H=h;cv.width=Math.round(w*k);cv.height=Math.round(h*k);ctx.setTransform(k,0,0,k,0,0);
 }
 build();
-window.addEventListener('resize',resize);
 // 透視：z＝離本壘的距離（m），x＝左右（m，右為正）
 function proj(x,z,hy,y0,sc0){const r=Math.pow(Math.max(0.0001,1-z/150),2.2);return {x:W/2+x*sc0*r,y:hy+(y0-hy)*r,r:r};}
 function tower(x,y,s,t,ph){
@@ -10336,11 +10335,12 @@ function tower(x,y,s,t,ph){
   ctx.globalCompositeOperation='source-over';
 }
 function burst(x,y,n,col,sp,o){o=o||{};for(let i=0;i<n;i++){const a=o.ring?i/n*6.283:rnd()*6.283,v=(o.ring?1:(0.25+rnd()*0.9))*sp;sparks.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:0,T:(o.T||1.2)*(0.8+rnd()*0.4),c:col,r:1+rnd()*1.4,g:o.g||60,d:o.d||0.975,trail:o.trail,p:rnd()*6.28});}}
-function frame(now){
-  requestAnimationFrame(frame);
-  if(start.hidden||ms.hidden||document.hidden)return;
-  if(!W||cv.offsetWidth!==W||cv.offsetHeight!==H)resize();if(!W)return;
-  const t=Math.max(0,(now-t0)/1000),lt=t%LOOP,loop=Math.floor(t/LOOP),dt=Math.min(0.05,Math.max(0.001,(now-(frame.l||now))/1000));frame.l=now;
+// 靜態畫面：只在顯示、改變視窗大小時畫一次（不跑動畫迴圈，省資源）
+function frame(){
+  if(start.hidden||ms.hidden)return;
+  resize();if(!W)return;
+  seed=7;sparks=[];
+  const t=3.7,dt=0.0001;
   const hy=H*0.5,y0=H*0.92,sc0=W*0.0155;
   // 天空
   let g=ctx.createLinearGradient(0,0,0,hy);g.addColorStop(0,'#01030a');g.addColorStop(0.55,'#0a1a3c');g.addColorStop(1,'#254878');
@@ -10375,31 +10375,25 @@ function frame(now){
   for(const sd of [-1,1]){ctx.strokeRect(hp.x+sd*hs*1.9-hs*0.55,hp.y-hs*0.75,hs*1.1,hs*2.1);}
   // 球場光暈
   ctx.globalCompositeOperation='lighter';g=ctx.createRadialGradient(W/2,H*0.7,0,W/2,H*0.7,W*0.6);g.addColorStop(0,'rgba(255,230,170,0.10)');g.addColorStop(1,'rgba(255,230,170,0)');ctx.fillStyle=g;ctx.fillRect(0,hy,W,H-hy);ctx.globalCompositeOperation='source-over';
-  // ===== 動畫：外野區持續施放煙火 =====
-  frame.nx=(frame.nx===undefined)?0.3:frame.nx;frame.nx-=dt;
-  if(frame.nx<=0){frame.nx=0.45+rnd()*0.8;const cols=['255,205,90','120,200,255','255,120,150','170,255,170','255,160,60','210,150,255','255,255,255'];
-    const n=rnd()<0.3?2:1;for(let k=0;k<n;k++){const tx=W*(0.05+rnd()*0.9),ty=H*(0.07+rnd()*0.26);rockets.push({x0:tx+(rnd()-0.5)*W*0.08,y0:hy-H*0.025,tx,ty,x:0,y:0,t:0,T:0.85+rnd()*0.5,col:cols[Math.floor(rnd()*cols.length)],type:Math.floor(rnd()*4),tr:[]});}}
+  // ===== 靜態煙火：預先算好幾朵、各停在不同的綻放階段 =====
   ctx.globalCompositeOperation='lighter';
-  for(let i=rockets.length-1;i>=0;i--){const r=rockets[i];r.t+=dt;const u=Math.min(1,r.t/r.T),e=1-Math.pow(1-u,2.2);
-    r.x=lerp(r.x0,r.tx,e)+Math.sin(u*9)*2*(1-u);r.y=lerp(r.y0,r.ty,e);r.tr.push({x:r.x,y:r.y});if(r.tr.length>14)r.tr.shift();
-    for(let k=0;k<r.tr.length;k++){const q=r.tr[k],f=k/r.tr.length;ctx.fillStyle='rgba(255,220,150,'+(0.5*f)+')';ctx.beginPath();ctx.arc(q.x,q.y,0.6+1.4*f,0,6.283);ctx.fill();}
-    if(u>=1){rockets.splice(i,1);flash.push({x:r.tx,y:r.ty,col:r.col,l:0});
-      const c=r.col,sp=H*(0.3+rnd()*0.12);
-      if(r.type===0)burst(r.tx,r.ty,80,c,sp,{T:1.3,g:60,d:0.975});
-      else if(r.type===1){burst(r.tx,r.ty,64,c,sp*1.05,{T:1.2,g:50,d:0.972,ring:1});burst(r.tx,r.ty,26,'255,255,255',sp*0.45,{T:1,g:50,d:0.97,ring:1});}
-      else if(r.type===2)burst(r.tx,r.ty,70,'255,210,110',sp*0.9,{T:2.3,g:95,d:0.985,trail:1});
-      else{burst(r.tx,r.ty,50,c,sp,{T:1.3,g:60,d:0.975});burst(r.tx,r.ty,34,'255,255,255',sp*0.5,{T:1.1,g:60,d:0.975});}}}
-  for(let i=flash.length-1;i>=0;i--){const f=flash[i];f.l+=dt;if(f.l>0.7){flash.splice(i,1);continue;}const k=1-f.l/0.7,R=H*0.5;
-    g=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,R);g.addColorStop(0,'rgba('+f.col+','+(0.22*k*k)+')');g.addColorStop(1,'rgba('+f.col+',0)');ctx.fillStyle=g;ctx.fillRect(f.x-R,f.y-R,R*2,R*2);}
-  for(let i=sparks.length-1;i>=0;i--){const s=sparks[i];s.l+=dt;if(s.l>s.T){sparks.splice(i,1);continue;}
-    s.vy+=s.g*dt;const dd=Math.pow(s.d,dt*60);s.vx*=dd;s.vy*=dd;const px=s.x,py=s.y;s.x+=s.vx*dt;s.y+=s.vy*dt;const k=1-s.l/s.T,tw=0.6+0.4*Math.sin(t*30+s.p);
-    ctx.fillStyle='rgba('+s.c+','+(k*tw)+')';ctx.beginPath();ctx.arc(s.x,s.y,s.r*(0.4+k),0,6.283);ctx.fill();
-    if(s.trail){ctx.strokeStyle='rgba('+s.c+','+(k*0.5)+')';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(s.x-s.vx*0.05,s.y-s.vy*0.05);ctx.stroke();}}
+  const cols=['255,205,90','120,200,255','255,120,150','170,255,170','255,160,60','210,150,255'];
+  const spots=[[0.08,0.2,0],[0.2,0.1,1],[0.34,0.26,3],[0.5,0.08,2],[0.64,0.24,0],[0.78,0.12,1],[0.9,0.22,3],[0.14,0.3,2],[0.88,0.07,0]];
+  spots.forEach((q,k)=>{const x=W*q[0],y=H*q[1],c=cols[k%cols.length],sp=H*(0.3+rnd()*0.12),ty=q[2];const n0=sparks.length;
+    if(ty===0)burst(x,y,80,c,sp,{T:1.3,g:60,d:0.975});else if(ty===1){burst(x,y,64,c,sp*1.05,{T:1.2,g:50,d:0.972,ring:1});burst(x,y,26,'255,255,255',sp*0.45,{T:1,g:50,d:0.97,ring:1});}
+    else if(ty===2)burst(x,y,70,'255,210,110',sp*0.9,{T:2.3,g:95,d:0.985,trail:1});else{burst(x,y,50,c,sp,{T:1.3,g:60,d:0.975});burst(x,y,34,'255,255,255',sp*0.5,{T:1.1,g:60,d:0.975});}
+    const age=0.18+((k*0.37)%0.5);for(let i=n0;i<sparks.length;i++){const s2=sparks[i];for(let a2=0;a2<age;a2+=1/60){s2.vy+=s2.g/60;const dd=s2.d;s2.vx*=dd;s2.vy*=dd;s2.x+=s2.vx/60;s2.y+=s2.vy/60;}s2.l=age;}
+    g=ctx.createRadialGradient(x,y,0,x,y,H*0.4);g.addColorStop(0,'rgba('+c+',0.14)');g.addColorStop(1,'rgba('+c+',0)');ctx.fillStyle=g;ctx.fillRect(x-H*0.4,y-H*0.4,H*0.8,H*0.8);});
+  for(const s2 of sparks){const k=Math.max(0,1-s2.l/s2.T);ctx.fillStyle='rgba('+s2.c+','+(k*0.9)+')';ctx.beginPath();ctx.arc(s2.x,s2.y,s2.r*(0.5+k),0,6.283);ctx.fill();
+    if(s2.trail){ctx.strokeStyle='rgba('+s2.c+','+(k*0.5)+')';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(s2.x,s2.y);ctx.lineTo(s2.x-s2.vx*0.06,s2.y-s2.vy*0.06);ctx.stroke();}}
   ctx.globalCompositeOperation='source-over';
   // 暈影＋標題區壓暗，確保文字好讀
   g=ctx.createRadialGradient(W/2,H*0.42,H*0.1,W/2,H*0.5,Math.max(W,H)*0.75);g.addColorStop(0,'rgba(2,5,12,0.35)');g.addColorStop(1,'rgba(2,5,12,0.72)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
 }
-requestAnimationFrame(frame);
+window.addEventListener('resize',frame);
+new MutationObserver(frame).observe(ms,{attributes:true,attributeFilter:['hidden']});
+new MutationObserver(frame).observe(start,{attributes:true,attributeFilter:['hidden']});
+frame();
 })();
 
 </script>

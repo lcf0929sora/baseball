@@ -10306,7 +10306,7 @@ engine.runRenderLoop(()=>{
 (function(){
 const cv=document.getElementById('titleCv');if(!cv||!cv.getContext)return;
 const ctx=cv.getContext('2d'),start=document.getElementById('start'),ms=document.getElementById('modeSelect');
-let W=0,H=0,stars=[],crowd=[],sparks=[],trail=[],t0=performance.now(),lastLoop=-1,seed=7;
+let W=0,H=0,stars=[],crowd=[],sparks=[],rockets=[],flash=[],t0=performance.now(),seed=7;
 const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
 const LOOP=6.4,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),lerp=(a,b,u)=>a+(b-a)*u,ease=u=>u*u*(3-2*u);
 function build(){
@@ -10335,16 +10335,7 @@ function tower(x,y,s,t,ph){
   ctx.fillStyle=g2;ctx.beginPath();ctx.moveTo(x-pw*0.4,y-ph2/2);ctx.lineTo(x+pw*0.4,y-ph2/2);ctx.lineTo(bx+s*1.4,H*0.95);ctx.lineTo(bx-s*1.4,H*0.95);ctx.closePath();ctx.fill();
   ctx.globalCompositeOperation='source-over';
 }
-function ballAt(x,y,rad,spin,a){
-  ctx.save();ctx.translate(x,y);
-  const g=ctx.createRadialGradient(-rad*0.35,-rad*0.4,rad*0.1,0,0,rad);g.addColorStop(0,'#fff');g.addColorStop(0.7,'#ece6da');g.addColorStop(1,'#b9b2a4');
-  ctx.globalAlpha=a;ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,rad,0,6.283);ctx.fill();
-  ctx.rotate(spin);ctx.strokeStyle='#d2312f';ctx.lineWidth=Math.max(0.8,rad*0.1);ctx.lineCap='round';
-  for(const sd of [-1,1]){ctx.beginPath();ctx.arc(sd*rad*1.25,0,rad*0.78,sd>0?Math.PI*0.72:-Math.PI*0.28,sd>0?Math.PI*1.28:Math.PI*0.28);ctx.stroke();
-    for(let k=-2;k<=2;k++){const an=(sd>0?Math.PI:0)+k*0.2,cx=sd*rad*1.25+Math.cos(an)*rad*0.78,cy=Math.sin(an)*rad*0.78;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx-sd*rad*0.2,cy+(k?Math.sign(k):0.3)*rad*0.16);ctx.stroke();}}
-  ctx.restore();ctx.globalAlpha=1;
-}
-function burst(x,y,n,col,sp){for(let i=0;i<n;i++){const a=rnd()*6.283,v=(0.3+rnd())*sp;sparks.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:0,T:0.7+rnd()*0.8,c:col,r:1+rnd()*1.6});}}
+function burst(x,y,n,col,sp,o){o=o||{};for(let i=0;i<n;i++){const a=o.ring?i/n*6.283:rnd()*6.283,v=(o.ring?1:(0.25+rnd()*0.9))*sp;sparks.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:0,T:(o.T||1.2)*(0.8+rnd()*0.4),c:col,r:1+rnd()*1.4,g:o.g||60,d:o.d||0.975,trail:o.trail,p:rnd()*6.28});}}
 function frame(now){
   requestAnimationFrame(frame);
   if(start.hidden||ms.hidden||document.hidden)return;
@@ -10384,32 +10375,26 @@ function frame(now){
   for(const sd of [-1,1]){ctx.strokeRect(hp.x+sd*hs*1.9-hs*0.55,hp.y-hs*0.75,hs*1.1,hs*2.1);}
   // 球場光暈
   ctx.globalCompositeOperation='lighter';g=ctx.createRadialGradient(W/2,H*0.7,0,W/2,H*0.7,W*0.6);g.addColorStop(0,'rgba(255,230,170,0.10)');g.addColorStop(1,'rgba(255,230,170,0)');ctx.fillStyle=g;ctx.fillRect(0,hy,W,H-hy);ctx.globalCompositeOperation='source-over';
-  // ===== 動畫：投球 → 揮棒 → 全壘打 =====
-  if(loop!==lastLoop){lastLoop=loop;trail.length=0;sparks.length=0;frame.hit=false;frame.fw=false;}
-  const T1=1.5,T2=4.2;
-  const plate={x:W/2+W*0.012,y:hp.y-hs*1.15};
-  let bx,by,br,spin=t*16,vis=true;
-  if(lt<T1){const u=lt/T1,z=18.44*(1-u),p=proj(0.15*u,z,hy,y0,sc0),h=1.9-0.8*u*u;bx=p.x;by=p.y-h*sc0*p.r*1.3;br=lerp(3.2,17,Math.pow(u,1.6));}
-  else if(lt<T2){const u=(lt-T1)/(T2-T1),e=1-Math.pow(1-u,1.6),ex=W*0.87,ey=H*0.2,ax=W*0.8,ay=H*0.04;
-    const a=1-e;bx=a*a*plate.x+2*a*e*ax+e*e*ex;by=a*a*plate.y+2*a*e*ay+e*e*ey;br=lerp(17,3,Math.pow(e,0.7));}
-  else vis=false;
-  // 球棒
-  if(lt>1.05&&lt<2.0){const u=clamp((lt-1.05)/0.5,0,1.4),th=lerp(-2.3,0.15,ease(Math.min(1,u)))+(u>1?(u-1)*0.9:0),px=W/2-W*0.27,py=y0+H*0.03,L=W*0.33;
-    ctx.save();ctx.translate(px,py);ctx.rotate(th);const a=lt>1.5?clamp(1-(lt-1.5)/0.5,0,1):1;ctx.globalAlpha=a;
-    const bg=ctx.createLinearGradient(0,-8,0,8);bg.addColorStop(0,'#e8c28a');bg.addColorStop(1,'#a8743a');ctx.fillStyle=bg;
-    ctx.beginPath();ctx.moveTo(0,-3);ctx.lineTo(L*0.62,-5);ctx.quadraticCurveTo(L*0.78,-11,L*0.97,-10);ctx.quadraticCurveTo(L*1.01,0,L*0.97,10);ctx.quadraticCurveTo(L*0.78,11,L*0.62,5);ctx.lineTo(0,3);ctx.closePath();ctx.fill();
-    ctx.globalAlpha=a*0.4;ctx.strokeStyle='#fff';ctx.lineWidth=14;ctx.beginPath();ctx.arc(0,0,L*0.95,-0.5,0.4);ctx.stroke();ctx.restore();ctx.globalAlpha=1;}
-  // 命中
-  if(lt>=T1&&!frame.hit){frame.hit=true;burst(plate.x,plate.y,34,'255,236,170',260);}
-  if(lt>=T1&&lt<T1+0.35){const u=(lt-T1)/0.35;ctx.globalCompositeOperation='lighter';ctx.strokeStyle='rgba(255,240,190,'+(1-u)+')';ctx.lineWidth=5*(1-u)+1;ctx.beginPath();ctx.arc(plate.x,plate.y,10+u*H*0.16,0,6.283);ctx.stroke();
-    g=ctx.createRadialGradient(plate.x,plate.y,0,plate.x,plate.y,H*0.18);g.addColorStop(0,'rgba(255,250,220,'+(0.7*(1-u))+')');g.addColorStop(1,'rgba(255,250,220,0)');ctx.fillStyle=g;ctx.fillRect(plate.x-H*0.2,plate.y-H*0.2,H*0.4,H*0.4);ctx.globalCompositeOperation='source-over';}
-  if(vis){trail.push({x:bx,y:by,r:br,t});while(trail.length&&t-trail[0].t>0.35)trail.shift();
-    ctx.globalCompositeOperation='lighter';for(const q of trail){const k=1-(t-q.t)/0.35;ctx.fillStyle='rgba(255,230,170,'+(0.28*k)+')';ctx.beginPath();ctx.arc(q.x,q.y,q.r*(0.5+0.5*k),0,6.283);ctx.fill();}ctx.globalCompositeOperation='source-over';
-    ballAt(bx,by,br,spin,1);}
-  // 全壘打煙火
-  if(lt>=T2-0.05&&!frame.fw){frame.fw=true;const ex=W*0.87,ey=H*0.2;burst(ex,ey,50,'255,205,90',170);burst(ex-W*0.05,ey-H*0.09,36,'120,200,255',130);burst(ex+W*0.04,ey+H*0.04,36,'255,120,150',130);}
+  // ===== 動畫：外野區持續施放煙火 =====
+  frame.nx=(frame.nx===undefined)?0.3:frame.nx;frame.nx-=dt;
+  if(frame.nx<=0){frame.nx=0.45+rnd()*0.8;const cols=['255,205,90','120,200,255','255,120,150','170,255,170','255,160,60','210,150,255','255,255,255'];
+    const n=rnd()<0.3?2:1;for(let k=0;k<n;k++){const tx=W*(0.05+rnd()*0.9),ty=H*(0.07+rnd()*0.26);rockets.push({x0:tx+(rnd()-0.5)*W*0.08,y0:hy-H*0.025,tx,ty,x:0,y:0,t:0,T:0.85+rnd()*0.5,col:cols[Math.floor(rnd()*cols.length)],type:Math.floor(rnd()*4),tr:[]});}}
   ctx.globalCompositeOperation='lighter';
-  for(let i=sparks.length-1;i>=0;i--){const s=sparks[i];s.l+=dt;if(s.l>s.T){sparks.splice(i,1);continue;}s.vy+=180*dt;s.vx*=0.985;s.x+=s.vx*dt;s.y+=s.vy*dt;const k=1-s.l/s.T;ctx.fillStyle='rgba('+s.c+','+k+')';ctx.beginPath();ctx.arc(s.x,s.y,s.r*(0.4+k),0,6.283);ctx.fill();}
+  for(let i=rockets.length-1;i>=0;i--){const r=rockets[i];r.t+=dt;const u=Math.min(1,r.t/r.T),e=1-Math.pow(1-u,2.2);
+    r.x=lerp(r.x0,r.tx,e)+Math.sin(u*9)*2*(1-u);r.y=lerp(r.y0,r.ty,e);r.tr.push({x:r.x,y:r.y});if(r.tr.length>14)r.tr.shift();
+    for(let k=0;k<r.tr.length;k++){const q=r.tr[k],f=k/r.tr.length;ctx.fillStyle='rgba(255,220,150,'+(0.5*f)+')';ctx.beginPath();ctx.arc(q.x,q.y,0.6+1.4*f,0,6.283);ctx.fill();}
+    if(u>=1){rockets.splice(i,1);flash.push({x:r.tx,y:r.ty,col:r.col,l:0});
+      const c=r.col,sp=H*(0.3+rnd()*0.12);
+      if(r.type===0)burst(r.tx,r.ty,80,c,sp,{T:1.3,g:60,d:0.975});
+      else if(r.type===1){burst(r.tx,r.ty,64,c,sp*1.05,{T:1.2,g:50,d:0.972,ring:1});burst(r.tx,r.ty,26,'255,255,255',sp*0.45,{T:1,g:50,d:0.97,ring:1});}
+      else if(r.type===2)burst(r.tx,r.ty,70,'255,210,110',sp*0.9,{T:2.3,g:95,d:0.985,trail:1});
+      else{burst(r.tx,r.ty,50,c,sp,{T:1.3,g:60,d:0.975});burst(r.tx,r.ty,34,'255,255,255',sp*0.5,{T:1.1,g:60,d:0.975});}}}
+  for(let i=flash.length-1;i>=0;i--){const f=flash[i];f.l+=dt;if(f.l>0.7){flash.splice(i,1);continue;}const k=1-f.l/0.7,R=H*0.5;
+    g=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,R);g.addColorStop(0,'rgba('+f.col+','+(0.22*k*k)+')');g.addColorStop(1,'rgba('+f.col+',0)');ctx.fillStyle=g;ctx.fillRect(f.x-R,f.y-R,R*2,R*2);}
+  for(let i=sparks.length-1;i>=0;i--){const s=sparks[i];s.l+=dt;if(s.l>s.T){sparks.splice(i,1);continue;}
+    s.vy+=s.g*dt;const dd=Math.pow(s.d,dt*60);s.vx*=dd;s.vy*=dd;const px=s.x,py=s.y;s.x+=s.vx*dt;s.y+=s.vy*dt;const k=1-s.l/s.T,tw=0.6+0.4*Math.sin(t*30+s.p);
+    ctx.fillStyle='rgba('+s.c+','+(k*tw)+')';ctx.beginPath();ctx.arc(s.x,s.y,s.r*(0.4+k),0,6.283);ctx.fill();
+    if(s.trail){ctx.strokeStyle='rgba('+s.c+','+(k*0.5)+')';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(s.x-s.vx*0.05,s.y-s.vy*0.05);ctx.stroke();}}
   ctx.globalCompositeOperation='source-over';
   // 暈影＋標題區壓暗，確保文字好讀
   g=ctx.createRadialGradient(W/2,H*0.42,H*0.1,W/2,H*0.5,Math.max(W,H)*0.75);g.addColorStop(0,'rgba(2,5,12,0.35)');g.addColorStop(1,'rgba(2,5,12,0.72)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);

@@ -37,7 +37,7 @@ const exact={
 '打擊畫面，點擊揮棒':'Batting view, click to swing','目前打者與投手資訊':'Current batter and pitcher info','壘包與跑者位置':'Bases and runners','主隊隊徽':'Home team logo','客隊隊徽':'Away team logo','賽前先發名單':'Starting lineups','賽前球場選擇':'Stadium selection','賽前球隊選擇':'Team selection','跑壘戰術':'Baserunning tactics','選擇遊戲模式':'Select game mode',
 '一壘手視角（點擊牽制一壘）':'First baseman view (click to pick off at 1st)','二壘手視角（點擊牽制二壘）':'Second baseman view (click to pick off at 2nd)','三壘手視角（點擊牽制三壘）':'Third baseman view (click to pick off at 3rd)',
 // ── 戰術
-'戰術 ▾':'Tactics ▾','戰術 ▴':'Tactics ▴','全員積極盜壘':'All: aggressive steal','全員盜壘':'All steal','積極盜壘':'Aggressive steal','預備積極盜壘（提早起跑）':'Aggressive steal ready (early jump)','預備盜壘（投手一動就跑）':'Steal ready (go on pitcher motion)','雙擊／右鍵＝盜壘　Shift＋雙擊／右鍵＝積極盜壘':'Double-click / right-click = steal   Shift = aggressive steal','守備位置':'Fielding positions','拖曳野手到指定位置':'Drag fielders to positions','已回到標準守備位置':'Back to standard positions','後退 ▼':'Back ▼','趨前 ▲':'In ▲','預設位置':'Default','內野':'Infield','外野':'Outfield',
+'戰術 ▾':'Tactics ▾','戰術 ▴':'Tactics ▴','全員積極盜壘':'All: aggressive steal','全員盜壘':'All steal','積極盜壘':'Aggressive steal','預備積極盜壘（投手一動就跑）':'Aggressive steal ready (go on any pitcher motion)','預備盜壘（投手跨步才跑）':'Steal ready (go on pitcher stride)','雙擊／右鍵＝盜壘　Shift＋雙擊／右鍵＝積極盜壘':'Double-click / right-click = steal   Shift = aggressive steal','守備位置':'Fielding positions','拖曳野手到指定位置':'Drag fielders to positions','已回到標準守備位置':'Back to standard positions','後退 ▼':'Back ▼','趨前 ▲':'In ▲','預設位置':'Default','內野':'Infield','外野':'Outfield',
 '離壘':'Lead off','回壘':'Return','盜壘':'Steal','牽制！':'Pickoff!','轉身牽制…':'Spin move…','出局！':'Out!','安全':'Safe','球在飛…':'Ball in flight…','沒有跑者':'No runner','投手牽制！':'Pickoff throw!','被觸殺！':'Tagged out!','盜壘中！':'Stealing!','預備盜壘（投手一動就跑）':'Steal set (runs on pitcher\'s move)','按住＝離壘　雙擊／右鍵＝盜壘':'Hold = lead off  Double-click / right-click = steal',
 '投球動作中不能牽制':'Can\'t pick off mid-pitch','現在無法牽制':'Can\'t pick off now','前方壘包有人':'Base ahead is occupied','牽制出局！':'Picked off!','牽制暴傳！':'Pickoff throwing error!','球滾遠了，跑者可自行判斷是否進壘':'The ball rolled away; runners may advance at their own risk',
 '盜壘取消':'Steal cancelled','盜壘失敗 出局':'Caught stealing','盜壘成功':'Stolen base','盜本壘成功':'Stole home',
@@ -76,6 +76,7 @@ const exact={
 '存檔的玩家球隊不在聯盟內':'The saved player team is not in the league'
 };
 const pieces={
+'歷史賽季':'Past Seasons','賽季・季後':'Season · Postseason','賽季開幕':'Season Opens','賽季':'Season','例行賽冠軍':'Regular-season champion','例行賽結束・世界賽進行中':'Regular season over · World Series in progress','例行賽結束！冠軍：':'Regular season over! Champion: ','，接著進行世界賽。':', then the World Series.','只有一個聯盟，沒有世界賽。':'Only one league, so no World Series.','世界賽：':'World Series: ','（七戰四勝）':' (best of 7)','世界冠軍：':'World champion: ','世界冠軍':'World Champion','世界賽第':'World Series Game','戰結束':' over','系列賽：':'Series: ','聯賽冠軍':'League Champion','電腦模擬整個系列賽':'Simulate the whole series','進入':'Start ','賽季開幕':'Season Opens','新賽季賽程已排定；個人成績、冷卻時間與傷勢已重置。歷年成績可在「歷史賽季」查看。':'The new schedule is set. Stats, cooldowns and injuries are reset. Past seasons are under "Past Seasons".','還沒有完整打完的賽季。':'No completed seasons yet.','返回列表':'Back to list','打擊排行（前三名）':'Batting leaders (top 3)','投手排行（前三名）':'Pitching leaders (top 3)','年度':'Year','聯賽':'League','冠軍':'Champion','最終戰績':'Final standings','聯盟冠軍':'League champion','主：':'Home: ',
 '受傷：':'Injury: ','必須退場':'must leave the game','頭部觸身球：':'Head hit by pitch: ',' 被勒令退場':' ejected','沒有可替補的球員：':'No substitute available: ',' 留在場上':' stays in the game','電腦換人：':'CPU substitution: ','電腦換投手：':'CPU pitching change: ','傷：':'Inj: ','・嚴重':' (severe)','冷卻 ':'Cooldown ','退場':'Ejected',
 '肩膀':'Shoulder','手肘':'Elbow','手臂肌肉':'Arm muscle','手指':'Finger','手部':'Hand','大腿拉傷':'Hamstring strain','腳踝扭傷':'Ankle sprain','膝蓋':'Knee','小腿抽筋':'Calf cramp','肋骨':'Ribs','腰部':'Lower back','背部':'Back','腦震盪':'Concussion','頭部撞擊':'Head impact',
 '體力不支':'fatigue','冷卻時間未消':'cooldown not cleared','跑壘':'baserunning','被球擊中':'hit by ball',
@@ -103,6 +104,7 @@ const pieces={
 // 全形標點 → 半形
 const PUNCT=[['　',' '],['・',' · '],['，',', '],['、',', '],['：',': '],['；','; '],['。','. '],['！','!'],['？','?'],['（',' ('],['）',')'],['「','"'],['」','"'],['／','/'],['＝','='],['｜','|'],['～','~']];
 const rules=[
+ [/PLAY 世界賽第 (\d+) 戰/g,'PLAY World Series Game $1'],[/世界賽第 (\d+) 戰/g,'World Series Game $1'],[/第 (\d+) 戰/g,'Game $1'],[/進入 (\d+) 賽季/g,'Start the $1 season'],[/(\d+) 賽季/g,'$1 season'],
  [/第 ?(\d+) ?局[\s　]*｜[\s　]*(.+?) 進攻/g,(m,n,t)=>'Inning '+n+' | '+t+' batting'],
  [/規定投球 ([\d.]+) 局/g,'Qualifying IP: $1'],
  [/第 ?(\d+) ?\/ ?(\d+) 日/g,'Day $1 / $2'],

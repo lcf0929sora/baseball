@@ -31,8 +31,7 @@ body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;ba
 .lamp.on.s{background:var(--led);box-shadow:0 0 8px var(--led)}
 .lamp.on.o{background:var(--hot);box-shadow:0 0 8px var(--hot)}
 .stats{position:absolute;top:12px;right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:10px;align-items:flex-start}
-#snd{pointer-events:auto;cursor:pointer;background:var(--board);color:var(--chalk);border:1px solid #2a3a58;width:44px;height:44px;font:700 12px var(--f-ui)}
-#snd:focus-visible,#go:focus-visible{outline:2px solid var(--led);outline-offset:2px}
+#go:focus-visible{outline:2px solid var(--led);outline-offset:2px}
 .pitch{position:absolute;top:50%;left:50%;right:auto;transform:translate(-50%,-50%);white-space:nowrap;text-align:center;font-family:var(--f-num);font-size:24px;letter-spacing:.1em;color:var(--chalk);text-shadow:0 2px 8px #000;opacity:0;transition:opacity .25s}
 .pitch.show{opacity:1}
 .pitch .pt{font-family:var(--f-ui);font-size:.5em;font-weight:900;letter-spacing:.2em;margin-right:.6em;padding:.2em .6em .2em .8em;background:var(--board);border:1px solid #2a3a58;vertical-align:.25em}
@@ -65,6 +64,20 @@ body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;ba
 #start{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;background:radial-gradient(ellipse at 50% 30%,#162a4a 0%,#0a1428 55%,#050a14 100%);padding-inline:max(16px,env(safe-area-inset-left,0px));padding-top:10px;padding-bottom:10px;max-width:100vw;min-width:0;box-sizing:border-box;overflow:hidden;z-index:10;pointer-events:auto}
 #go{display:none;margin-top:14px;flex:0 0 auto;cursor:pointer;font:900 20px var(--f-ui);letter-spacing:.3em;padding:14px 34px 14px 40px;background:var(--led);color:#1a1205;border:0}
 #go.ready-to-start{display:block}
+/* 賽後成績單 */
+#gbOv{position:fixed;inset:0;z-index:2000;background:rgba(5,9,18,.88);display:flex;justify-content:center;align-items:flex-start;overflow:auto;padding:16px;pointer-events:auto}
+#gbOv[hidden]{display:none}
+.gb-card{width:min(980px,100%);background:#0f1829;color:var(--chalk);border:1px solid #2a3a58;border-radius:8px;padding:14px 16px 12px;font:14px/1.5 var(--f-ui)}
+.gb-card h3{margin:0 0 10px;font-size:22px;display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline}.gb-card h3 small{font-size:16px;color:var(--led)}
+.gb-card h4{margin:14px 0 4px;font-size:16px;color:var(--led)}
+.gb-sc{overflow-x:auto;margin:4px 0 8px}
+.gb-t{border-collapse:collapse;width:100%;font-size:13px;white-space:nowrap}.gb-t th,.gb-t td{padding:3px 8px;border-bottom:1px solid #243551;text-align:center}.gb-t .l{text-align:left}
+.gb-t th{color:#9fb3d1;font-weight:600}.gb-t .tot{font-weight:800}.gb-t tr.tot td{border-top:1px solid #3a5078;color:#fff}.gb-t tr.sub td{color:#b6c4dc}.gb-t .gi{color:#6d86ad;margin-right:3px}
+.gb-ls td.tot{color:var(--led);font-weight:800}
+.gb-ev{list-style:none;margin:0;padding:0;display:grid;gap:3px}.gb-ev b{display:inline-block;min-width:5.5em;color:#9fb3d1;margin-right:6px}
+.gb-t i,.gb-ev i{font-style:normal;font-size:11px;font-weight:800;padding:0 5px;margin-left:5px;border-radius:3px;background:#2a3a58}
+.gb-t i.w{background:#2f7a45;color:#eaffef}.gb-t i.l{background:#8a2f2f;color:#ffeaea}.gb-t i.s{background:#8a6a1e;color:#fff4d6}.gb-t i.h{background:#355a8a;color:#e6f0ff}
+.gb-btn{text-align:center;margin-top:12px;position:sticky;bottom:0;padding:6px 0;background:linear-gradient(rgba(15,24,41,0),#0f1829 40%)}.gb-btn button{min-width:140px;padding:9px 20px;font:700 16px var(--f-ui);background:var(--led);color:#101826;border:0;border-radius:6px;cursor:pointer}
 /* 季後（世界賽）卡片 */
 .hb-pinfo{font-size:14px;line-height:1.6;margin:2px 0 6px}.hb-pinfo b{color:var(--led)}.hb-pinfo .me{color:#7be08a}
 .hb-pbtns{margin:8px 0 0;justify-content:flex-start;flex-wrap:wrap}
@@ -226,12 +239,16 @@ body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;ba
 .sc{position:absolute;top:112px;left:max(16px,env(safe-area-inset-left,0px));background:var(--board);border:1px solid #2a3a58;padding:8px 12px;display:flex;gap:14px;align-items:center;font-family:var(--f-num);font-size:22px;letter-spacing:.03em}
 .sc .rs{display:flex;flex-direction:column;gap:6px;line-height:1.1}.sc .team-score-row{display:grid;grid-template-columns:220px 64px;align-items:center;gap:10px;height:54px}.sc .team-name-cell{display:flex;align-items:center;gap:10px;width:220px;min-width:220px;overflow:hidden;white-space:nowrap;font-family:var(--f-ui);font-size:22px;font-weight:900;letter-spacing:0}.sc .score-team-logo{display:block;flex:0 0 52px;width:52px;height:52px;object-fit:contain;background:rgba(0,0,0,.35);border-radius:4px}.sc .score-team-logo[hidden]{display:none!important}.sc .team-name-text{display:block;overflow:hidden;text-overflow:ellipsis}.sc .team-score-row b{display:block;width:64px;box-sizing:border-box;text-align:center;color:var(--led);font-size:38px;line-height:1;font-weight:700;font-variant-numeric:tabular-nums}.sc #inn{color:var(--dim);font-family:var(--f-ui);font-size:14px;font-weight:900;min-width:4.6em}
 @media(max-width:700px){.sc{top:108px;padding:6px 8px;gap:8px}.sc .team-score-row{grid-template-columns:170px 52px;height:48px;gap:6px}.sc .team-name-cell{width:170px;min-width:170px;font-size:17px;gap:7px}.sc .score-team-logo{flex-basis:44px;width:44px;height:44px}.sc .team-score-row b{width:52px;font-size:32px}#attackTop{top:98px;max-width:calc(100vw - 24px);overflow:hidden;text-overflow:ellipsis;font-size:16px;padding:4px 8px}.base-mini{width:78px;height:84px;left:calc(max(16px,env(safe-area-inset-left,0px)) + 130px)}}
-#activePlayerInfo{position:absolute;left:max(16px,env(safe-area-inset-left,0px));bottom:62px;display:flex;flex-direction:column;gap:10px;min-width:270px;max-width:min(560px,80vw);padding:10px 13px;background:rgba(8,16,31,.9);border:1px solid #2a3a58;border-left:3px solid var(--led);box-shadow:0 3px 12px #0005;font-size:16px;line-height:1.35;text-shadow:0 1px 3px #000}
+#activePlayerInfo{position:absolute;left:max(16px,env(safe-area-inset-left,0px));bottom:62px;display:flex;flex-direction:column;gap:7px;min-width:270px;max-width:min(560px,80vw);padding:10px 13px;background:rgba(8,16,31,.9);border:1px solid #2a3a58;border-left:3px solid var(--led);box-shadow:0 3px 12px #0005;font-size:16px;line-height:1.35;text-shadow:0 1px 3px #000}
 #activePlayerInfo .player-card{display:flex;flex-direction:column;gap:5px;min-width:0}
 #activePlayerInfo .player-line{display:flex;align-items:center;gap:9px;white-space:nowrap;flex-wrap:nowrap}
 #activePlayerInfo .player-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%;padding-left:0;color:#d7e4f7;font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
 #activePlayerInfo .player-stats span{text-align:center;min-width:0;padding:3px 2px;background:rgba(35,51,76,.75);border:1px solid #354765;border-radius:3px}
 @media(max-width:650px){#activePlayerInfo{max-width:calc(100vw - 32px);min-width:0;padding:8px 10px;font-size:14px;gap:8px}#activePlayerInfo .player-stats{font-size:14px;gap:4px}#activePlayerInfo .player-stats span{padding:3px 1px;letter-spacing:-.02em}}
+#activePlayerInfo .player-ab{display:flex;gap:6px;min-height:0;font-size:14px;font-weight:800;white-space:nowrap}
+#activePlayerInfo .player-ab:empty{display:none}
+#activePlayerInfo .player-ab span{padding:1px 7px;border-radius:3px;background:rgba(35,51,76,.75);border:1px solid #354765;color:#d7e4f7}
+#activePlayerInfo .player-ab .h{color:#7be08a;border-color:#2f7a45}#activePlayerInfo .player-ab .o{color:#aab6cc}#activePlayerInfo .player-ab .b{color:#ffd06a;border-color:#8a6a1e}
 #activePlayerInfo .role{font-size:14px;letter-spacing:.04em;color:var(--dim);min-width:32px;font-weight:800}
 #activePlayerInfo .player-name{font-weight:900;color:var(--chalk);font-size:18px}
 #activePlayerInfo .player-number{font-family:var(--f-ui);font-size:18px;font-weight:900;line-height:1;color:var(--chalk);min-width:20px}
@@ -244,7 +261,6 @@ html,body{height:100%;background:#000}
 #hud,#start{box-sizing:border-box;inset:auto;left:0;top:0;width:calc(100%/var(--u,1));height:calc(100%/var(--u,1));transform:scale(var(--u,1));transform-origin:0 0}
 @media (max-width:520px){
   .board{font-size:22px;padding:6px 10px}
-  #snd{width:40px;height:40px}
   .pitch{font-size:18px}
 }
 
@@ -320,6 +336,10 @@ html,body{height:100%;background:#000}
 /* 打者視角左右與投手視角相反：一壘視窗在右、三壘視窗在左 */
 .pkwin.rc#pkL{left:auto;right:max(16px,env(safe-area-inset-right,0px))}
 .pkwin.rc#pkR{right:auto;left:max(16px,env(safe-area-inset-left,0px))}
+.pkwin.rc{height:194px}
+.pk-gui.pk-gui2{display:flex;position:absolute;left:0;top:0;right:auto;bottom:auto;flex-direction:row;width:auto;padding:5px;border-radius:8px;z-index:30}
+.pk-gui.pk-gui2[hidden]{display:none}
+.pk-gui.pk-gui2 button{flex:none;padding:8px 14px;white-space:nowrap}
 #pkM{top:470px;height:188px}   /* 二壘：放在三壘視窗下方 */
 /* 球種選擇：移到投手左邊（不遮住投手） */
 .pkwin[hidden]{display:none}
@@ -346,9 +366,6 @@ html,body{height:100%;background:#000}
 /* 打擊視角：一／三壘小視窗內的積極盜壘／盜壘按鈕 */
 .pk-gui{display:none;position:absolute;left:0;right:0;bottom:0;z-index:5;gap:4px;padding:4px;background:rgba(8,16,31,.78);pointer-events:auto}
 .pkwin.rc .pk-gui{display:flex}
-.pk-gui.pk-gui2{display:flex;position:absolute;left:0;top:0;right:auto;bottom:auto;flex-direction:row;width:auto;padding:5px;border-radius:8px;z-index:30}
-.pk-gui.pk-gui2[hidden]{display:none}
-.pk-gui.pk-gui2 button{flex:none;padding:8px 14px;white-space:nowrap}
 .pk-gui button{flex:1 1 0;min-width:0;padding:8px 2px;border:1px solid #9bb4dc;border-radius:6px;background:rgba(8,16,31,.96);color:#f3f6ff;font:900 15px var(--f-ui);cursor:pointer;touch-action:manipulation;pointer-events:auto}
 .pk-gui button:active{transform:scale(.95)}
 .pk-gui button:disabled{opacity:.4;cursor:not-allowed}
@@ -487,7 +504,6 @@ button.pg-row.sel.pcon{box-shadow:none}
       <b>O</b><div class="lamps" id="lo"></div>
     </div>
     <div class="stats">
-      <button id="snd" type="button" aria-label="音效開關">音效</button>
     </div>
     <div class="pitch" id="pitch"></div>
     <div id="runnerTactics" hidden aria-label="跑壘戰術">
@@ -499,7 +515,7 @@ button.pg-row.sel.pcon{box-shadow:none}
       </div>
     </div>
     <div id="buntHint" hidden>觸擊：按住右鍵擺出觸擊姿勢（框跟著滑鼠）　←→／A D 選擇打球方向　放開收棒</div>
-    <div id="activePlayerInfo" aria-live="polite" aria-label="目前打者與投手資訊"><div class="player-card"><div class="player-line"><span class="role">打者</span><span class="player-number" id="activeBatterNumber">1</span><span class="player-name" id="activeBatterName">陳冠宇</span></div><div class="player-stats" id="activeBatterStats"><span>AVG .000</span><span>RBI 0</span><span>HR 0</span></div></div><div class="player-card"><div class="player-line"><span class="role">投手</span><span class="player-number" id="activePitcherNumber">1</span><span class="player-name" id="activePitcherName">林昱珉</span></div><div class="player-stats" id="activePitcherStats"><span>PC 0</span><span>ERA —</span><span>SO 0</span></div></div></div>
+    <div id="activePlayerInfo" aria-live="polite" aria-label="目前打者與投手資訊"><div class="player-card"><div class="player-line"><span class="role">打者</span><span class="player-number" id="activeBatterNumber">1</span><span class="player-name" id="activeBatterName">陳冠宇</span></div><div class="player-stats" id="activeBatterStats"><span>AVG .000</span><span>RBI 0</span><span>HR 0</span></div><div class="player-ab" id="activeBatterAB"></div></div><div class="player-card"><div class="player-line"><span class="role">投手</span><span class="player-number" id="activePitcherNumber">1</span><span class="player-name" id="activePitcherName">林昱珉</span></div><div class="player-stats" id="activePitcherStats"><span>PC 0</span><span>ERA —</span><span>SO 0</span></div></div></div>
     <div class="base-mini"><svg id="mini" width="100" height="92" viewBox="0 0 100 92" aria-label="壘包與跑者位置">
       <path d="M50 78 L81 47 L50 16 L19 47 Z" fill="none" stroke="#33456a" stroke-width="1.2" stroke-dasharray="3 2.5"/>
       <circle cx="50" cy="52" r="2" fill="#33456a"/>
@@ -1817,14 +1833,19 @@ function statCSP(f){const n=(f.SBA||0)+(f.CSc||0);return n?Math.round((f.CSc||0)
 function statOBP(b){const d=b.AB+b.BB+b.HBP+b.SF;return rate(b.H+b.BB+b.HBP,d);}
 function statSLG(b){return b.AB?((b.oneB+2*b.twoB+3*b.threeB+4*b.HR)/b.AB).toFixed(3).replace(/^0/,'') : '.000';}
 var baseP=[null,null,null],walkOldP=[null,null,null],lastBatPlayer=null,walkRuns=0,runLog=[];   // baseP 與 bases 平行；runLog 用於三出局取消得分時回沖紀錄。
+const AB_LABEL={'1B':'一安','2B':'二安','3B':'三安',HR:'全壘',BB:'四壞',HBP:'觸身',SO:'三振',SF:'犧飛',OUT:'出局'};
 function addBatEvent(kind,extra={}){
   if(!practiceMode){if(kind==='HR')crowd('homerun');else if(kind==='1B'||kind==='2B'||kind==='3B')crowd('hit');else if(kind==='SO')crowd('strikeout');}   // 觀眾音效：crowd() 內已限定只有主場打擊時才會播
-  const p=currentBatter(),b=p.batting;lastBatPlayer=p;b.PA++;if(!p._gB){p._gB=1;b.G++;}
+  const p=currentBatter(),b=p.batting;lastBatPlayer=p;b.PA++;
+  (p._ab||(p._ab=[])).push(extra.label||AB_LABEL[kind]||'出局');if(p._ab.length>5)p._ab.shift();   // 當場打席結果（左下角顯示最近五個）
+if(!p._gB){p._gB=1;b.G++;}
+  gbMark();
   if(kind!=='BB'&&kind!=='HBP'&&kind!=='SF')b.AB++;
   if(kind==='1B'||kind==='2B'||kind==='3B'||kind==='HR'){
     TH[mode==='bat'?'me':'cpu']++;b.H++;b[kind==='1B'?'oneB':kind==='2B'?'twoB':kind==='3B'?'threeB':'HR']++;
   }else if(kind==='BB')b.BB++;else if(kind==='SO')b.SO++;else if(kind==='HBP')b.HBP++;else if(kind==='SF')b.SF++;
   b.RBI+=extra.rbi||0;   // 安打、犧牲飛球、滾地球打點、保送／觸身擠回的分數都算打點
+  gbRbi(p,extra.rbi||0);
   activeBatterIndex[p.team]=(activeBatterIndex[p.team]+1)%9;
   refreshRosterTable();updateActiveJerseys();updateLockerRoster();updateActivePlayerStats();
 }
@@ -4683,7 +4704,7 @@ function musicSetup(){
 // 客場打者出局：可立即播放者延遲 1 秒；其餘等本 play 結束、進入下一棒畫面時播放。
 let outSongPend=false,outSongDelay=0,outSongFlag=1,outSongTriggered=false;
 function musicOnOut({batterOut=false,strikeout=false,noWildPitch=false}={}){
-  if(practiceMode||gameOver||!soundOn||!SND.music||mode!=='pit'||!batterOut||outSongTriggered||outSongPend)return;
+  if(practiceMode||gameOver||!SND.music||mode!=='pit'||!batterOut||outSongTriggered||outSongPend)return;
   outSongFlag=0; // 本 play 有打者出局，預設延後到 play 結束播放
   const canPlayNow=!bases.some(Boolean)||(strikeout&&noWildPitch);
   if(canPlayNow){outSongPend=true;outSongDelay=1;outSongFlag=1;}
@@ -4692,23 +4713,23 @@ function musicOnOut({batterOut=false,strikeout=false,noWildPitch=false}={}){
 function musicFlushOut(playEnd=false){
   if(!outSongPend||outSongDelay>0||(outSongFlag===0&&!playEnd))return;
   outSongPend=false;outSongDelay=0;outSongFlag=1;outSongTriggered=true; // 先消耗事件，避免同一 play 重複 trigger
-  if(practiceMode||!soundOn||!SND.music)return;
+  if(practiceMode||!SND.music)return;
   musicSetup();const t=musicTracks.out;if(!t||t.bad)return;
   try{t.el.currentTime=0;t.el.volume=clamp(MUSIC.vol,0,1);const p=t.el.play();if(p&&p.catch)p.catch(e=>{if(e&&e.name!=='NotAllowedError'&&e.name!=='AbortError')t.bad=true;});}catch{}
 }
 function musicTick(dt){
   musicSetup();
   if(outSongPend){
-    if(!soundOn||!SND.music||practiceMode||gameOver){outSongPend=false;outSongDelay=0;outSongFlag=1;}
+    if(!SND.music||practiceMode||gameOver){outSongPend=false;outSongDelay=0;outSongFlag=1;}
     else{outSongDelay=Math.max(0,outSongDelay-dt);if(outSongDelay<=0&&outSongFlag===1)musicFlushOut();}
   }
   // 目前應播放哪一首：只在投球循環中更新（打出去後跑壘期間維持原狀，避免跑者移動時來回切換）
-  const live=!practiceMode&&!gameOver&&soundOn&&SND.music&&mode==='bat';
+  const live=!practiceMode&&!gameOver&&SND.music&&mode==='bat';
   if(!live||!['ready','windup','pitch','flight','result'].includes(st))musicWant='none';
   else if(st==='ready'||st==='windup'||st==='pitch')musicWant=(bases[1]||bases[2])?'chance':'cheer';
   else if(musicWant==='none')musicWant=(bases[1]||bases[2])?'chance':'cheer';
   musicRetryT-=dt;
-  {const o=musicTracks.out;if(o&&!o.bad&&!o.el.paused&&(!soundOn||!SND.music||practiceMode||gameOver||st==='title')){try{o.el.pause();o.el.currentTime=0;}catch{}}}
+  {const o=musicTracks.out;if(o&&!o.bad&&!o.el.paused&&(!SND.music||practiceMode||gameOver||st==='title')){try{o.el.pause();o.el.currentTime=0;}catch{}}}
   MUSIC.kinds.forEach(k=>{const t=musicTracks[k];if(!t||t.bad)return;
     const tgt=musicWant===k?MUSIC.vol:0,rate=MUSIC.vol/(tgt>t.vol?MUSIC.fadeIn:MUSIC.fadeOut)*dt;
     t.vol=t.vol<tgt?Math.min(tgt,t.vol+rate):Math.max(tgt,t.vol-rate);
@@ -4739,7 +4760,7 @@ function crowdSetup(){
       el.addEventListener('error',()=>{t.bad=true;console.warn('觀眾音效檔無法載入，略過：'+url);});el.src=url;return t;});});
 }
 function crowd(kind){   // 事件發生時呼叫；只登記，稍後由 crowdTick 合併後播放
-  if(practiceMode||!soundOn||!SND.crowd||!CROWD.pri[kind])return;
+  if(practiceMode||!SND.crowd||!CROWD.pri[kind])return;
   if(kind==='strikeout'){if(mode!=='pit')return;}   // 三振：只有主場投手三振對手（主場守備）才算
   else if(kind!=='win'&&mode!=='bat')return;        // 其餘尖叫聲只在主場（玩家隊）打擊時才算；贏球是整場結束的事件，不受此限
   if(!crowdPend||CROWD.pri[kind]>CROWD.pri[crowdPend.kind])crowdPend={kind,t:CROWD.merge};
@@ -4747,7 +4768,7 @@ function crowd(kind){   // 事件發生時呼叫；只登記，稍後由 crowdTi
 function crowdTick(dt){
   if(!crowdPend&&!crowdCur)return;
   if(crowdCur&&(crowdCur.t.el.ended||crowdCur.t.el.paused))crowdCur=null;
-  if(crowdCur&&(!soundOn||!SND.crowd)){try{crowdCur.t.el.pause();}catch{}crowdCur=null;crowdPend=null;return;}
+  if(crowdCur&&(!SND.crowd)){try{crowdCur.t.el.pause();}catch{}crowdCur=null;crowdPend=null;return;}
   if(!crowdPend)return;
   crowdPend.t-=dt;if(crowdPend.t>0)return;
   const kind=crowdPend.kind;crowdPend=null;
@@ -4793,7 +4814,7 @@ function stadiumAudioOpenEnd(){SA.openWant=false;}                        // 第
 function stadiumAudioStop(){SA.openWant=false;SA.ambWant=false;}          // 離開比賽
 function saPlay(el){try{const p=el.play();if(p&&p.catch)p.catch(e=>{if(e&&e.name!=='NotAllowedError'&&e.name!=='AbortError')el._bad=true;});}catch{}}
 function stadiumAudioTick(dt){
-  const inGame=!practiceMode&&!gameOver&&st!=='title'&&soundOn;
+  const inGame=!practiceMode&&!gameOver&&st!=='title';
   SA.retryT-=dt;const retry=SA.retryT<=0;if(retry)SA.retryT=1;   // 瀏覽器需先有使用者操作才能播放；被擋就每秒重試
   // 開場音樂
   const o=SA.open;
@@ -4833,11 +4854,11 @@ function stadiumAudioTick(dt){
 }
 
 // ================= audio =================
-let AC=null,soundOn=true;
-const SND={music:true,sfx:true,crowd:true};   // 設定內的三類開關：音樂（應援曲）／音效（揮棒擊球）／觀眾音效（尖叫聲、歡呼）；soundOn 仍是 HUD 的總靜音
+let AC=null;
+const SND={music:true,sfx:true,crowd:true};   // 設定內的三類開關：音樂（應援曲）／音效（揮棒擊球）／觀眾音效（尖叫聲、歡呼）
 function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch{AC=null;}}
   if(AC&&AC.state==='suspended'){try{AC.resume();}catch{}}return AC;}
-function burst(o){if(!soundOn||!SND[o.cat||'sfx'])return;const a=ac();if(!a)return;
+function burst(o){if(!SND[o.cat||'sfx'])return;const a=ac();if(!a)return;
   const n=Math.max(1,a.sampleRate*o.dur|0),buf=a.createBuffer(1,n,a.sampleRate),d=buf.getChannelData(0);
   for(let i=0;i<n;i++)d[i]=Math.random()*2-1;
   const s=a.createBufferSource();s.buffer=buf;
@@ -4845,7 +4866,7 @@ function burst(o){if(!soundOn||!SND[o.cat||'sfx'])return;const a=ac();if(!a)retu
   const g=a.createGain(),t=a.currentTime;
   g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(o.g,t+(o.att||0.004));g.gain.exponentialRampToValueAtTime(0.0001,t+o.dur);
   s.connect(f);f.connect(g);g.connect(a.destination);s.start(t);}
-function tone(f0,f1,dur,g0){if(!soundOn||!SND.sfx)return;const a=ac();if(!a)return;
+function tone(f0,f1,dur,g0){if(!SND.sfx)return;const a=ac();if(!a)return;
   const o=a.createOscillator(),g=a.createGain(),t=a.currentTime;
   o.type='sine';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);
   g.gain.setValueAtTime(g0,t);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
@@ -5066,7 +5087,8 @@ function lampsAfterOut(sub,{batterOut=false,strikeout=false,noWildPitch=false}={
   if(outs>=3){outs=0;swPend=true;note='三出局，攻守交換';}
   hud2();return [sub,note].filter(Boolean).join(' ・ ');
 }
-function updateActivePlayerStats(){const b=currentBatter(),p=currentPitcher(),bs=b.batting,ps=p.pitching;const be=$('activeBatterStats'),pe=$('activePitcherStats');if(be)be.innerHTML='<span>AVG '+statAVG(bs)+'</span><span>RBI '+bs.RBI+'</span><span>HR '+bs.HR+'</span>';if(pe)pe.innerHTML='<span>STA '+Math.round(pitcherStam(p)*100)+'%</span><span>PC '+(ps.pitches||0)+'</span><span>ERA '+statERA(ps)+'</span><span>SO '+ps.SO+'</span>';}
+function updateActivePlayerStats(){const b=currentBatter(),p=currentPitcher(),bs=b.batting,ps=p.pitching;const be=$('activeBatterStats'),pe=$('activePitcherStats');const ae=$('activeBatterAB');if(ae){const L=b._ab||[],sig=L.join();if(ae._sig!==sig){ae._sig=sig;ae.innerHTML=L.map(t=>'<span class="'+('一安二安三安全壘'.includes(t)?'h':t==='四壞'||t==='觸身'||t==='失誤'||t==='野選'?'b':'o')+'">'+t+'</span>').join('');}}
+  if(be)be.innerHTML='<span>AVG '+statAVG(bs)+'</span><span>RBI '+bs.RBI+'</span><span>HR '+bs.HR+'</span>';if(pe)pe.innerHTML='<span>STA '+Math.round(pitcherStam(p)*100)+'%</span><span>PC '+(ps.pitches||0)+'</span><span>ERA '+statERA(ps)+'</span><span>SO '+ps.SO+'</span>';}
 function hud2(){syncPitchMenu();const b=currentBatter(),p=currentPitcher();const homeTeam=teamConfig.teams.find(t=>t.id===chosenHomeId)||{},awayTeam=teamConfig.teams.find(t=>t.id===chosenAwayId)||{};if($('homeTeamLabel'))$('homeTeamLabel').textContent=homeTeam.name||'RED';if($('awayTeamLabel'))$('awayTeamLabel').textContent=awayTeam.name||'BLUE';[['homeScoreLogo',homeTeam],['awayScoreLogo',awayTeam]].forEach(([id,t])=>{const img=$(id),src=t&&t.logo?String(t.logo).trim():'';if(!img)return;if(src){if(img.dataset.src!==src){img.dataset.src=src;img.onload=()=>{img.hidden=false;};img.onerror=()=>{img.hidden=true;};img.src=src;}if(img.complete&&img.naturalWidth)img.hidden=false;}else{img.removeAttribute('src');img.dataset.src='';img.hidden=true;}});$('inn').textContent='第'+inn+'局';const attackSlot=mode==='bat'?'RED':'BLUE',attackId=attackSlot==='RED'?chosenHomeId:chosenAwayId,attackName=(teamConfig.teams.find(t=>t.id===attackId)||{}).name||attackSlot;if($('attackTop'))$('attackTop').textContent='第 '+inn+' 局　｜　'+attackName+' 進攻';$('scMe').textContent=score.me;$('scCpu').textContent=score.cpu;$('activeBatterNumber').textContent=String(b.number);$('activeBatterName').textContent=b.name+'（'+batLabel(b)+'）';$('activePitcherNumber').textContent=String(p.number);$('activePitcherName').textContent=p.name+'（'+throwLabel(p)+'）';$('activePlayerInfo').hidden=(st==='title'||lockerRoomView);updateActivePlayerStats();syncBaseRunners();updateLockerRoster();}
 function applyTeamColors(){
   const batC=mode==='bat'?COL_RED:COL_BLUE,fldC=mode==='bat'?COL_BLUE:COL_RED;
@@ -5106,8 +5128,8 @@ function switchSides(){clearExiters();bases=[0,0,0];baseP=[null,null,null];balls
   setMode();hud();
   if(defTouched){defApplyHomes();defenders.forEach(d=>{d.root.position.copyFrom(d.home);d.root.rotation.y=Math.atan2(-d.home.x,-d.home.z);});}
   hideInningScoreFlash();}
-function endGame(){st='title';chase=false;hideInningScoreFlash();hideBanner();if(lgGame){lgAfterGame();return;}showModeSelection();hud();}
-$('snd').addEventListener('click',e=>{soundOn=!soundOn;e.currentTarget.textContent=soundOn?'音效':'靜音';if(soundOn)ac();});
+function endGame(){st='title';chase=false;hideInningScoreFlash();hideBanner();gbShow(()=>{if(lgGame){lgAfterGame();return;}showModeSelection();hud();});}   // 先顯示賽後成績單，按「確定」才進入原本的賽後流程
+
 
 // ================= pitching =================
 const W=1.25,CATCH_Z=-1.3,STEP_X=-1.35,STEP_Z=0.05;
@@ -6872,9 +6894,9 @@ function finalizePlay(){
   const runsScored=playRuns||0;
   if(!b.out&&playOuts===0&&!errJ.batterOnErr){const kind=bb>=4?'HR':bb===3?'3B':bb===2?'2B':'1B';addBatEvent(kind,{rbi:runsScored});addPitcherHit(kind);}
   else if(b.out){const sacFly=b.how==='fly'&&runsScored>0,gRbi=(b.how==='force'||b.how==='tag')&&playOuts<2;   // 犧牲飛球與非雙殺的滾地出局都算打點
-    addBatEvent(sacFly?'SF':'OUT',{rbi:(sacFly||gRbi)?runsScored:0});}
+    addBatEvent(sacFly?'SF':'OUT',{rbi:(sacFly||gRbi)?runsScored:0,label:playOuts>=3?'三殺':playOuts===2?'雙殺':sacFly?'犧飛':b.how==='fly'?'高飛':b.how==='infieldfly'?'內飛':b.how==='tag'?'觸殺':'封殺'});}
   else { // 打者因野手選擇或失誤上壘：仍要結束打席並記 AB，但不記安打
-    addBatEvent('OUT',{rbi:errJ.batterOnErr?0:runsScored});   // 野手選擇有打點；失誤上壘沒有
+    addBatEvent('OUT',{rbi:errJ.batterOnErr?0:runsScored,label:errJ.batterOnErr?'失誤':'野選'});   // 野手選擇有打點；失誤上壘沒有
   }
   closeFieldingLifecycle();
   // 打者出局的音樂事件已在 putOut() 確認出局時建立；此處只結算 play，避免延後重設播放時機。
@@ -8315,7 +8337,7 @@ function checkDefenderContact(frameDt=1/60){
       runners.forEach(q=>{q.fo=true;onCatchRunner(q);});
     }
     beginDefensiveThrow(d,contact&&contact.point);assignCovers(d);
-    if(FL.res.foul&&fly&&!FL.shown){FL.shown=true;fCredit(d,'PO');balls=0;strikes=0;sfx.glove();const fsub=lampsAfterOut('',{batterOut:true});addBatEvent('OUT');announce('界外接殺','bad',fsub);hud();}
+    if(FL.res.foul&&fly&&!FL.shown){FL.shown=true;fCredit(d,'PO');balls=0;strikes=0;sfx.glove();const fsub=lampsAfterOut('',{batterOut:true});addBatEvent('OUT',{label:'高飛'});announce('界外接殺','bad',fsub);hud();}
     if(!FL.shown){FL.shown=true;showFlightResult();}
     if(st==='flight'){st='result';stT=0;}
     return true;
@@ -8364,7 +8386,7 @@ function pickFemaleZhVoice(){
 }
 const ZH_NUM=['零','一','二','三','四','五','六','七','八','九'];
 function announceBatter(){
-  if(practiceMode||gameOver||TM.testBall||st==='title'||!soundOn||!SND.sfx)return;
+  if(practiceMode||gameOver||TM.testBall||st==='title'||!SND.sfx)return;
   const bt=battingTeam(),idx=(activeBatterIndex[bt]||0)%9,b=currentBatter();if(!b)return;
   const key=inn+'|'+bt+'|'+idx+'|'+(b.id||b.name);
   if(key===lastBatKey)return;lastBatKey=key;
@@ -8383,7 +8405,7 @@ function pickFemaleEnVoice(){
   return femaleEnVoice;
 }
 function speakZh(text,rate,onend,delay){   // 中文模式：中文女聲優先（沒有中文語音就不播）；英文模式：英文女聲，文字先經 TR 翻成英文
-  if(!soundOn||!SND.sfx||!text)return;
+  if(!SND.sfx||!text)return;
   const go=()=>{try{const ss=window.speechSynthesis;if(!ss)return;
     const en=LANG==='en',v=en?pickFemaleEnVoice():pickFemaleZhVoice();if(!v)return;
     const t=new SpeechSynthesisUtterance(en?TR(text):text);t.voice=v;t.lang=v.lang;
@@ -8404,7 +8426,7 @@ function pickMaleVoice(){
 }
 try{if(window.speechSynthesis)speechSynthesis.onvoiceschanged=()=>{maleVoice=null;femaleZhVoice=null;femaleEnVoice=null;pickMaleVoice();pickFemaleZhVoice();pickFemaleEnVoice();};}catch{}
 function umpSound(kind){
-  if(!soundOn||!SND.sfx)return;
+  if(!SND.sfx)return;
   try{const ss=window.speechSynthesis;if(ss){ss.cancel();const t=new SpeechSynthesisUtterance(kind==='safe'?'Safe!':kind==='out'?'Out!':kind==='K'?'Strike out!':'Strike!');const mv=pickMaleVoice();if(mv){t.voice=mv;t.lang=mv.lang;}else t.lang='en-US';t.rate=1.05;t.pitch=0.6;t.volume=0.9;ss.speak(t);}}catch{}
 }
 function umpGesture(u,type,dur){u.gest={type,t:0,dur:dur||1.5};}
@@ -8847,7 +8869,7 @@ function pkLayout(){
   PK_BASES.forEach(i=>{if(!pkVis[i])return;const r=pkEl[i].getBoundingClientRect();if(!r.width)return;
     pkCams[i].viewport=new BABYLON.Viewport((r.left-cr.left)/cr.width,1-(r.bottom-cr.top)/cr.height,r.width/cr.width,r.height/cr.height);});
 }
-// 打擊視角：積極盜壘／盜壘按鈕。一、三壘＝小視窗內；二壘＝畫面上二壘跑者正上方、水平一排（都掛在 #hud 內，與小視窗同一座標系）。
+// 打擊視角：積極盜壘／盜壘按鈕，一、二、三壘都在各自的小視窗內。
 // 積極盜壘：投手一有動作（投球或牽制）就跑，起跑早、成功率高，但遇到牽制容易出局；盜壘：等投手向前跨步才跑。再按一次同按鈕＝取消。
 const pkGui={};
 function buildRcGui(i,cls){
@@ -8906,7 +8928,7 @@ function pkFrame(){
   const batCtx=!hbpView&&!chase&&!lockerRoomView&&!chg&&!walkCam&&el.start.hidden;
   let ch=false;
   PK_BASES.forEach(i=>{
-    // 投手畫面固定顯示一、二、三壘牽制視窗；打者畫面只顯示一、三壘，但只要壘上有跑者就持續顯示。
+    // 投手畫面固定顯示一、二、三壘牽制視窗；打者畫面只要該壘有跑者就持續顯示。
     const hasRunner=!!bases[i]||!!pkKeep[i]||!!(pk&&pk.i===i);
     const v=mode==='pit'?(pitCtx):(batCtx&&i!==1&&hasRunner);
     if(v!==pkVis[i]){pkVis[i]=v;pkEl[i].hidden=!v;ch=true;if(!v&&pkHover===i)pkHover=-1;}
@@ -9503,12 +9525,15 @@ function updateAim(px,py){
 //   ‧ 守備進行中（場內球、暴投、盜壘、牽制、界外接殺）屬於必要畫面，不能跳過
 function trySkipScreen(){
   if(practiceMode||tm('busy')||chg||gameOver||runnerTacticsOpen||subOpen||defOpen||st==='title'||st==='change')return false;
-  if(st==='flight'){   // 界外球飛行中結果未定（可能被接殺）：落地且結果已結算（FL.shown）之後才能跳過
+  if(st==='flight'){   // 界外球飛行中結果未定（可能被接殺）：落地／撞到固體之後才能跳過
     // 結果已定、可以跳過的時刻：落地、或撞到觀眾席／記分板／看台／牆等非地面物體（hitT／structureContact／越界 cross；撞到之後即使在空中也不可能被接殺）、或軌跡已結束。
     // 原本只認「落地」，界外球先撞到觀眾席等物體時 sim.landed 可能是空的，會一直不能跳過。
     const sm=FL&&FL.sim,settled=!!sm&&((sm.landed&&ft>=sm.landed.t)||(sm.structureContact&&ft>=sm.structureContact.t)||(sm.cross&&sm.cross.t!=null&&ft>=sm.cross.t)||(sm.hitT!=null&&ft>=sm.hitT)||ft>=sm.tEnd);
-    const landed=FL&&FL.res&&FL.res.foul&&!FL.wp&&!FL.steal&&FL.shown&&settled&&!flyOut&&!ballCaughtBy;
+    // 不必等結果文字（FL.shown）：球撞到看台／牆之後，結果可能要到後面才宣告，原本會因此一直不能跳過；沒宣告就先補宣告（好球數照加）再跳。
+    // 也不必等野手撿到球（ballCaughtBy）：界外球落地後只剩野手撿球，與結果無關。
+    const landed=FL&&FL.res&&FL.res.foul&&!FL.wp&&!FL.steal&&settled&&!flyOut;
     if(!landed)return false;
+    if(!FL.shown){FL.shown=true;showFlightResult();}
     enterReady();return true;
   }
   if(st!=='result')return false;
@@ -9562,7 +9587,7 @@ function rhFind(){
   for(const e of rhRunners()){
     const pos=e.actor.root.position,cams=[];
     if(e.i>=0&&subRects[e.i]&&subRects[e.i].width&&inR(subRects[e.i],rhX,rhY))cams.push(pkCams[e.i]);   // 子視窗內：用子視窗的攝影機
-    else if(!overSub)cams.push(scene.activeCamera||cam);
+    else if(!overSub)cams.push(cam);   // 主鏡頭固定用 cam：多 viewport 時 scene.activeCamera 會是最後渲染的子視窗鏡頭，二壘跑者（沒有子視窗）就永遠抓不到
     for(const c of cams){
       const b=rhBox(c,pos,cr,w,h);if(!b||rhX<b.l||rhX>b.r||rhY<b.t||rhY>b.b)continue;
       const d=Math.hypot(rhX-(b.l+b.r)/2,rhY-(b.t+b.b)/2);if(d<bd){bd=d;best=e;}
@@ -9752,11 +9777,11 @@ function lgAddStat(id,kind,o){
 function lgDecide(ev){
   let a=0,b=0,cand=null;
   for(const e of ev){
-    const pl=a>b?0:b>a?1:-1;if(e.s===0)a+=e.n;else b+=e.n;const lead=a>b?0:b>a?1:-1;
-    if(lead===-1)cand=null;else if(lead!==pl||!cand)cand={s:lead,wp:e.wp,lp:e.lp};
+    const before=(e.s===0?a-b:b-a),pl=a>b?0:b>a?1:-1;if(e.s===0)a+=e.n;else b+=e.n;const lead=a>b?0:b>a?1:-1;
+    if(lead===-1)cand=null;else if(lead!==pl||!cand)cand={s:lead,wp:e.wp,lp:e.lp,wpo:e.wpo,lpo:e.lpo,ev:e,k:Math.max(0,-before)};   // k＝該事件中第幾分是超前分
   }
   const w=a>b?0:b>a?1:-1;if(w<0)return null;
-  return cand&&cand.s===w?{winner:w,wp:cand.wp,lp:cand.lp}:{winner:w,wp:null,lp:null};
+  return cand&&cand.s===w?{winner:w,wp:cand.wp,lp:cand.lp,wpo:cand.wpo,lpo:cand.lpo,ev:cand.ev,k:cand.k}:{winner:w,wp:null,lp:null};
 }
 // ================= 電腦模擬（逐打席；用球員實際能力值）=================
 function lgCtx(teamId){
@@ -10215,7 +10240,7 @@ function lgLaunch(g,info){   // 例行賽與世界賽共用的開賽流程（inf
 function lgFindStadium(t){const v=t&&t.stadium?String(t.stadium).trim():'';if(!v||!stadiumList.length)return null;return stadiumList.find(x=>x.id===v)||stadiumList.find(x=>x.name===v)||stadiumList.find(x=>x.name.includes(v)||v.includes(x.name))||null;}
 const LG_BK=['G','PA','AB','H','twoB','threeB','HR','RBI','R','BB','SO','HBP','SF','SB','CS'],LG_PK=['G','GS','IPouts','H','R','ER','BB','SO','HR','HBP','pitches'],LG_FK=['G','PO','A','E','DP','SBA','CSc'];
 function lgOnStart(){
-  [rosters.RED,rosters.BLUE].forEach(L=>L.forEach(p=>{p._gB=p._gP=p._gF=0;p._gpit=0;}));
+  [rosters.RED,rosters.BLUE].forEach(L=>L.forEach(p=>{p._gB=p._gP=p._gF=0;p._gpit=0;p._ab=[];}));
   if(lgGame){
     INNINGS=LG.innings;if(stadiumChosenId)LG.stadium=stadiumChosenId;
     LG.snap=JSON.parse(JSON.stringify(LG.pl));LG.snapH=JSON.parse(JSON.stringify({cd:LG.cd,inj:LG.inj}));lgSyncLast='';   // 開賽前的成績備份：中途離開（不打完）時還原，避免同一天重打造成重複計算
@@ -10228,6 +10253,7 @@ function lgOnStart(){
     lgSave();
   }
   [rosters.RED,rosters.BLUE].forEach(L=>L.forEach(p=>{if(p.pos&&p.pos!=='替補'&&p.fielding){p._gF=1;p.fielding.G++;}}));   // 先發守備員：出賽一場
+  gbReset();
 }
 let lgSyncT=null,lgSyncLast='';
 function lgSyncSoon(){if(!lgGame||lgSyncT)return;lgSyncT=setTimeout(()=>{lgSyncT=null;lgSyncNow();},0);}
@@ -10246,12 +10272,105 @@ function lgSyncNow(){
 }
 function lgAbort(){if(lgGame&&LG&&LG.snap){LG.pl=LG.snap;LG.snap=null;if(LG.snapH){LG.cd=LG.snapH.cd;LG.inj=LG.snapH.inj;LG.snapH=null;}lgSave();}}   // 中途離開：還原開賽前成績
 // 引擎回報得分事件（單場流程 addRuns／cancelPlayRuns 呼叫）
-function lgOnRuns(n){
-  if(!lgGame)return;const batRed=mode==='bat',w=rosters[batRed?'RED':'BLUE'].find(p=>p.pos==='投手'),l=currentPitcher();
-  lgRunEvents.push({s:(batRed===homeMe)?1:0,n,wp:w&&w.cfgId,lp:l&&l.cfgId});
+function lgOnRuns(n){   // 每場比賽（聯賽或單場）都記：得分事件，賽後成績單用它判定勝敗投與勝利打點
+  const batRed=mode==='bat',w=rosters[batRed?'RED':'BLUE'].find(p=>p.pos==='投手'),l=currentPitcher();
+  lgRunEvents.push({s:(batRed===homeMe)?1:0,n,wp:w&&w.cfgId,lp:l&&l.cfgId,wpo:w,lpo:l});
 }
 function lgCancelRuns(k){while(k>0&&lgRunEvents.length){const e=lgRunEvents[lgRunEvents.length-1],d=Math.min(k,e.n);e.n-=d;k-=d;if(e.n<=0)lgRunEvents.pop();}}
-function lgOnPitch(){if(!lgGame)return;const t=pitchingTeam();if(!lgGS[t]){const p=currentPitcher();lgGS[t]=p&&p.cfgId;if(p)p.pitching.GS=(p.pitching.GS||0)+1;}}
+function lgOnPitch(){const t=pitchingTeam();gbPitch(t);if(!lgGame)return;if(!lgGS[t]){const p=currentPitcher();lgGS[t]=p&&p.cfgId;if(p)p.pitching.GS=(p.pitching.GS||0)+1;}}
+// ================= 賽後成績單：該場出賽球員的個人成績、勝敗投／救援／中繼、全壘打、勝利打點 =================
+// 成績＝比賽結束時的累積成績減去開賽時的備份（聯賽的累積成績載入後才備份，所以只算這一場）
+const GB={app:{RED:[],BLUE:[]},seq:0,mark:0};
+const GB_BK=['AB','H','twoB','threeB','HR','RBI','R','BB','SO','HBP','SF','SB','CS'],GB_PK=['IPouts','H','R','ER','BB','SO','HR','HBP','pitches'],GB_FK=['E','DP'];
+function gbReset(){
+  GB.app={RED:[],BLUE:[]};GB.seq=0;GB.mark=0;lgRunEvents=[];
+  [rosters.RED,rosters.BLUE].forEach(L=>L.forEach(p=>{p._b0=Object.assign({},p.batting);p._p0=Object.assign({},p.pitching);p._f0=Object.assign({},p.fielding);p._app=0;p._slot=-1;p._posSeen=(p.pos&&p.pos!=='替補')?p.pos:'';}));
+  gbMark();
+}
+const gbLead=t=>t==='RED'?score.me-score.cpu:score.cpu-score.me;
+function gbMark(){   // 記錄目前在場的人：打序、守位、登場順序（被換下的球員之後仍能查到）
+  ['RED','BLUE'].forEach(t=>{for(let i=0;i<9;i++){const q=lineupAt(t,i);if(!q)continue;q._slot=i;if(!q._app)q._app=++GB.seq;if(q.pos&&q.pos!=='替補')q._posSeen=q.pos;}});
+}
+function gbPitch(t){   // 每球：記錄投手登場時的比分差、之後是否守住領先（救援／中繼用）
+  const pl=currentPitcher();if(!pl)return;const L=GB.app[t],lead=gbLead(t);let r=L[L.length-1];
+  if(r&&r.p!==pl){r.last=lead;r.min=Math.min(r.min,lead);r=null;}
+  if(!r){r={p:pl,ent:lead,min:lead,last:lead};L.push(r);gbMark();}else{r.last=lead;if(lead<r.min)r.min=lead;}
+}
+function gbRbi(p,n){   // 把打點記到這個打席產生的得分事件上（勝利打點用）
+  let rem=n;for(let i=lgRunEvents.length-1;i>=GB.mark&&rem>0;i--){const e=lgRunEvents[i],c=Math.min(rem,e.n-(e.rbiN||0));if(c>0){e.rbiBy=e.rbiBy||p;e.rbiN=(e.rbiN||0)+c;rem-=c;}}
+  GB.mark=lgRunEvents.length;
+}
+const gbDiff=(now,old,keys)=>{const o={};keys.forEach(k=>{o[k]=(now[k]||0)-((old&&old[k])||0);});return o;};
+function gbBuild(){
+  gbMark();['RED','BLUE'].forEach(t=>{const L=GB.app[t],r=L[L.length-1];if(r){const l=gbLead(t);r.last=l;r.min=Math.min(r.min,l);}});
+  const side=t=>{
+    const bats=rosters[t].filter(p=>p._app).sort((x,y)=>(x._slot-y._slot)||(x._app-y._app));
+    const rows=bats.map((p,i)=>{const d=gbDiff(p.batting,p._b0,GB_BK),first=!bats.some((q,j)=>j<i&&q._slot===p._slot);return {p,d,sub:!first,pos:p._posSeen||p.pos||'',avg:p.batting.AB>0?p.batting.H/p.batting.AB:null,fd:gbDiff(p.fielding,p._f0,GB_FK)};});
+    const pit=GB.app[t].map(r=>({r,p:r.p,d:gbDiff(r.p.pitching,r.p._p0,GB_PK)}));
+    return {t,rows,pit};
+  };
+  const S={RED:side('RED'),BLUE:side('BLUE')},dec=lgDecide(lgRunEvents),out=(x)=>x.d.IPouts;
+  const D={wp:null,lp:null,sv:null,hold:[],rbi:null,winner:dec?(dec.winner===(homeMe?1:0)?'RED':'BLUE'):null};
+  if(dec){
+    // 勝敗投：先發要投滿 5 局（依局數縮放）才能拿勝投，投不夠就改給接手後投最多的救援投手
+    const wt=D.winner,lt=wt==='RED'?'BLUE':'RED',W=S[wt].pit,need=3*Math.min(5,Math.ceil(INNINGS*5/9));
+    let wp=dec.wpo&&W.find(x=>x.p===dec.wpo);
+    if(wp&&W.indexOf(wp)===0&&W.length>1&&out(wp)<need){const rel=W.slice(1).reduce((b,x)=>(!b||out(x)>out(b))?x:b,null);if(rel)wp=rel;}
+    D.wp=wp||W[0]||null;D.lp=(dec.lpo&&S[lt].pit.find(x=>x.p===dec.lpo))||S[lt].pit[0]||null;
+    const last=W[W.length-1];
+    if(last&&last!==D.wp&&W.length>1&&last.r.ent>0&&last.r.ent<=3&&last.r.min>0&&out(last)>=3)D.sv=last;
+    if(dec.ev&&dec.ev.rbiBy&&dec.k<(dec.ev.rbiN||0))D.rbi=dec.ev.rbiBy;
+  }
+  ['RED','BLUE'].forEach(t=>{S[t].pit.forEach((x,i)=>{if(i>0&&i<S[t].pit.length-1&&x!==D.wp&&x!==D.lp&&x!==D.sv&&x.r.ent>0&&x.r.ent<=3&&x.r.last>0&&out(x)>=1)D.hold.push(x);});});
+  return {S,D};
+}
+const gbName=p=>pgEsc(p.name||'—'),gbIP=o=>Math.floor(o/3)+(o%3?'<sup>'+(o%3)+'/3</sup>':'');
+const gbAvg=v=>v==null?'—':(v>=1?'1.000':v.toFixed(3).slice(1));
+function gbTeamHtml(sd,name,D){
+  const tag=x=>x===D.wp?'<i class="w">勝</i>':x===D.lp?'<i class="l">敗</i>':x===D.sv?'<i class="s">救</i>':D.hold.includes(x)?'<i class="h">中</i>':'';
+  const tot={AB:0,R:0,H:0,RBI:0,HR:0,BB:0,SO:0,SB:0};
+  const br=sd.rows.map(r=>{const d=r.d;Object.keys(tot).forEach(k=>{tot[k]+=k==='BB'?d.BB+d.HBP:d[k];});
+    return '<tr class="'+(r.sub?'sub':'')+'"><td class="l">'+(r.sub?'<span class="gi">↳</span>':'')+gbName(r.p)+(D.rbi===r.p?' <i class="s">勝利打點</i>':'')+'</td><td>'+pgEsc(r.pos)+'</td><td>'+d.AB+'</td><td>'+d.R+'</td><td>'+d.H+'</td><td>'+d.RBI+'</td><td>'+d.HR+'</td><td>'+(d.BB+d.HBP)+'</td><td>'+d.SO+'</td><td>'+d.SB+'</td><td>'+gbAvg(r.avg)+'</td></tr>';}).join('');
+  const to={IPouts:0,H:0,R:0,ER:0,BB:0,SO:0,HR:0,pitches:0};
+  const pr=sd.pit.map(x=>{const d=x.d;Object.keys(to).forEach(k=>{to[k]+=k==='BB'?d.BB+d.HBP:d[k];});const pg=x.p.pitching,era=pg.IPouts>0?(pg.ER*27/pg.IPouts):null;
+    return '<tr><td class="l">'+gbName(x.p)+tag(x)+'</td><td>'+gbIP(d.IPouts)+'</td><td>'+d.pitches+'</td><td>'+d.H+'</td><td>'+d.R+'</td><td>'+d.ER+'</td><td>'+(d.BB+d.HBP)+'</td><td>'+d.SO+'</td><td>'+d.HR+'</td><td>'+(era==null?'—':era.toFixed(2))+'</td></tr>';}).join('');
+  return '<section class="gb-team"><h4>'+pgEsc(name)+'</h4><div class="gb-sc"><table class="gb-t"><thead><tr><th class="l">打者</th><th>守位</th><th>打數</th><th>得分</th><th>安打</th><th>打點</th><th>全壘打</th><th>四死球</th><th>三振</th><th>盜壘</th><th>打擊率</th></tr></thead><tbody>'+br
+    +'<tr class="tot"><td class="l">合計</td><td></td><td>'+tot.AB+'</td><td>'+tot.R+'</td><td>'+tot.H+'</td><td>'+tot.RBI+'</td><td>'+tot.HR+'</td><td>'+tot.BB+'</td><td>'+tot.SO+'</td><td>'+tot.SB+'</td><td></td></tr></tbody></table></div>'
+    +'<div class="gb-sc"><table class="gb-t"><thead><tr><th class="l">投手</th><th>投球局數</th><th>投球數</th><th>被安打</th><th>失分</th><th>責失</th><th>四死球</th><th>三振</th><th>被全壘打</th><th>防禦率</th></tr></thead><tbody>'+pr
+    +'<tr class="tot"><td class="l">合計</td><td>'+gbIP(to.IPouts)+'</td><td>'+to.pitches+'</td><td>'+to.H+'</td><td>'+to.R+'</td><td>'+to.ER+'</td><td>'+to.BB+'</td><td>'+to.SO+'</td><td>'+to.HR+'</td><td></td></tr></tbody></table></div></section>';
+}
+function gbHtml(){
+  const {S,D}=gbBuild(),nameMe=teamNameOf(chosenHomeId),nameOp=teamNameOf(chosenAwayId),nm={RED:nameMe,BLUE:nameOp};
+  const N=Math.max(INNINGS,inn),top=homeMe?['cpu','BLUE',nameOp]:['me','RED',nameMe],bot=homeMe?['me','RED',nameMe]:['cpu','BLUE',nameOp];
+  const ls=r=>{let c='';for(let i=0;i<N;i++){const v=LS[r[0]][i]||0;c+=i>=inn?'<td>–</td>':(r===bot&&i===inn-1&&!v&&score[bot[0]]>score[top[0]])?'<td>X</td>':'<td>'+v+'</td>';}
+    return '<tr><td class="l">'+pgEsc(r[2])+'</td>'+c+'<td class="tot">'+score[r[0]]+'</td><td>'+TH[r[0]]+'</td><td>'+TE[r[0]]+'</td></tr>';};
+  let head='<tr><th class="l"></th>';for(let i=0;i<N;i++)head+='<th>'+(i+1)+'</th>';head+='<th>R</th><th>H</th><th>E</th></tr>';
+  // 特殊事蹟
+  const ev=[],list=(arr)=>arr.join('、');
+  const mk=(lbl,txt)=>txt?'<li><b>'+lbl+'</b>'+txt+'</li>':'';
+  const pn=(x,t)=>x?gbName(x.p)+'（'+pgEsc(nm[t])+'）':'';
+  const wt=D.winner,lt=wt==='RED'?'BLUE':'RED';
+  ev.push(mk('勝投',wt&&D.wp?pn(D.wp,wt):''),mk('敗投',lt&&D.lp?pn(D.lp,lt):''),mk('救援成功',wt&&D.sv?pn(D.sv,wt):''));
+  const holds=D.hold.map(x=>gbName(x.p)+'（'+pgEsc(nm[S.RED.pit.includes(x)?'RED':'BLUE'])+'）');ev.push(mk('中繼成功',list(holds)));
+  if(D.rbi)ev.push(mk('勝利打點',gbName(D.rbi)+'（'+pgEsc(nm[rosters.BLUE.includes(D.rbi)?'BLUE':'RED'])+'）'));
+  const per=(key,lbl)=>{const a=[];['RED','BLUE'].forEach(t=>S[t].rows.forEach(r=>{const n=r.d[key];if(n>0)a.push(gbName(r.p)+(n>1?' ×'+n:'')+'（'+pgEsc(nm[t])+'）');}));ev.push(mk(lbl,list(a)));};
+  per('HR','全壘打');
+  ['RED','BLUE'].forEach(t=>{const P=S[t].pit;if(P.length===1&&P[0].d.IPouts>0){const o=t==='RED'?'cpu':'me',won=score[t==='RED'?'me':'cpu']>score[o];if(won)ev.push(mk(score[o]===0?'完封勝':'完投勝',gbName(P[0].p)+'（'+pgEsc(nm[t])+'）'));}});
+  const res=score.me>score.cpu?'勝':score.me<score.cpu?'敗':'和局';
+  return '<div class="gb-card"><h3>比賽結束<small>'+pgEsc(nameMe)+'　'+score.me+' : '+score.cpu+'　'+pgEsc(nameOp)+'（'+res+'）</small></h3>'
+   +'<div class="gb-sc"><table class="gb-t gb-ls"><thead>'+head+'</thead><tbody>'+ls(top)+ls(bot)+'</tbody></table></div>'
+   +'<h4>特殊事蹟</h4><ul class="gb-ev">'+(ev.join('')||'<li>無</li>')+'</ul>'
+   +gbTeamHtml(S.RED,nameMe,D)+gbTeamHtml(S.BLUE,nameOp,D)
+   +'<div class="gb-btn"><button type="button" id="gbOk">確定</button></div></div>';
+}
+let gbAfter=null;
+function gbShow(next){
+  let h='';try{h=gbHtml();}catch(e){console.error(e);}
+  if(!h||practiceMode){next();return;}
+  let ov=$('gbOv');if(!ov){ov=document.createElement('div');ov.id='gbOv';$('app').appendChild(ov);}
+  ov.innerHTML=h;ov.hidden=false;gbAfter=next;
+  const ok=$('gbOk');ok.onclick=()=>{ov.hidden=true;ov.innerHTML='';const f=gbAfter;gbAfter=null;if(f)f();};ok.focus();
+}
 // 比賽結束：把兩隊所有球員這場的成績併進存檔
 function lgAfterGame(){
   lgSyncNow();   // 最後一次把累積成績寫回存檔

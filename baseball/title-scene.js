@@ -92,4 +92,5 @@ window.addEventListener('resize',frame);
 new MutationObserver(frame).observe(ms,{attributes:true,attributeFilter:['hidden']});
 new MutationObserver(frame).observe(start,{attributes:true,attributeFilter:['hidden']});
 frame();
+start.classList.add('ts-ready');   // 背景畫好才顯示選單，避免先閃出沒有背景的舊版選單
 })();

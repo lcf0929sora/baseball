@@ -67,10 +67,14 @@ body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;ba
 /* 賽後成績單 */
 #gbOv{position:fixed;inset:0;z-index:2000;background:rgba(5,9,18,.88);display:flex;justify-content:center;align-items:flex-start;overflow:auto;padding:16px;pointer-events:auto}
 #gbOv[hidden]{display:none}
-.gb-card{width:min(980px,100%);background:#0f1829;color:var(--chalk);border:1px solid #2a3a58;border-radius:8px;padding:14px 16px 12px;font:14px/1.5 var(--f-ui)}
+.gb-card{width:min(1320px,100%);background:#0f1829;color:var(--chalk);border:1px solid #2a3a58;border-radius:8px;padding:14px 16px 12px;font:14px/1.5 var(--f-ui)}
 .gb-card h3{margin:0 0 10px;font-size:22px;display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline}.gb-card h3 small{font-size:16px;color:var(--led)}
 .gb-card h4{margin:14px 0 4px;font-size:16px;color:var(--led)}
 .gb-sc{overflow-x:auto;margin:4px 0 8px}
+.gb-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.gb-team{min-width:0;max-height:min(58vh,620px);overflow:auto;border:1px solid #243551;border-radius:6px;padding:0 10px 6px;scrollbar-color:#46608a #0f1829}
+.gb-team h4{position:sticky;top:0;z-index:1;margin:0 -10px 4px;padding:8px 10px 5px;background:#0f1829}
+@media(max-width:820px){.gb-cols{grid-template-columns:1fr}.gb-team{max-height:none}}
 .gb-t{border-collapse:collapse;width:100%;font-size:13px;white-space:nowrap}.gb-t th,.gb-t td{padding:3px 8px;border-bottom:1px solid #243551;text-align:center}.gb-t .l{text-align:left}
 .gb-t th{color:#9fb3d1;font-weight:600}.gb-t .tot{font-weight:800}.gb-t tr.tot td{border-top:1px solid #3a5078;color:#fff}.gb-t tr.sub td{color:#b6c4dc}.gb-t .gi{color:#6d86ad;margin-right:3px}
 .gb-ls td.tot{color:var(--led);font-weight:800}
@@ -248,7 +252,7 @@ body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;ba
 #activePlayerInfo .player-ab{display:flex;gap:6px;min-height:0;font-size:14px;font-weight:800;white-space:nowrap}
 #activePlayerInfo .player-ab:empty{display:none}
 #activePlayerInfo .player-ab span{padding:1px 7px;border-radius:3px;background:rgba(35,51,76,.75);border:1px solid #354765;color:#d7e4f7}
-#activePlayerInfo .player-ab .h{color:#7be08a;border-color:#2f7a45}#activePlayerInfo .player-ab .o{color:#aab6cc}#activePlayerInfo .player-ab .b{color:#ffd06a;border-color:#8a6a1e}
+#activePlayerInfo .player-ab .h{background:#1f5a33;color:#c8ffd9;border-color:#37935a}#activePlayerInfo .player-ab .o{background:#6a2323;color:#ffd6d6;border-color:#a54444}#activePlayerInfo .player-ab .b{background:#6a5416;color:#fff0b8;border-color:#b08d2c}   /* 安打類綠、出局類紅、不算打數（四壞／觸身／犧牲打）黃 */
 #activePlayerInfo .role{font-size:14px;letter-spacing:.04em;color:var(--dim);min-width:32px;font-weight:800}
 #activePlayerInfo .player-name{font-weight:900;color:var(--chalk);font-size:18px}
 #activePlayerInfo .player-number{font-family:var(--f-ui);font-size:18px;font-weight:900;line-height:1;color:var(--chalk);min-width:20px}
@@ -939,7 +943,7 @@ put(MB.CreateBox('rubber',{width:0.6,height:0.05,depth:0.15}),0,0.1,18.44,chalk)
 // 壘包：平面寬與深都由 0.4 m 加倍至 0.8 m，厚度仍維持薄片外觀。
 [[19.4,19.4],[-19.4,19.4],[0,38.8]].forEach(p=>{const b=put(MB.CreateBox('base',{width:1.2,height:0.1,depth:1.2}),p[0],0.08,p[1],chalk);b.rotation.y=Math.PI/4;});
 // 好球帶尺寸（寬 ZX×2、高 ZY0～ZY1）；球通過 z=0 平面時判定。
-const ZX=0.25,ZY0=0.5,ZY1=1.35;
+const ZX=0.25,ZY0=0.40,ZY1=0.90;   // 好球帶高度：下緣＝膝蓋下方、上緣＝肩膀高度（人物肩膀世界高度 SY×1.5＝0.9 m）；原本 0.5～1.35 明顯高過肩膀
 // 本壘板（規則 2.02）：寬 17 英寸的直邊朝投手（+Z），兩側各 8.5 英寸，再以兩條 12 英寸斜邊收到朝捕手（-Z）的尖端。
 // 原點 (0,0) 是尖端＝兩條界外線的交點（壘間距、投手板距離都從這裡量）；板厚 0.04 m。
 const PLATE={W:17*0.0254,S:8.5*0.0254};PLATE.T=Math.sqrt((12*0.0254)**2-(PLATE.W/2)**2);PLATE.D=PLATE.S+PLATE.T;   // 寬、側邊長、斜邊在深度方向的投影、總深度
@@ -1359,7 +1363,7 @@ function updPitArms(){[pitcher,pBody,armTilt,armPivot].forEach(n=>n.computeWorld
   if(BABYLON.Vector3.Distance(gsh,gAbs)>ARM_MAX*1.001)gAbs=setGloveWorld(pitcherDef,gAbs,gsh);   // 保險：任何來源讓手套離肩超過臂長，一律拉回
   arm2(pArmL,gsh,gAbs,V(pS,0.25,0));}
 const BX0=-1.15;let BX=BX0,batS=1,pS=1;   // BX0＝右打站位；BX＝實際站位；batS／pS＝左右打／投鏡射方向。
-let swingY=0.85,ld=0,swLd=0,fromP=null;
+let swingY=0.65,ld=0,swLd=0,fromP=null;
 let LZX=1,LZZ=1;let buntHandK=0,leanZ=0,buntFeetTurned=false;const BUNT_HAND_L=0.36,BUNT_HAND_R=0.52;   // leanZ：往投手方向（+z）的前傾角(rad)；觸擊握短棒：左／右手沿棒身滑到局部座標 0.36／0.52（棒長 1.0、中心 0.5），兩手靠近棒中心
 // 身體前傾／後仰：擊球點離打者越遠（外角）軀幹以髖關節為軸向前傾、手臂前伸；內角則向後仰。leanCur 為目前傾角(rad，+前傾)
 const LEAN={fwd:0.36,back:0.28,reach:0,hipY:0.45,xRef:0.35,footF:0.22,footB:0.12};let leanCur=0,leanAim=0,leanAimV=0,leanDod=0,dodgeDrop=0,footOffL=0,footOffR=0,leanDirty=false;
@@ -1810,7 +1814,7 @@ function playerForActor(d){
  if(d.isPitcher)return currentPitcher();if(d.isCatcher)return playerAtPos(pitchingTeam(),'捕手');
  if(d.name&&POS_ORDER.includes(d.name))return playerAtPos(pitchingTeam(),d.name);return null;
 }
-function playerBoxScale(p){return (Number(p&&p.attributes&&p.attributes.batBox)||75)/90;}
+function playerBoxScale(p){return Math.max(0.2,((Number(p&&p.attributes&&p.attributes.batBox)||75)-10)/80);}   // 90→1.0（不變）、50→0.5，其餘線性（100→1.125）
 function pitchMaxKmh(p){const s=Number(p&&p.attributes&&p.attributes.pitchSpeed)||75;return (120+(s-50)*0.9)*stamSpeedK(pitcherStam(p));}   // 體力 70% → 球速 ×0.9
 function scaledPitchKmh(base,p){return Math.round(base/153*pitchMaxKmh(p));}
 function pitchControlSigma(){const pp=currentPitcher(),s=Number(pp&&pp.attributes&&pp.attributes.control)||75;return PIT.sigma*80/Math.max(1,s*pitcherStam(pp));}   // 體力%＝控球倍率
@@ -4528,7 +4532,7 @@ let batAimShown=false,aimWasOn=false;
 //   框縮放 k = 1 − 0.18·D（碰到球機率∝面積∝k² → 帶外/帶內 ≈ 0.76 ✓），下限 kMin
 
 //   擊球威力倍率 p = 1 − 0.69·(1−k) = 1 − 0.124·D（帶外/帶內初速比 ≈ 0.914 ✓）— 所有威力（出球初速）隨 k 線性縮小
-const BOXM={a:0.18,pw:0.69,kMin:0.5,cy:(ZY0+ZY1)/2,hy:(ZY1-ZY0)/2};
+const BOXM={a:0.18,pw:0.69,kMin:0.5,cy:(ZY0+ZY1)/2,hy:0.425};   // hy 沿用舊好球帶半高 0.425 m：好球帶縮小後，框隨離中心距離的衰減（公尺）不變，相對好球帶就變緩
 function boxScale(pt){const D=Math.max(Math.abs(pt.x)/ZX,Math.abs(pt.y-BOXM.cy)/BOXM.hy);return clamp(1-BOXM.a*D,BOXM.kMin,1);}
 const boxPower=k=>1-BOXM.pw*(1-k);
 let boxK=1;   // 目前框縮放（由瞄準位置即時算出）
@@ -5087,8 +5091,8 @@ function lampsAfterOut(sub,{batterOut=false,strikeout=false,noWildPitch=false}={
   if(outs>=3){outs=0;swPend=true;note='三出局，攻守交換';}
   hud2();return [sub,note].filter(Boolean).join(' ・ ');
 }
-function updateActivePlayerStats(){const b=currentBatter(),p=currentPitcher(),bs=b.batting,ps=p.pitching;const be=$('activeBatterStats'),pe=$('activePitcherStats');const ae=$('activeBatterAB');if(ae){const L=b._ab||[],sig=L.join();if(ae._sig!==sig){ae._sig=sig;ae.innerHTML=L.map(t=>'<span class="'+('一安二安三安全壘'.includes(t)?'h':t==='四壞'||t==='觸身'||t==='失誤'||t==='野選'?'b':'o')+'">'+t+'</span>').join('');}}
-  if(be)be.innerHTML='<span>AVG '+statAVG(bs)+'</span><span>RBI '+bs.RBI+'</span><span>HR '+bs.HR+'</span>';if(pe)pe.innerHTML='<span>STA '+Math.round(pitcherStam(p)*100)+'%</span><span>PC '+(ps.pitches||0)+'</span><span>ERA '+statERA(ps)+'</span><span>SO '+ps.SO+'</span>';}
+function updateActivePlayerStats(){const b=currentBatter(),p=currentPitcher(),bs=b.batting,ps=p.pitching;const be=$('activeBatterStats'),pe=$('activePitcherStats');const ae=$('activeBatterAB');if(ae){const L=b._ab||[],sig=L.join();if(ae._sig!==sig){ae._sig=sig;ae.innerHTML=L.map(t=>'<span class="'+('一安二安三安全壘'.includes(t)?'h':t==='四壞'||t==='觸身'||t==='犧飛'?'b':'o')+'">'+t+'</span>').join('');}}
+  if(be)be.innerHTML='<span>AVG '+statAVG(bs)+'</span><span>RBI '+bs.RBI+'</span><span>HR '+bs.HR+'</span>';if(pe)pe.innerHTML='<span>PC '+(ps.pitches||0)+'</span><span>ERA '+statERA(ps)+'</span><span>SO '+ps.SO+'</span>';}
 function hud2(){syncPitchMenu();const b=currentBatter(),p=currentPitcher();const homeTeam=teamConfig.teams.find(t=>t.id===chosenHomeId)||{},awayTeam=teamConfig.teams.find(t=>t.id===chosenAwayId)||{};if($('homeTeamLabel'))$('homeTeamLabel').textContent=homeTeam.name||'RED';if($('awayTeamLabel'))$('awayTeamLabel').textContent=awayTeam.name||'BLUE';[['homeScoreLogo',homeTeam],['awayScoreLogo',awayTeam]].forEach(([id,t])=>{const img=$(id),src=t&&t.logo?String(t.logo).trim():'';if(!img)return;if(src){if(img.dataset.src!==src){img.dataset.src=src;img.onload=()=>{img.hidden=false;};img.onerror=()=>{img.hidden=true;};img.src=src;}if(img.complete&&img.naturalWidth)img.hidden=false;}else{img.removeAttribute('src');img.dataset.src='';img.hidden=true;}});$('inn').textContent='第'+inn+'局';const attackSlot=mode==='bat'?'RED':'BLUE',attackId=attackSlot==='RED'?chosenHomeId:chosenAwayId,attackName=(teamConfig.teams.find(t=>t.id===attackId)||{}).name||attackSlot;if($('attackTop'))$('attackTop').textContent='第 '+inn+' 局　｜　'+attackName+' 進攻';$('scMe').textContent=score.me;$('scCpu').textContent=score.cpu;$('activeBatterNumber').textContent=String(b.number);$('activeBatterName').textContent=b.name+'（'+batLabel(b)+'）';$('activePitcherNumber').textContent=String(p.number);$('activePitcherName').textContent=p.name+'（'+throwLabel(p)+'）';$('activePlayerInfo').hidden=(st==='title'||lockerRoomView);updateActivePlayerStats();syncBaseRunners();updateLockerRoster();}
 function applyTeamColors(){
   const batC=mode==='bat'?COL_RED:COL_BLUE,fldC=mode==='bat'?COL_BLUE:COL_RED;
@@ -5098,7 +5102,8 @@ function applyTeamColors(){
 function setMode(){buntForceOff();applyTeamColors();const p=mode==='pit',k=p?2.146*pitchControlSigma()/AIM_R:1;$('ptypes').hidden=!p;tm('setMode');cVis(p);
   aim.scaling.set(k,1,k);}
 var pitchMenuReady=false,pitchMenuSig='',pitchList=[0];   // pitchList：選單中每個鈕對應的 TYPES 索引（直球一定有，其餘依投手會的變化球）
-function pitchScoreOf(t,pit){if(t.n==='直球')return 90;const pc=pit&&pit.pitches;if(pc==null)return DEFAULT_ATTR;const v=Number(pc[t.n]);return Number.isFinite(v)&&v>0?v:0;}
+function pitchScoreOf(t,pit){if(t.n==='直球')return 90;const pc=pit&&pit.pitches;if(pc==null)return t.rare?0:DEFAULT_ATTR;   // 沒填球路資料的投手：會一般 6 種，橫掃球／蝴蝶球要球員資料明確寫了才有
+  const v=Number(pc[t.n]);return Number.isFinite(v)&&v>0?v:0;}
 function availPitchIdx(pit){const r=[];TYPES.forEach((t,i)=>{if(t.n==='直球'||pitchScoreOf(t,pit)>0)r.push(i);});return r;}
 function brkFor(t,pit){const b=t.brk();if(t.n!=='直球'){const k=pitchScoreOf(t,pit)/90;b.x*=k;b.y*=k;b.z*=k;}return b;}   // 變化量＝標準變化量 × 分數／90
 function syncPitchMenu(force){
@@ -5221,26 +5226,35 @@ function pReset(){
   armPivot.position.set(0.02*pS,-0.04,-0.30);
   armPivot.rotation.x=0;
 }
+// 球路（右投手基準；brk＝相對於「無旋轉直線＋重力」軌跡的變化量，x＋＝手套側（投手左手側、右投對右打者是向外角）、−＝持球手側（臂側）；y＋＝上飄、−＝下沉）
+// ex＝變化發生的時機指數（越大越晚才變）。球速 k（km/h）與變化方向依真實球種特性：
+//   直球（四縫線）：旋轉最強、下沉最少（相對重力「上飄」）。　伸卡球（二縫線）：臂側跑位＋下沉。　卡特球：小幅手套側、略沉、速度接近直球。
+//   滑球：明顯手套側＋小幅下沉、晚變。　曲球：強烈下墜（12-6，帶一點手套側）、最慢、較早開始彎。　變速球：臂側淡出＋下沉、比直球慢 20 km/h 左右。　指叉球：幾乎不橫移、末端急墜。
 const TYPES=[
-  {n:'直球',T:[0.9,1.0],k:[143,153],brk:()=>V(0,0.08,0)},
-  {n:'滑球',T:[1.05,1.15],k:[126,136],brk:()=>V(0.55,-0.12,0)},
-  {n:'曲球',T:[1.28,1.4],k:[106,118],brk:()=>V(-0.15,-0.75,0)},
-  {n:'變速球',T:[1.15,1.25],k:[116,126],brk:()=>V(0.12,-0.3,0)}
+  {n:'直球',T:[0.9,1.0],k:[143,153],ex:2.5,brk:()=>V(0,0.08,0)},
+  {n:'伸卡球',T:[0.92,1.02],k:[140,150],ex:2.4,brk:()=>V(-0.34,-0.16,0)},
+  {n:'卡特球',T:[0.95,1.05],k:[134,146],ex:3.0,brk:()=>V(0.20,-0.05,0)},
+  {n:'滑球',T:[1.05,1.15],k:[126,136],ex:2.8,brk:()=>V(0.55,-0.12,0)},
+  {n:'曲球',T:[1.28,1.4],k:[106,118],ex:2.2,brk:()=>V(0.25,-0.75,0)},
+  {n:'變速球',T:[1.15,1.25],k:[116,126],ex:2.5,brk:()=>V(-0.28,-0.30,0)},
+  {n:'指叉球',T:[1.1,1.2],k:[124,136],ex:3.4,brk:()=>V(-0.08,-0.62,0)},
+  {n:'橫掃球',T:[1.08,1.18],k:[120,132],ex:2.6,rare:1,brk:()=>V(0.95,-0.10,0)},   // 橫掃球（Sweeper）：幾乎全是橫向位移（手套側），下沉很少
+  {n:'蝴蝶球',T:[1.4,1.55],k:[98,112],ex:2.0,rare:1,brk:()=>{const q=Math.floor(performance.now()/700),r=k=>{const v=Math.sin(q*12.9898+k*78.233)*43758.5453;return v-Math.floor(v);};return V((r(1)-0.5)*0.9,-0.45+r(2)*0.5,0);}}   // 蝴蝶球（Knuckleball）：幾乎不旋轉，每球的飄動方向與幅度都不一樣（左右約 ±0.45、上下 −0.45～+0.05）
 ];
-// 左投：變化球的橫向位移左右鏡射（滑球往手套側、變速球往持球手側…，一律以 pS 對調）
+// 左投：變化球的橫向位移左右鏡射（x＋＝手套側，一律以 pS 對調）
 TYPES.forEach(t=>{const f=t.brk;t.brk=()=>{const b=f();b.x*=pS;return b;};});
 const PITCH_DIRT_SHARE=0.24;   // 電腦投手「低/高」區間中進土的比例：0.19×0.24≈4.6%（MLB 進土球約 3~6%）
 function newPitch(){addPitchEvent();
   {const tp=tm('testPitch');if(tp)return tp;}
   const al=availPitchIdx(currentPitcher()),t=TYPES[al[Math.random()*al.length|0]];let x,y;
-  if(Math.random()<0.62){x=rnd(-0.2,0.2);y=rnd(0.6,1.25);}
-  else if(Math.random()<0.5){x=(Math.random()<0.5?-1:1)*rnd(0.34,0.55);y=rnd(0.5,1.3);}
-  else{x=rnd(-0.3,0.3);const r=Math.random();y=r<PITCH_DIRT_SHARE?rnd(-0.35,-0.12):r<0.62?rnd(0.25,0.4):rnd(1.45,1.65);}   // 解析落點在地下＝進土球（約占全部投球 4.6%），由 pitchPrep 交給物理引擎彈地
+  if(Math.random()<0.62){x=rnd(-0.2,0.2);y=rnd(0.46,0.84);}
+  else if(Math.random()<0.5){x=(Math.random()<0.5?-1:1)*rnd(0.34,0.55);y=rnd(0.38,0.92);}
+  else{x=rnd(-0.3,0.3);const r=Math.random();y=r<PITCH_DIRT_SHARE?rnd(-0.35,-0.12):r<0.62?rnd(0.12,0.28):rnd(1.02,1.22);}   // 解析落點在地下＝進土球（約占全部投球 4.6%），由 pitchPrep 交給物理引擎彈地
   const brk=brkFor(t,currentPitcher()),tg=V(x,y,0),kmh=scaledPitchKmh(rnd(t.k[0],t.k[1]),currentPitcher());
   return {type:t,T:16.7/(kmh/3.6*0.93),kmh:kmh,brk:brk,tg:tg,S:V(-0.68,1.31,16.7),A:tg.subtract(brk),
     strike:Math.abs(x)<=ZX+0.035&&y>=ZY0-0.07&&y<=ZY1+0.07};
 }
-function pathA(p,u){const k=Math.pow(Math.max(u,0),2.5);   // 解析軌跡（起點→落點的內插＋球種變化量；重力已預先補償在內插裡）
+function pathA(p,u){const k=Math.pow(Math.max(u,0),p.type.ex||2.5);   // 解析軌跡（起點→落點的內插＋球種變化量；重力已預先補償在內插裡）
   return V(p.S.x+(p.A.x-p.S.x)*u+p.brk.x*k,p.S.y+(p.A.y-p.S.y)*u+p.brk.y*k,Math.max(p.S.z*(1-u),CATCH_Z));}
 // 投球進土：解析軌跡在抵達本壘前碰到地面（球心 ≤ BALL_R）時，從碰地點起交給與擊球／暴投共用的物理引擎：
 // 重力、空氣阻力、groundResolve（恢復係數、水平速度保留、滾動）。p.bn 保存彈跳後的取樣點與「彈跳事件時間」，
@@ -5293,7 +5307,7 @@ function aiBat(dt){const a=AI0,to=flightClock-a.d;if(!a||to<0.1||swingT>=0||aimL
   const vz=Math.max(5,(q[2]-p[2])/0.1),spd=(1-AIP.beta)*vz*(1+a.eS)+AIP.beta*AIP.prior;   // 速度估計含期望值偏差
   const tauO=Math.max(0.01,(p[2]+a.eZ)/spd),tau=tauO-a.d;                                  // 估計剩餘時間
   const px=p[0]+((p[0]-q[0])/0.1+a.eVx)*tauO+a.bx,py=p[1]+((p[1]-q[1])/0.1+a.eVy)*tauO+a.by;
-  const k=1-Math.exp(-dt/AIP.lag);aimX+=(clamp(px,-0.75,0.75)-aimX)*k;aimY+=(clamp(py,0.2,1.75)-aimY)*k;limitBatAim();
+  const k=1-Math.exp(-dt/AIP.lag);aimX+=(clamp(px,-0.75,0.75)-aimX)*k;aimY+=(clamp(py,0.15,1.3)-aimY)*k;limitBatAim();
   if(!a.dec&&tau<=0.2){a.dec=true;const d=Math.hypot(Math.max(Math.abs(px)-ZX,0),Math.max(ZY0-py,py-ZY1,0)),two=strikes>=2;
     a.go=Math.random()<(d<0.03?(two?0.97:0.88):(two?0.6:0.3)*Math.exp(-d/0.12));}
   if(a.go&&tau<=0.128+a.eM){a.go=false;swing();}}
@@ -5506,7 +5520,7 @@ let swingT=-1,swung=false,contactDone=false,clickClock=0,lastDt=0;
 let hitStop=0,FL=null,ft=0,chase=false;
 // 【跑壘功能】有效安打／全壘打時打者從本壘朝一壘跑；腳部以左右交替抬起、前後擺動呈現跑步。
 let runnerActive=false;
-let aimX=0.05,aimY=0.95,aimLock=false,ptrX=null,ptrY=null,missInfo='';
+let aimX=0.05,aimY=0.65,aimLock=false,ptrX=null,ptrY=null,missInfo='';
 
 // ================= 跑壘 / 封殺 / 回休息室 =================
 const BASEP=[V(0,0,0),V(19.4,0,19.4),V(0,0,38.8),V(-19.4,0,19.4),V(0,0,0)];   // 1~3＝壘包，4＝回本壘
@@ -7594,7 +7608,7 @@ function swing(){                                              // 揮棒不受�
   if(swingT>=0&&swingT<0.3)return;
   swingP=P;dodgeFor=P;dodgeTgt=0;dodgeDropTgt=0;   // 揮棒：取消閃躲
   fromP=curP.slice();swLd=ld;swingT=0;contactDone=false;sfx.swing();
-  clickClock=flightClock;aimLock=true;swingY=clamp(aimY,0.6,0.95);
+  clickClock=flightClock;aimLock=true;swingY=clamp(aimY,0.45,0.78);
 }
 
 // ===== 球棒–球碰撞物理（近似解）=====
@@ -8603,7 +8617,7 @@ function gameFrame(dt){
       P.T=P.S.z/(P.kmh/3.6*0.93);pitchPrep(P);   // 進土球：碰地後改走共用物理
       flightClock=0;st='pitch';if(buntActive())BUNT.charged=true;ball.position.copyFrom(P.S);   // 投手出手的瞬間打者若是觸擊姿勢：內野手立刻往前衝（之後等觸到球再正常守備）
       ball.scaling.setAll(1+P.S.z*0.07);ball.isVisible=true;
-      el.tbar.className='tbar';if(mode==='pit'){AI0=aiNew();hist.length=0;aimX=0;aimY=0.9;aimLock=false;}
+      el.tbar.className='tbar';if(mode==='pit'){AI0=aiNew();hist.length=0;aimX=0;aimY=0.65;aimLock=false;}
     }
   }else if(st==='pitch'){
     pclock+=dt;flightClock+=dt;
@@ -8617,7 +8631,7 @@ function gameFrame(dt){
     const t0=Math.min(P.T,Math.max(0,flightClock-dt)),t1=Math.min(P.T,flightClock);
     pitchSegment={from:prevPitchPos.clone(),to:bp.clone(),dt:Math.max(dt,1e-5),time0:t0,time1:t1};
     if(checkHitByPitch(prevPitchPos,bp,dt)){showPitchInfo();return;}
-    {const uu=clamp(flightClock/P.T,0,1),ww=2.5*Math.pow(uu,1.5)-1.5*Math.pow(uu,2.5);   // 瞬間切線預測落點（變化球會移動）
+    {const uu=clamp(flightClock/P.T,0,1),ee=P.type.ex||2.5,ww=ee*Math.pow(uu,ee-1)-(ee-1)*Math.pow(uu,ee);   // 瞬間切線預測落點（變化球會移動）
      if(P.bn){const q=pathAt(P,1);mark.position.set(q.x,q.y,0);}else mark.position.set(P.A.x+P.brk.x*ww,P.A.y+P.brk.y*ww,0);   // 進土球：標記＝彈起後實際越過本壘板的位置
      mark.scaling.setAll(mode==='pit'?2.2:1);}
     if(buntArmed()&&!BUNT.done&&flightClock>=P.T){BUNT.done=true;if(!(buntActive()&&BUNT.blend>0.5&&buntTryContact())){BUNT.passed=true;if(buntActive()){swung=true;clickClock=P.T-0.12;missInfo=missInfo||'觸擊沒碰到';}}}   // 試圖觸擊（按住右鍵）沒碰到球＝算揮空好球   // 觸擊：球過本壘板的瞬間判定；沒觸到＝跑者立刻回壘
@@ -8637,7 +8651,7 @@ function gameFrame(dt){
   if(wild&&st==='result'){const w=wild,p=ball.position,qx=p.x,qy=p.y,qz=p.z;{const sp=Math.hypot(w.vx,w.vy,w.vz);w.vx-=0.0055*sp*w.vx*dt;w.vy-=(9.8+0.0055*sp*w.vy)*dt;w.vz-=0.0055*sp*w.vz*dt;}p.x+=w.vx*dt;p.y+=w.vy*dt;p.z+=w.vz*dt;
     {const tx=p.x,ty=p.y,tz=p.z,n=solidHit(qx,qy,qz,tx,ty,tz);if(n){const vn=w.vx*n.x+w.vy*n.y+w.vz*n.z;if(vn<-1e-6){const f=clamp(n.hitTime===undefined?1:n.hitTime,0,1);w.vx=(w.vx-1.4*vn*n.x)*0.8;w.vy=(w.vy-1.4*vn*n.y)*0.8;w.vz=(w.vz-1.4*vn*n.z)*0.8;const po=n.pushOut===undefined?0.002:n.pushOut;p.set(qx+(tx-qx)*f+n.x*po,qy+(ty-qy)*f+n.y*po,qz+(tz-qz)*f+n.z*po);}}}
     groundResolve(p.y,w.vx,w.vy,w.vz,0.075,dt);p.y=_g.y;w.vx=_g.vx;w.vy=_g.vy;w.vz=_g.vz;ball.rotation.x-=dt*w.vz*8;}
-  if(ball.isVisible&&(st==='pitch'||st==='flight')&&fieldingStage==='idle'){ball.rotation.x+=dt*(st==='flight'?26:34);ball.rotation.z+=dt*(st==='flight'?9:(P&&P.type.n==='滑球'?24:5));}
+  if(ball.isVisible&&(st==='pitch'||st==='flight')&&fieldingStage==='idle'){ball.rotation.x+=dt*(st==='flight'?26:34);ball.rotation.z+=dt*(st==='flight'?9:(P&&(P.type.n==='滑球'||P.type.n==='卡特球'||P.type.n==='橫掃球')?24:P&&(P.type.n==='指叉球'||P.type.n==='蝴蝶球')?2:5));}
   updateActorShadows();
   if(land.isEnabled()&&FL&&FL.spinFlight&&st==='flight'&&FL.sim&&FL.sim.pts&&ft*60<FL.sim.pts.length-1&&!(FL.sim.landed&&ft>=FL.sim.landed.t)){
     const pts=FL.sim.pts,i=Math.max(0,Math.min(pts.length-2,Math.floor(ft*60))),fr=ft*60-i,a0=pts[i],b0=pts[i+1];
@@ -8999,9 +9013,11 @@ function pkStart(i,cx,cy){
 }
 // 牽制傳球的誤差：與野手傳球同一函式，並使用「投手本人」的控球（accuracyScale）；球速也用投手臂力（throwProfile）
 function pkAimErr(pt){return throwErrorAimAt(V(PITCHER_XZ.x,1.4,PITCHER_XZ.z),pt,throwProfile(pitcherDef).accuracyScale);}
+const PK_STAM_COST=0.25;
 function pkBegin(i,tg){   // 玩家投手與電腦投手共用的牽制起手
   for(let j=0;j<3;j++)if(rcRun[j]&&j!==i){rcRun[j]=null;rcArm[j]=false;rcAgg[j]=false;}stealCov=null;   // 牽制開始：其他提早起跑的跑者中止、走回壘包
   const d=defenders[PK_DEF[i]],turn=i!==2,twist=PK_TWIST[i];
+  {const pp=currentPitcher();if(pp)pp._gpit=(pp._gpit||0)+PK_STAM_COST;}   // 牽制消耗體力：一次牽制＝投 1/4 球（體力、冷卻時間都用這個計數；PC 球數不變）
   const commit=!!(rcArm[i]&&rcAgg[i]);if(commit){rcArm[i]=false;rcAgg[i]=false;}   // 積極盜壘：看到投手一動就已經起跑，要過一會兒才發現是牽制，才折返
   pk={i:i,di:PK_DEF[i],d:d,turn:turn,t:0,relT:twist+PK_T_ARM,twist:twist,phase:'wind',tg:tg,settle:PK_SETTLE,
     run:{s:leadD[i],v:commit?0.6:Math.max(0,rcVel[i]),react:commit?clamp(0.55+gs(0.06),0.4,0.75):clamp(0.19+gs(0.027),0.11,0.30),commit,returning:false,onBase:false,away:leadD[i]>PK_TOUCH},runMode:true,ballFree:false,
@@ -9413,7 +9429,8 @@ function pkAIMaybe(dt){
   for(let i=0;i<3;i++){
     if(!bases[i]||rcRun[i])continue;
     // 電腦不知道跑者是否要盜壘：每位跑者都有隨機的牽制機率（一壘較高）；離壘遠到折返趕不上傳球時（與電腦跑者同一個安全餘裕）機率大增
-    const ex=AI_PK_RATE_MARGIN-pickoffSafety(i,leadD[i]),rate=ex>0?0.1+0.6*ex:(i===0?0.02:0.01);
+    const ex=AI_PK_RATE_MARGIN-pickoffSafety(i,leadD[i]),spdK=1+clamp(((Number(baseP[i]&&baseP[i].attributes&&baseP[i].attributes.speed)||75)-72)/23,0,1.3),   // 快腳跑者：電腦投手更常牽制（速度 95 約 2 倍）
+      rate=ex>0?(0.1+0.6*ex)*Math.min(1.25,spdK):(i===0?0.028:i===1?0.012:0.01)*spdK;
     if(Math.random()<rate*dt){pkStartAI(i);pkAICool=4;return true;}
   }
   return false;
@@ -9584,7 +9601,9 @@ function rhFind(){
   const subRects=PK_BASES.map(i=>(pkVis[i]&&pkEl[i])?pkEl[i].getBoundingClientRect():null);
   const overSub=subRects.some(r=>r&&r.width&&inR(r,rhX,rhY));
   let best=null,bd=1e9;
-  for(const e of rhRunners()){
+  const list=rhRunners();
+  if(!walkSeq&&pitcher.isEnabled()){const pp=currentPitcher();if(pp)list.push({actor:pitcherDef,pl:pp,i:-1,pitcher:true});}   // 投手：滑鼠移上去才看得到體力
+  for(const e of list){
     const pos=e.actor.root.position,cams=[];
     if(e.i>=0&&subRects[e.i]&&subRects[e.i].width&&inR(subRects[e.i],rhX,rhY))cams.push(pkCams[e.i]);   // 子視窗內：用子視窗的攝影機
     else if(!overSub)cams.push(cam);   // 主鏡頭固定用 cam：多 viewport 時 scene.activeCamera 會是最後渲染的子視窗鏡頭，二壘跑者（沒有子視窗）就永遠抓不到
@@ -9599,7 +9618,8 @@ function rhUpdate(){
   const e=rhFind();
   if(!e){rhTip.style.display='none';rhKey='';return;}
   const p=e.pl,a=p.attributes||{},spd=Number(a.speed)||75,acc=Number(a.acceleration)||75;
-  const key=p.id+'|'+spd+'|'+acc;
+  const sta=e.pitcher?Math.round(pitcherStam(p)*100):0,pcs=e.pitcher?(p.pitching.pitches||0):0;
+  const key=p.id+'|'+(e.pitcher?'P'+sta+'|'+pcs:spd+'|'+acc);
   if(key!==rhKey){
     rhKey=key;rhTip.textContent='';
     const row=(txt,col)=>{const d=document.createElement('div');d.textContent=txt;if(col)d.style.color=col;rhTip.appendChild(d);return d;};
@@ -9608,8 +9628,8 @@ function rhUpdate(){
     const sc=(label,v)=>{const d=document.createElement('div');d.style.cssText='display:flex;justify-content:space-between;gap:14px';
       const l=document.createElement('span');l.textContent=label;l.style.color='#9fb4d8';
       const n=document.createElement('b');n.textContent=Math.round(v);n.style.cssText='font-size:15px;color:'+col(v);
-      d.appendChild(l);d.appendChild(n);rhTip.appendChild(d);};
-    sc('速度',spd);sc('加速度',acc);
+      d.appendChild(l);d.appendChild(n);rhTip.appendChild(d);return d;};
+    if(e.pitcher){sc('體力',sta);sc('投球數',pcs).lastChild.style.color='#e8eef9';}else{sc('速度',spd);sc('加速度',acc);}
   }
   rhTip.style.display='block';
   const tw=rhTip.offsetWidth,th=rhTip.offsetHeight;
@@ -10360,7 +10380,7 @@ function gbHtml(){
   return '<div class="gb-card"><h3>比賽結束<small>'+pgEsc(nameMe)+'　'+score.me+' : '+score.cpu+'　'+pgEsc(nameOp)+'（'+res+'）</small></h3>'
    +'<div class="gb-sc"><table class="gb-t gb-ls"><thead>'+head+'</thead><tbody>'+ls(top)+ls(bot)+'</tbody></table></div>'
    +'<h4>特殊事蹟</h4><ul class="gb-ev">'+(ev.join('')||'<li>無</li>')+'</ul>'
-   +gbTeamHtml(S.RED,nameMe,D)+gbTeamHtml(S.BLUE,nameOp,D)
+   +'<div class="gb-cols">'+gbTeamHtml(S.RED,nameMe,D)+gbTeamHtml(S.BLUE,nameOp,D)+'</div>'
    +'<div class="gb-btn"><button type="button" id="gbOk">確定</button></div></div>';
 }
 let gbAfter=null;

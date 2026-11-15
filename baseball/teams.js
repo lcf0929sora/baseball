@@ -174,7 +174,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 16,
           "position": "投手",
           "attributes": { "batBox": 59, "power": 61, "speed": 78, "acceleration": 68, "pitchSpeed": 74, "armStrength": 72, "control": 84, "defense": 75, "stamina": 66 },
-          "pitches": { "指叉球": 86, "曲球": 73 }
+          "pitches": { "指叉球": 86, "曲球": 73, "橫掃球": 58 }
         },
         {
           "id": "RED-17",
@@ -386,7 +386,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 13,
           "position": "投手",
           "attributes": { "batBox": 61, "power": 61, "speed": 81, "acceleration": 77, "pitchSpeed": 88, "armStrength": 70, "control": 73, "defense": 73, "stamina": 71 },
-          "pitches": { "卡特球": 50, "曲球": 71 }
+          "pitches": { "卡特球": 50, "曲球": 71, "橫掃球": 77 }
         },
         {
           "id": "BLUE-14",
@@ -410,7 +410,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 16,
           "position": "投手",
           "attributes": { "batBox": 50, "power": 60, "speed": 94, "acceleration": 79, "pitchSpeed": 73, "armStrength": 82, "control": 67, "defense": 71, "stamina": 69 },
-          "pitches": { "指叉球": 78, "變速球": 89, "卡特球": 50 }
+          "pitches": { "指叉球": 78, "變速球": 89, "卡特球": 50, "橫掃球": 50 }
         },
         {
           "id": "BLUE-17",
@@ -434,7 +434,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 19,
           "position": "投手",
           "attributes": { "batBox": 57, "power": 58, "speed": 65, "acceleration": 82, "pitchSpeed": 73, "armStrength": 74, "control": 69, "defense": 62, "stamina": 79 },
-          "pitches": { "變速球": 88, "卡特球": 90 }
+          "pitches": { "變速球": 88, "卡特球": 90, "蝴蝶球": 64 }
         },
         {
           "id": "BLUE-20",
@@ -654,7 +654,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 17,
           "position": "投手",
           "attributes": { "batBox": 50, "power": 52, "speed": 89, "acceleration": 72, "pitchSpeed": 78, "armStrength": 63, "control": 85, "defense": 75, "stamina": 76 },
-          "pitches": { "變速球": 90, "伸卡球": 65, "卡特球": 73 }
+          "pitches": { "變速球": 90, "伸卡球": 65, "卡特球": 73, "橫掃球": 72 }
         },
         {
           "id": "GREY-18",
@@ -678,7 +678,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 20,
           "position": "投手",
           "attributes": { "batBox": 78, "power": 52, "speed": 61, "acceleration": 84, "pitchSpeed": 84, "armStrength": 81, "control": 65, "defense": 71, "stamina": 83 },
-          "pitches": { "曲球": 77, "伸卡球": 82, "卡特球": 77 }
+          "pitches": { "曲球": 77, "伸卡球": 82, "卡特球": 77, "橫掃球": 75 }
         },
         {
           "id": "GREY-21",
@@ -914,7 +914,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 20,
           "position": "投手",
           "attributes": { "batBox": 56, "power": 52, "speed": 70, "acceleration": 68, "pitchSpeed": 78, "armStrength": 71, "control": 71, "defense": 95, "stamina": 91 },
-          "pitches": { "卡特球": 71, "指叉球": 83, "變速球": 66 }
+          "pitches": { "卡特球": 71, "指叉球": 83, "變速球": 66, "橫掃球": 60 }
         },
         {
           "id": "ORANGE-21",
@@ -1142,7 +1142,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 19,
           "position": "投手",
           "attributes": { "batBox": 53, "power": 51, "speed": 85, "acceleration": 81, "pitchSpeed": 82, "armStrength": 74, "control": 86, "defense": 87, "stamina": 84 },
-          "pitches": { "曲球": 89 }
+          "pitches": { "曲球": 89, "橫掃球": 66 }
         },
         {
           "id": "GREEN-20",
@@ -1346,7 +1346,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 15,
           "position": "投手",
           "attributes": { "batBox": 70, "power": 54, "speed": 84, "acceleration": 79, "pitchSpeed": 68, "armStrength": 73, "control": 94, "defense": 82, "stamina": 50 },
-          "pitches": { "卡特球": 75, "變速球": 88, "曲球": 80 }
+          "pitches": { "卡特球": 75, "變速球": 88, "曲球": 80, "橫掃球": 72 }
         },
         {
           "id": "BUSAN-16",
@@ -1386,7 +1386,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 20,
           "position": "投手",
           "attributes": { "batBox": 64, "power": 62, "speed": 86, "acceleration": 66, "pitchSpeed": 77, "armStrength": 89, "control": 66, "defense": 83, "stamina": 71 },
-          "pitches": { "變速球": 67, "滑球": 80 }
+          "pitches": { "變速球": 67, "滑球": 80, "橫掃球": 76 }
         },
         {
           "id": "BUSAN-21",
@@ -1582,7 +1582,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 15,
           "position": "投手",
           "attributes": { "batBox": 61, "power": 63, "speed": 78, "acceleration": 89, "pitchSpeed": 81, "armStrength": 74, "control": 77, "defense": 67, "stamina": 86 },
-          "pitches": { "滑球": 70, "伸卡球": 79 }
+          "pitches": { "滑球": 70, "伸卡球": 79, "橫掃球": 72 }
         },
         {
           "id": "TURKEY-16",
@@ -1614,7 +1614,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 19,
           "position": "投手",
           "attributes": { "batBox": 60, "power": 69, "speed": 60, "acceleration": 88, "pitchSpeed": 68, "armStrength": 79, "control": 77, "defense": 78, "stamina": 76 },
-          "pitches": { "伸卡球": 81, "曲球": 79, "卡特球": 73 }
+          "pitches": { "伸卡球": 81, "曲球": 79, "卡特球": 73, "蝴蝶球": 55 }
         },
         {
           "id": "TURKEY-20",
@@ -1818,7 +1818,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 15,
           "position": "投手",
           "attributes": { "batBox": 59, "power": 73, "speed": 80, "acceleration": 82, "pitchSpeed": 77, "armStrength": 73, "control": 77, "defense": 83, "stamina": 91 },
-          "pitches": { "指叉球": 79, "伸卡球": 61, "變速球": 78 }
+          "pitches": { "指叉球": 79, "伸卡球": 61, "變速球": 78, "橫掃球": 60 }
         },
         {
           "id": "PERSIMMON-16",
@@ -2274,7 +2274,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 13,
           "position": "投手",
           "attributes": { "batBox": 54, "power": 73, "speed": 88, "acceleration": 81, "pitchSpeed": 72, "armStrength": 76, "control": 57, "defense": 79, "stamina": 80 },
-          "pitches": { "曲球": 85 }
+          "pitches": { "曲球": 85, "橫掃球": 79 }
         },
         {
           "id": "WOLF-14",
@@ -2298,7 +2298,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 16,
           "position": "投手",
           "attributes": { "batBox": 71, "power": 67, "speed": 78, "acceleration": 77, "pitchSpeed": 98, "armStrength": 70, "control": 65, "defense": 82, "stamina": 80 },
-          "pitches": { "卡特球": 66, "伸卡球": 78, "指叉球": 72 }
+          "pitches": { "卡特球": 66, "伸卡球": 78, "指叉球": 72, "橫掃球": 69 }
         },
         {
           "id": "WOLF-17",
@@ -2306,7 +2306,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 17,
           "position": "投手",
           "attributes": { "batBox": 72, "power": 50, "speed": 81, "acceleration": 90, "pitchSpeed": 73, "armStrength": 77, "control": 64, "defense": 65, "stamina": 64 },
-          "pitches": { "滑球": 72 }
+          "pitches": { "滑球": 72, "橫掃球": 71 }
         },
         {
           "id": "WOLF-18",
@@ -2314,7 +2314,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 18,
           "position": "投手",
           "attributes": { "batBox": 60, "power": 64, "speed": 71, "acceleration": 52, "pitchSpeed": 71, "armStrength": 73, "control": 78, "defense": 64, "stamina": 80 },
-          "pitches": { "指叉球": 95 }
+          "pitches": { "指叉球": 95, "橫掃球": 65 }
         },
         {
           "id": "WOLF-19",
@@ -2322,7 +2322,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 19,
           "position": "投手",
           "attributes": { "batBox": 50, "power": 65, "speed": 79, "acceleration": 92, "pitchSpeed": 73, "armStrength": 71, "control": 99, "defense": 70, "stamina": 69 },
-          "pitches": { "曲球": 82, "卡特球": 70, "指叉球": 80 }
+          "pitches": { "曲球": 82, "卡特球": 70, "指叉球": 80, "橫掃球": 66 }
         },
         {
           "id": "WOLF-20",
@@ -2414,7 +2414,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 1,
           "position": "投手",
           "attributes": { "batBox": 53, "power": 61, "speed": 86, "acceleration": 75, "pitchSpeed": 76, "armStrength": 73, "control": 79, "defense": 67, "stamina": 96 },
-          "pitches": { "卡特球": 78, "伸卡球": 74 }
+          "pitches": { "卡特球": 78, "伸卡球": 74, "橫掃球": 67 }
         },
         {
           "id": "MONKEY-02",
@@ -2518,7 +2518,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 14,
           "position": "投手",
           "attributes": { "batBox": 54, "power": 63, "speed": 92, "acceleration": 85, "pitchSpeed": 78, "armStrength": 75, "control": 60, "defense": 80, "stamina": 80 },
-          "pitches": { "曲球": 62, "伸卡球": 67, "指叉球": 81 }
+          "pitches": { "曲球": 62, "伸卡球": 67, "指叉球": 81, "橫掃球": 77 }
         },
         {
           "id": "MONKEY-15",
@@ -2754,7 +2754,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 14,
           "position": "投手",
           "attributes": { "batBox": 58, "power": 73, "speed": 80, "acceleration": 75, "pitchSpeed": 77, "armStrength": 58, "control": 64, "defense": 64, "stamina": 89 },
-          "pitches": { "曲球": 79, "變速球": 68, "伸卡球": 79 }
+          "pitches": { "曲球": 79, "變速球": 68, "伸卡球": 79, "橫掃球": 73 }
         },
         {
           "id": "KING-15",
@@ -2786,7 +2786,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 18,
           "position": "投手",
           "attributes": { "batBox": 62, "power": 86, "speed": 92, "acceleration": 72, "pitchSpeed": 79, "armStrength": 84, "control": 80, "defense": 71, "stamina": 62 },
-          "pitches": { "卡特球": 72, "曲球": 61 }
+          "pitches": { "卡特球": 72, "曲球": 61, "橫掃球": 68 }
         },
         {
           "id": "KING-19",
@@ -2886,7 +2886,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 1,
           "position": "投手",
           "attributes": { "batBox": 59, "power": 52, "speed": 70, "acceleration": 71, "pitchSpeed": 73, "armStrength": 89, "control": 74, "defense": 82, "stamina": 87 },
-          "pitches": { "卡特球": 67, "指叉球": 80, "伸卡球": 68 }
+          "pitches": { "卡特球": 67, "指叉球": 80, "伸卡球": 68, "橫掃球": 66 }
         },
         {
           "id": "BEAN-02",
@@ -2982,7 +2982,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 13,
           "position": "投手",
           "attributes": { "batBox": 55, "power": 55, "speed": 73, "acceleration": 88, "pitchSpeed": 80, "armStrength": 85, "control": 62, "defense": 56, "stamina": 100 },
-          "pitches": { "卡特球": 64 }
+          "pitches": { "卡特球": 64, "橫掃球": 80 }
         },
         {
           "id": "BEAN-14",
@@ -2990,7 +2990,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 14,
           "position": "投手",
           "attributes": { "batBox": 69, "power": 68, "speed": 73, "acceleration": 69, "pitchSpeed": 78, "armStrength": 71, "control": 89, "defense": 76, "stamina": 82 },
-          "pitches": { "指叉球": 71 }
+          "pitches": { "指叉球": 71, "橫掃球": 70 }
         },
         {
           "id": "BEAN-15",
@@ -3462,7 +3462,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 14,
           "position": "投手",
           "attributes": { "batBox": 73, "power": 56, "speed": 78, "acceleration": 86, "pitchSpeed": 72, "armStrength": 70, "control": 69, "defense": 85, "stamina": 84 },
-          "pitches": { "指叉球": 100, "卡特球": 90, "伸卡球": 69 }
+          "pitches": { "指叉球": 100, "卡特球": 90, "伸卡球": 69, "橫掃球": 66 }
         },
         {
           "id": "POPE-15",
@@ -3594,7 +3594,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 1,
           "position": "投手",
           "attributes": { "batBox": 61, "power": 50, "speed": 80, "acceleration": 78, "pitchSpeed": 52, "armStrength": 72, "control": 75, "defense": 74, "stamina": 51 },
-          "pitches": { "卡特球": 69, "變速球": 74, "伸卡球": 75 }
+          "pitches": { "卡特球": 69, "變速球": 74, "伸卡球": 75, "橫掃球": 73 }
         },
         {
           "id": "KYIV-02",
@@ -3706,7 +3706,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 15,
           "position": "投手",
           "attributes": { "batBox": 63, "power": 69, "speed": 84, "acceleration": 74, "pitchSpeed": 78, "armStrength": 85, "control": 50, "defense": 81, "stamina": 76 },
-          "pitches": { "變速球": 92, "指叉球": 50 }
+          "pitches": { "變速球": 92, "指叉球": 50, "橫掃球": 65 }
         },
         {
           "id": "KYIV-16",
@@ -3714,7 +3714,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 16,
           "position": "投手",
           "attributes": { "batBox": 54, "power": 64, "speed": 79, "acceleration": 70, "pitchSpeed": 60, "armStrength": 75, "control": 93, "defense": 54, "stamina": 87 },
-          "pitches": { "曲球": 64 }
+          "pitches": { "曲球": 64, "橫掃球": 51 }
         },
         {
           "id": "KYIV-17",
@@ -3730,7 +3730,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 18,
           "position": "投手",
           "attributes": { "batBox": 64, "power": 68, "speed": 72, "acceleration": 71, "pitchSpeed": 78, "armStrength": 88, "control": 69, "defense": 86, "stamina": 76 },
-          "pitches": { "滑球": 77, "曲球": 70, "變速球": 83 }
+          "pitches": { "滑球": 77, "曲球": 70, "變速球": 83, "蝴蝶球": 78 }
         },
         {
           "id": "KYIV-19",
@@ -3738,7 +3738,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 19,
           "position": "投手",
           "attributes": { "batBox": 80, "power": 67, "speed": 68, "acceleration": 84, "pitchSpeed": 88, "armStrength": 71, "control": 77, "defense": 83, "stamina": 77 },
-          "pitches": { "指叉球": 71, "伸卡球": 76 }
+          "pitches": { "指叉球": 71, "伸卡球": 76, "橫掃球": 70 }
         },
         {
           "id": "KYIV-20",
@@ -3746,7 +3746,7 @@ window.BASEBALL_TEAM_CONFIG = {
           "number": 20,
           "position": "投手",
           "attributes": { "batBox": 64, "power": 70, "speed": 86, "acceleration": 73, "pitchSpeed": 80, "armStrength": 89, "control": 74, "defense": 81, "stamina": 84 },
-          "pitches": { "卡特球": 54, "伸卡球": 65 }
+          "pitches": { "卡特球": 54, "伸卡球": 65, "橫掃球": 64 }
         },
         {
           "id": "KYIV-21",

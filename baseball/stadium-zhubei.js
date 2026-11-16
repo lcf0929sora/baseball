@@ -4,7 +4,7 @@
  *
  *  規格
  *   · 中外野全壘打牆離本壘 140 m、左右外野（沿界外線）120 m；外野牆是 5 段折線（左右翼各兩段斜牆＋中間一段 60 m 的直牆；θ=±30° 處 131 m）。
- *   · 內野看台是「三層」：下層 6 階、走道、中層 6 階、走道、上層 6 階，總高約 19 m；本壘後方一段（34 m 寬）＋一、三壘側各沿界外線 80 m（r=6~86 m）；
+ *   · 內野看台是「三層」：下層 6 階、走道、中層 6 階、走道、上層 6 階，總高約 19 m；同一層的座位沿同一條折線（三壘側 r=86 m → 本壘後方 → 一壘側 r=86 m）連成一整圈，轉角用斜接接起來，沒有缺口；
  *     上方有半遮蔽的深灰藍屋頂（沿外牆內側 14.4 m，蓋住上層、走道和中層的大部分，下層露天），靠牆有古銅色立柱。
  *     往外野方向接一段較矮的 5 階看台（r=86~121 m），再接外野看台（5 階）。
  *   · 外牆：整圈封閉的卵石石材牆（12 條邊，由各段看台的後牆線求交點得到，沒有缺口），牆面有三道帶狀窗（對應三層看台的環場走道）；
@@ -23,10 +23,13 @@
  *  球場風格（和百貨公司協調）
  *   · 外牆和百貨公司同一種卵石石材；內野看台有深灰藍屋頂；中外野記分板兩側各有一座小「鼓形塔」（淺褐木紋板材＋環繞陽台＋深灰藍分格大屋簷圓頂），
  *     呼應百貨公司；記分板是深石板色底、古銅框、暖白字。
- *  新竹縣第二運動場（依空拍照片，位置依地圖左上角）
- *   · 在球場左後方約 120 m（地圖左上角）：400 m 級跑道（8 線道藍色）、內側紅色場地、人工草足球場（白線）；東側一座藍紫色座椅的 10 階看台（白色混凝土、北端平屋頂），
- *     西側一座 7 階看台（深灰藍斜屋頂、背後青綠玻璃立面）；四根約 36 m 高的照明塔；跑道兩端的綠色圍籬；東南側另有一個小橢圓練習場（藍環＋灰色水泥中心）。
- *     離球場外牆最近的是小橢圓場（約 6 m），運動場本體離球場外牆 34 m 以上，離南邊馬路約 18 m。
+ *  新竹縣第二運動場與溜冰場（依空拍照片，位置、方向、大小都是在地圖上量的，並把產生的輪廓疊回地圖核對過）
+ *   · 運動場中心在地圖 (118,170)，換算約在本壘板左後方 125 m；長軸方位約 345°（北北西，往下偏右 15°——和球場的 22° 不同）：
+ *     足球場 85 × 54 m（人工草＋白線）、400 m 級跑道（外圍約 138 × 88 m，8 線道藍色）、內側紅色場地；
+ *     東側一座藍紫色座椅的 10 階看台（長約 75 m，中段有一大片平屋頂），西側一座 7 階看台（對應地圖上靠邊緣的長條建築，深灰藍斜屋頂、背後青綠玻璃立面）；
+ *     四根約 36 m 高的照明塔、跑道兩端外圍的綠色圍籬。
+ *   · 溜冰場（藍色小橢圓）：地圖 (298,272)，長軸方位約 11°，約 47 × 32 m，藍色環形、灰褐色水泥中心，在運動場東看台南端的東南方。
+ *   · 運動場本體（看台）離球場外牆 22 m 以上；溜冰場離外牆最近約 2 m（緊貼著三壘側後方外牆，和地圖上的相對位置一致）；離南邊馬路都有餘裕。
  *  其他
  *   · 道路：莊敬北路（紅框東側）、莊敬一路與光明六路（紅框南側）；周圍是樹林。其餘建築（住宅大樓、其他圓形建築、運動場等）這一版先「不」生成。
  *  本檔「不」設定天空／霧／光源——那些由主程式的天氣系統決定。
@@ -284,21 +287,45 @@ function stand(ax,az,bx,bz,tiers,gap,top0,ext,o){o=o||{};const f=frame(ax,az,bx,
   if(nb<tiers){const off0=gap+nb*CROWD_STEP,dep=(tiers-nb)*CROWD_STEP,top=top0+(tiers-1)*CROWD_ROW;ghostBox(mx+nx*(off0+dep/2),top/2,mz+nz*(off0+dep/2),L,top,dep+0.1,ang,'spectator');}
   return f;
 }
-// 看台之間的走道（平台）和欄杆
-function aisle(f,off0,off1,y){const cx=f.mx+f.nx*(off0+off1)/2,cz=f.mz+f.nz*(off0+off1)/2;
-  const a=put(MB.CreateBox('xxAisle',{width:f.L,height:0.3,depth:off1-off0}),cx,y-0.15,cz,aisleMat);a.rotation.y=f.ang;
-  const r=put(MB.CreateBox('xxAisleRail',{width:f.L,height:1.0,depth:0.15}),f.mx+f.nx*(off0+0.1),y+0.5,f.mz+f.nz*(off0+0.1),railMat);r.rotation.y=f.ang;}
-// 內野三層看台：下層 6 階（高 4.0~8.0 m）、走道、中層 6 階（8.8~12.8 m）、走道、上層 6 階（13.6~17.6 m）；總深度 25.6 m（離界外牆線）
+// 沿折線往外平移 dist（＞0 往外＝遠離球場中心、＜0 往內），轉角用斜接，所以每一圈（每一階、每一條走道）的轉角都是接起來的
+function pathOff(pts,dist){const E=[];for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],dx=b[0]-a[0],dz=b[1]-a[1],l=Math.hypot(dx,dz);let nx=dz/l,nz=-dx/l;
+    if(nx*((a[0]+b[0])/2-C0[0])+nz*((a[1]+b[1])/2-C0[1])<0){nx=-nx;nz=-nz;}
+    E.push({p:[a[0]+nx*dist,a[1]+nz*dist],d:[dx/l,dz/l],n:[nx,nz]});}
+  const out=[[pts[0][0]+E[0].n[0]*dist,pts[0][1]+E[0].n[1]*dist]];for(let i=1;i<pts.length-1;i++)out.push(lineIsect(E[i-1],E[i]));
+  const e=E[E.length-1];out.push([pts[pts.length-1][0]+e.n[0]*dist,pts[pts.length-1][1]+e.n[1]*dist]);return out;}
+// 沿「基準折線」（球場這一側的牆線）往外的階梯式看台：每一階是一圈連續的折線（含轉角），貼觀眾貼圖。
+// 碰撞：前 tierBoxes 階每段各一個方盒，其餘合併成每段一個方盒。base＝第一階前面的地板高度（多層看台的上層用）。
+function standPath(pts,tiers,gap,top0,o){o=o||{};const base=o.base||0,pos=[],uv=[],idxR=[],idxT=[],quadI=arr=>{const n=pos.length/3-4;arr.push(n,n+1,n+2,n,n+2,n+3);},vBase=top0-CROWD_ROW;
+  for(let k=0;k<tiers;k++){const offF=gap+k*CROWD_STEP,PF=pathOff(pts,offF),PB=pathOff(pts,offF+CROWD_STEP),top=top0+k*CROWD_ROW,bot=k?top-CROWD_ROW:base;let cu=0;
+    for(let i=0;i<PF.length-1;i++){const a=PF[i],b=PF[i+1],c=PB[i],d=PB[i+1],l=Math.hypot(b[0]-a[0],b[1]-a[1]),u0=cu/CROWD_TW,u1=(cu+l)/CROWD_TW;
+      pos.push(a[0],bot,a[1],b[0],bot,b[1],b[0],top,b[1],a[0],top,a[1]);uv.push(u0,(bot-vBase)/CROWD_ROW,u1,(bot-vBase)/CROWD_ROW,u1,(top-vBase)/CROWD_ROW,u0,(top-vBase)/CROWD_ROW);quadI(idxR);
+      pos.push(a[0],top,a[1],b[0],top,b[1],d[0],top,d[1],c[0],top,c[1]);uv.push(u0,0,u1,0,u1,1,u0,1);quadI(idxT);cu+=l;}}
+  const m=new BABYLON.Mesh('xxStand',scene),vd=new BABYLON.VertexData(),nor=[];
+  vd.positions=pos;vd.indices=idxR.concat(idxT);vd.uvs=uv;BABYLON.VertexData.ComputeNormals(pos,vd.indices,nor);vd.normals=nor;vd.applyToMesh(m);
+  m.material=crowdMat;m.isPickable=false;m.subMeshes=[];
+  const nv=pos.length/3;new BABYLON.SubMesh(0,0,nv,0,idxR.length,m);new BABYLON.SubMesh(1,0,nv,idxR.length,idxT.length,m);
+  const nb=o.tierBoxes==null?tiers:o.tierBoxes,seg=(PM,top,dep)=>{for(let i=0;i<PM.length-1;i++){const a=PM[i],b=PM[i+1],dx=b[0]-a[0],dz=b[1]-a[1];ghostBox((a[0]+b[0])/2,top/2,(a[1]+b[1])/2,Math.hypot(dx,dz)+0.1,top,dep+0.1,Math.atan2(-dz,dx),'spectator');}};
+  for(let k=0;k<nb;k++)seg(pathOff(pts,gap+k*CROWD_STEP+CROWD_STEP/2),top0+k*CROWD_ROW,CROWD_STEP);
+  if(nb<tiers){const dep=(tiers-nb)*CROWD_STEP;seg(pathOff(pts,gap+nb*CROWD_STEP+dep/2),top0+(tiers-1)*CROWD_ROW,dep);}
+}
+// 一條折線上的走道（平台）和欄杆
+const AB=newBatch();
+function aislePath(pts,off0,off1,y){const P0=pathOff(pts,off0),P1=pathOff(pts,off1),R=pathOff(pts,off0+0.1),top=[0.75,0.7,0.6],rc=[0.29,0.23,0.16];
+  for(let i=0;i<P0.length-1;i++){const a=P0[i],b=P0[i+1],c=P1[i+1],d=P1[i];AB.quad([a[0],y,a[1]],[b[0],y,b[1]],[c[0],y,c[1]],[d[0],y,d[1]],[0,1,0],top);
+    const r0=R[i],r1=R[i+1],dx=r1[0]-r0[0],dz=r1[1]-r0[1];AB.box((r0[0]+r1[0])/2,y+0.5,(r0[1]+r1[1])/2,Math.hypot(dx,dz)+0.1,1.0,0.15,Math.atan2(-dz,dx),rc);}}
+// 內野三層看台：下層 6 階（高 4.0~8.0 m）、走道、中層 6 階（8.8~12.8 m）、走道、上層 6 階（13.6~17.6 m）；總深度 25.6 m（離界外牆線）。
+// 三層各自沿同一條折線「一壘側 → 本壘後方 → 三壘側」連成一整圈，沒有缺口。
 const BOWL_BACK=1.4+18*CROWD_STEP+2*2.2+0.3,BOWL_H=17.6+1.6;       // 後牆（外牆）中心離界外牆線 25.9 m，高 19.2 m
-function bowl(ax,az,bx,bz,ext){
-  const f=stand(ax,az,bx,bz,6,1.4,4.0,ext,{tierBoxes:6});aisle(f,8.0,10.2,8.0);
-  stand(ax,az,bx,bz,6,10.2,8.8,ext,{base:8.0,tierBoxes:0});aisle(f,16.8,19.0,12.8);
-  stand(ax,az,bx,bz,6,19.0,13.6,ext,{base:12.8,tierBoxes:0});return f;}
+function bowlPath(pts){
+  standPath(pts,6,1.4,4.0,{tierBoxes:6});aislePath(pts,8.0,10.2,8.0);
+  standPath(pts,6,10.2,8.8,{base:8.0,tierBoxes:0});aislePath(pts,16.8,19.0,12.8);
+  standPath(pts,6,19.0,13.6,{base:12.8,tierBoxes:0});AB.toMesh('xxBowlAisles',vcMat);}
 const FOUL_OFF=19,homeBackZ=-20,sides=[-1,1];
-bowl(-17,homeBackZ,17,homeBackZ,0);                                                   // 本壘後方
-sides.forEach(s=>{const sa=lpt(s,6,FOUL_OFF),sb=lpt(s,86,FOUL_OFF),sc=lpt(s,121,FOUL_OFF);
-  bowl(sa.x,sa.z,sb.x,sb.z,0);                                                         // 內野三層看台（沿界外線 r=6~86 m）
-  stand(sb.x,sb.z,sc.x,sc.z,5,1.4,3.6,0,{tierBoxes:2});});                             // 往外野方向接一段較矮的 5 階看台（r=86~121 m）
+const KP=s=>lpt(s,FOUL_OFF-Math.abs(homeBackZ)/SQ,FOUL_OFF);                                  // 界外牆線（離界外線 19 m）與本壘後擋球牆線(z=-20)的交點（x≈±6.9）
+const BP=[[lpt(-1,86,FOUL_OFF).x,lpt(-1,86,FOUL_OFF).z],[KP(-1).x,KP(-1).z],[KP(1).x,KP(1).z],[lpt(1,86,FOUL_OFF).x,lpt(1,86,FOUL_OFF).z]];   // 基準折線：三壘側 r=86 → 本壘後方 → 一壘側 r=86
+bowlPath(BP);                                                                                 // 內野三層看台（整圈連續）
+sides.forEach(s=>{const sb=lpt(s,86,FOUL_OFF),sc=lpt(s,121,FOUL_OFF);
+  stand(sb.x,sb.z,sc.x,sc.z,5,1.4,3.6,0,{tierBoxes:2});});                                   // 往外野方向接一段較矮的 5 階看台（r=86~121 m）
 for(let i=0;i<OF.length-1;i++)stand(OF[i][0],OF[i][1],OF[i+1][0],OF[i+1][1],5,1.8,4.6,1.2,{tierBoxes:2});   // 外野看台
 
 // ── 封閉的外牆：由各條「看台後牆線」求交點，得到一圈封閉的多邊形；整圈都有牆，沒有缺口 ──
@@ -358,10 +385,11 @@ function drum(cx,cz,r,y0,tiers,roofH){
 
 // ═════════ ⑥ 界外牆、擋球牆、球員休息區 ═════════
 const foulMat=M('#2b4a43'),stripe=M('#d9c79c');
-wallSeg(-12,homeBackZ,12,homeBackZ,3.4,0.6,foulMat,true,false,stripe,0.6);
+// 擋球牆與界外牆沿著看台的「基準折線」：本壘後方的擋球牆從 K(-1) 到 K(1)（x≈±6.9），界外牆從 K 斜著接到界外線 19 m 的位置，再一路到極柱
+wallSeg(KP(-1).x,homeBackZ,KP(1).x,homeBackZ,3.4,0.6,foulMat,true,false,stripe,0.6);
 sides.forEach(s=>{
-  const a=lpt(s,0,FOUL_OFF),b=lpt(s,POLE,FOUL_OFF),pole=lpt(s,POLE,0);
-  wallSeg(s*12,homeBackZ,a.x,a.z,3.0,0.6,foulMat,true,false,stripe,0.6);
+  const k=KP(s),a=lpt(s,0,FOUL_OFF),b=lpt(s,POLE,FOUL_OFF),pole=lpt(s,POLE,0);
+  wallSeg(k.x,k.z,a.x,a.z,3.0,0.6,foulMat,true,false,stripe,0.6);
   wallSeg(a.x,a.z,b.x,b.z,2.8,0.6,foulMat,true,false,stripe,0.6);
   wallSeg(pole.x,pole.z,b.x,b.z,2.8,0.6,foulMat,true,false,stripe,0.6);
 });
@@ -488,18 +516,19 @@ SB.toMesh('xxStoreStone',stoneMat);PB.toMesh('xxStoreTrim',vcMat);RB.toMesh('xxS
  for(let i=0;i<8;i++){const h=5+rr()*5,c=put(MB.CreateCylinder('xxSculpt',{diameter:0.35,height:h,tessellation:8},scene),sc[0]+(rr()-0.5)*3,h/2,sc[1]+(rr()-0.5)*3,red);c.rotation.z=(rr()-0.5)*0.9;c.rotation.x=(rr()-0.5)*0.9;}
  put(MB.CreateBox('xxSculptBase',{width:6,height:0.5,depth:6}),sc[0],0.25,sc[1],M('#9b9482'));}
 
-// ═════════ ⑨b 新竹縣第二運動場（地圖左上角，依空拍照片）═════════
-// 位置：地圖左上角，換算成球場座標約在本壘板左後方 120 m（運動場中心約 (-119,-92)），離球場最近處是它東南側的小橢圓練習場（約 3 m 外）。
-// 長軸沿 U 軸（方位 22.1°，與紅框、東邊馬路平行）。內容：400 m 級跑道（8 線道、藍色）＋ 內側紅色場地 ＋ 人工草足球場（白線）、
-// 東側一座藍紫色座椅的多層看台（白色混凝土＋北端有平屋頂）、西側一座較低的看台（深灰藍斜屋頂、背後玻璃立面）、
-// 四根高約 36 m 的照明塔、跑道兩端外圍的綠色圍籬，以及東南側另一個小橢圓練習場（藍色環形跑道＋灰色水泥中心）。
-const SF={},CT=px2uv(118,170);SF.Cu=CT[0];SF.Cv=CT[1];
-const C2=px2uv(297,267);SF.C2u=C2[0];SF.C2v=C2[1];
+// ═════════ ⑨b 新竹縣第二運動場（地圖左上角，依空拍照片與地圖量測）═════════
+// 位置與方向（量自地圖）：運動場中心在地圖 (118,170)；足球場是 85 × 54 m 的長方形，長軸方位約 345°（北北西，往下偏右 15°，不是球場的 22°）；
+// 跑道外圍長約 138 m、寬約 88 m（8 線道）；東側（右）有長約 75 m 的看台，中段有一大片灰色平屋頂；西側（左）靠近邊緣有一棟長條建築（教師會）當作西看台。
+// 溜冰場（藍色小橢圓）：地圖 (298,272)，長軸方位約 11°，約 47 × 32 m，藍色環形、灰褐色水泥中心，在東看台南端的東南方。
+const SF={};
+const MKFRAME=(cx,cz,az)=>{const D=Math.PI/180,A=[Math.sin((az-67)*D),Math.cos((az-67)*D)],B=[Math.sin((az+90-67)*D),Math.cos((az+90-67)*D)];
+  return {L:(a,b)=>[cx+A[0]*a+B[0]*b,cz+A[1]*a+B[1]*b],ry:Math.atan2(-B[1],B[0])};};     // a＝沿長軸（方位 az 為正）、b＝垂直長軸往右；ry＝盒子 x 軸沿 b 時的 rotation.y
+const F1c=px2g(118,170),F1=MKFRAME(F1c[0],F1c[1],345);SF.c=F1c;
+const F2c=px2g(298,272),F2=MKFRAME(F2c[0],F2c[1],11);SF.c2=F2c;
 {
- const R_IN=34,LANES=8,LW=1.22,R_OUT=R_IN+LANES*LW,S=60,Y0=0.06;
+ const R_IN=34,LANES=8,LW=1.22,R_OUT=R_IN+LANES*LW,S=50,Y0=0.06,PITCH_L=85,PITCH_W=54;
  SF.R_OUT=R_OUT;SF.S=S;
- const L=(a,b,cu,cv)=>uv2g((cu==null?SF.Cu:cu)+a,(cv==null?SF.Cv:cv)+b);   // 運動場座標 (a 沿長軸 U、b 沿 V) → 球場座標 [x,z]
- const flatMat=(()=>{const m=M('#000000',{em:'#ffffff'});m.disableLighting=true;m.backFaceCulling=false;return m;})();
+ const L=F1.L,flatMat=(()=>{const m=M('#000000',{em:'#ffffff'});m.disableLighting=true;m.backFaceCulling=false;return m;})();
  // 跑道外形：兩個半圓（半徑 r）加兩條直道（長 s），逆時針的點列 [a,b]
  const oval=(s,r,n)=>{const pts=[];for(let i=0;i<=n;i++){const t=-Math.PI/2+Math.PI*i/n;pts.push([s/2+r*Math.cos(t),r*Math.sin(t)]);}
    for(let i=0;i<=n;i++){const t=Math.PI/2+Math.PI*i/n;pts.push([-s/2+r*Math.cos(t),r*Math.sin(t)]);}return pts;};
@@ -511,52 +540,51 @@ const C2=px2uv(297,267);SF.C2u=C2[0];SF.C2v=C2[1];
   for(let i=0;i<inn.length;i++){const j=(i+1)%inn.length,a0=L(...inn[i]),a1=L(...inn[j]),b0=L(...out[i]),b1=L(...out[j]),d=Math.hypot(inn[j][0]-inn[i][0],inn[j][1]-inn[i][1]);
     B.quad([a0[0],Y0+0.02,a0[1]],[b0[0],Y0+0.02,b0[1]],[b1[0],Y0+0.02,b1[1]],[a1[0],Y0+0.02,a1[1]],[0,1,0],[1,1,1],[0,len/10],[1,len/10],[1,(len+d)/10],[0,(len+d)/10]);len+=d;}
   B.toMesh('xxTrackRing',unlitTex(tt));
-  // ② 內側紅色場地（跑道內緣之內，用扇形三角形）＋ 外側的淺色邊緣
-  const F=newBatch(),red=[0.74,0.33,0.24],c0=L(0,0);
-  for(let i=0;i<inn.length;i++){const j=(i+1)%inn.length,p=L(...inn[i]),q=L(...inn[j]);F.tri([c0[0],Y0,c0[1]],[q[0],Y0,q[1]],[p[0],Y0,p[1]],[0,1,0],red);}
-  F.toMesh('xxTrackInfield',flatMat);
-  // ③ 足球場（100×64 m）：人工草＋白線。貼圖 1024×1024：x→64 m（沿 V）、y→100 m（沿 U）
-  const pt=newTex('xxSFPitch',1024,1024),pg=pt.getContext(),sx=1024/64,sy=1024/100;
+  // ② 內側紅色場地（扇形三角形）
+  const Fb=newBatch(),red=[0.74,0.33,0.24],c0=L(0,0);
+  for(let i=0;i<inn.length;i++){const j=(i+1)%inn.length,p=L(...inn[i]),q=L(...inn[j]);Fb.tri([c0[0],Y0,c0[1]],[q[0],Y0,q[1]],[p[0],Y0,p[1]],[0,1,0],red);}
+  Fb.toMesh('xxTrackInfield',flatMat);
+  // ③ 足球場（85×54 m）：人工草＋白線。貼圖 1024×1024：x→54 m（沿 b）、y→85 m（沿 a）
+  const pt=newTex('xxSFPitch',1024,1024),pg=pt.getContext(),sx=1024/PITCH_W,sy=1024/PITCH_L;
   for(let i=0;i<10;i++){pg.fillStyle=i%2?'#2f8f3c':'#35983f';pg.fillRect(0,i*102.4,1024,102.4);}pg.scale(sx,sy);
   pg.strokeStyle='#f3f3ee';pg.lineWidth=0.18;const line=(x0,y0,x1,y1)=>{pg.beginPath();pg.moveTo(x0,y0);pg.lineTo(x1,y1);pg.stroke();};
-  pg.strokeRect(0.5,0.5,63,99);line(0.5,50,63.5,50);pg.beginPath();pg.arc(32,50,9.15,0,TAU);pg.stroke();
-  for(const yy of[0.5,99.5]){const dir=yy<50?1:-1;pg.strokeRect(32-20.15,yy+(dir>0?0:-16.5),40.3,16.5);pg.strokeRect(32-9.15,yy+(dir>0?0:-5.5),18.3,5.5);
-    pg.beginPath();pg.arc(32,yy+dir*11,9.15,dir>0?0.93:Math.PI+0.93,dir>0?Math.PI-0.93:TAU-0.93);pg.stroke();}
+  pg.strokeRect(0.5,0.5,PITCH_W-1,PITCH_L-1);line(0.5,PITCH_L/2,PITCH_W-0.5,PITCH_L/2);pg.beginPath();pg.arc(PITCH_W/2,PITCH_L/2,7.5,0,TAU);pg.stroke();
+  for(const yy of[0.5,PITCH_L-0.5]){const dir=yy<PITCH_L/2?1:-1;pg.strokeRect(PITCH_W/2-15,yy+(dir>0?0:-12),30,12);pg.strokeRect(PITCH_W/2-7,yy+(dir>0?0:-4.5),14,4.5);}
   pt.update();
-  const pm=put(MB.CreateGround('xxSFPitchMesh',{width:64,height:100},scene),...(()=>{const c=L(0,0);return [c[0],Y0+0.04,c[1]];})(),unlitTex(pt));pm.rotation.y=BR;
+  const cp=L(0,0),pm=put(MB.CreateGround('xxSFPitchMesh',{width:PITCH_W,height:PITCH_L},scene),cp[0],Y0+0.04,cp[1],unlitTex(pt));pm.rotation.y=F1.ry;
  }
- // ④ 看台
- const bx=(b,a,y,wV,h,dU,col,o)=>{const p=L(a,b);return {p,args:[p[0],y,p[1],wV,h,dU,BR,col,o]};};
- const ST=newBatch();const put3=(b,a,y,wV,h,dU,col,o)=>{const q=bx(b,a,y,wV,h,dU,col,o);ST.box(...q.args);};
+ // ④ 看台、照明塔、圍籬（全部合併成一個 mesh）
+ const ST=newBatch();
+ const put3=(b,a,y,wV,h,dU,col,o)=>{const p=L(a,b);ST.box(p[0],y,p[1],wV,h,dU,F1.ry,col,o);};      // b＝垂直長軸的位置、a＝沿長軸的位置；wV＝沿 b 的寬、dU＝沿 a 的長
  const seatCols=[[0.18,0.42,0.78],[0.36,0.28,0.72],[0.16,0.64,0.78],[0.48,0.42,0.85],[0.22,0.34,0.7]],conc=[0.86,0.86,0.84],white=[0.94,0.94,0.92],rr=rng(88);
- // 東側看台（藍紫色座椅）：10 階，長 80 m，往外升到 9.3 m；北端（+a）有白色平屋頂
- {const A0=-40,A1=40,b0=R_OUT+3;
+ // 東側看台（藍紫色座椅）：10 階，長 75 m，往外升到 9.3 m；中段有一大片白色（灰色）平屋頂
+ {const A0=-37,A1=38,b0=R_OUT+3;
   for(let k=0;k<10;k++){const b=b0+k,top=1.2+k*0.9;put3(b+0.5,(A0+A1)/2,top-0.45,1.0,0.9,A1-A0,conc);
     for(let a=A0+1;a<A1-2;a+=2.6){if(Math.abs(a%13)<1.3)continue;put3(b+0.5,a+1.1,top+0.25,0.55,0.5,2.2,seatCols[(rr()*seatCols.length)|0]);}}
-  put3(b0+10.5,(A0+A1)/2,6,1.0,12,A1-A0,white);                                                   // 後牆（白色混凝土）
-  for(const a of[A0-0.3,A1+0.3])for(let k=0;k<10;k++)put3(b0+k+0.5,a,(1.2+k*0.9)/2,1.0,1.2+k*0.9,0.6,white);   // 兩端的階梯狀山牆
-  put3(b0+7.5,22,11.4,9,0.5,38,white);put3(b0+7.5,22,10.95,9,0.15,38,[0.55,0.56,0.58]);               // 北端平屋頂＋底面
-  for(const a of[6,22,38])put3(b0+11.4,a,5.7,0.7,11.4,0.7,white);}
- // 西側看台：7 階，長 60 m，深灰藍斜屋頂、背後玻璃立面
- {const A0=-5,A1=55,b0=R_OUT+3;
+  put3(b0+10.5,(A0+A1)/2,6,1.0,12,A1-A0,white);
+  for(const a of[A0-0.3,A1+0.3])for(let k=0;k<10;k++)put3(b0+k+0.5,a,(1.2+k*0.9)/2,1.0,1.2+k*0.9,0.6,white);
+  put3(b0+7.5,0,11.4,9,0.5,50,white);put3(b0+7.5,0,10.95,9,0.15,50,[0.55,0.56,0.58]);              // 中段平屋頂（a=-25~25）＋底面
+  for(const a of[-22,0,22])put3(b0+11.4,a,5.7,0.7,11.4,0.7,white);}
+ // 西側看台：7 階，長 42 m（a=-50~-8，對應地圖上靠近邊緣的那棟長條建築），深灰藍斜屋頂、背後青綠玻璃立面
+ {const A0=-50,A1=-8,b0=R_OUT+3;
   for(let k=0;k<7;k++){const b=-(b0+k),top=1.0+k*0.8;put3(b-0.5,(A0+A1)/2,top-0.4,1.0,0.8,A1-A0,conc);
-    for(let a=A0+1;a<A1-2;a+=2.6){if(Math.abs(a%13)<1.3)continue;put3(b-0.5,a+1.1,top+0.25,0.55,0.5,2.2,[0.16+rr()*0.1,0.42+rr()*0.12,0.72+rr()*0.1]);}}
-  put3(-(b0+7.8),(A0+A1)/2,3.2,1.0,6.4,A1-A0,[0.4,0.62,0.66]);                                      // 背後的玻璃立面（青綠）
-  put3(-(b0+3.4),(A0+A1)/2,8.2,13,0.45,A1-A0+2,[0.52,0.6,0.68],{rz:-0.09});                           // 斜屋頂（背後高、靠場邊低）
+    for(let a=A0+1;a<A1-2;a+=2.6){if(Math.abs((a+50)%13)<1.3)continue;put3(b-0.5,a+1.1,top+0.25,0.55,0.5,2.2,[0.16+rr()*0.1,0.42+rr()*0.12,0.72+rr()*0.1]);}}
+  put3(-(b0+7.8),(A0+A1)/2,3.2,1.0,6.4,A1-A0,[0.4,0.62,0.66]);
+  put3(-(b0+3.4),(A0+A1)/2,8.2,13,0.45,A1-A0+2,[0.52,0.6,0.68],{rz:-0.09});
   put3(-(b0-0.2),(A0+A1)/2,7.1,0.5,0.7,A1-A0+2,white);
-  for(let a=A0;a<=A1;a+=10)put3(-(b0+7.8),a,4.4,0.6,8.8,0.6,white);}
+  for(let a=A0;a<=A1+0.1;a+=10)put3(-(b0+7.8),a,4.4,0.6,8.8,0.6,white);}
  // 四根照明塔（高 36 m，上面一排燈具）
- for(const [a,b] of[[-62,-(R_OUT+9)],[-62,R_OUT+9],[62,-(R_OUT+9)],[62,R_OUT+9]]){const p=L(a,b);
-  ST.box(p[0],18,p[1],0.8,36,0.8,BR,[0.8,0.82,0.84]);ST.box(p[0],36.3,p[1],5.5,3.2,0.9,BR,[0.22,0.24,0.27]);
-  for(let i=-2;i<=2;i++)for(let j=0;j<2;j++)ST.box(p[0]+Math.cos(BR)*i*1.0,35.7+j*1.3,p[1]-Math.sin(BR)*i*1.0,0.8,0.9,0.15,BR,[1,1,0.9]);}
- // 圍籬：跑道兩端的半圓外 2.5 m，每 5 m 一根立柱＋上緣橫桿
+ for(const [a,b] of[[-66,-(R_OUT+9)],[-66,R_OUT+9],[66,-(R_OUT+9)],[66,R_OUT+9]]){const p=L(a,b);
+  ST.box(p[0],18,p[1],0.8,36,0.8,F1.ry,[0.8,0.82,0.84]);ST.box(p[0],36.3,p[1],5.5,3.2,0.9,F1.ry,[0.22,0.24,0.27]);
+  for(let i=-2;i<=2;i++)for(let j=0;j<2;j++){const q=L(a,b+i*1.0);ST.box(q[0],35.7+j*1.3,q[1],0.8,0.9,0.15,F1.ry,[1,1,0.9]);}}
+ // 圍籬：跑道兩端的半圓外 2.5 m，每段一根立柱＋上緣橫桿
  {const f=oval(S,R_OUT+2.5,24),fc=[0.28,0.5,0.34];
-  for(let i=0;i<f.length;i++){const a=f[i];if(Math.abs(a[0])<S/2-0.5)continue;const p=L(...a),q=L(...f[(i+1)%f.length]);
-    if(!(Math.abs(f[(i+1)%f.length][0])<S/2-0.5)){ST.box(p[0],0.65,p[1],0.1,1.3,0.1,0,fc);const dx=q[0]-p[0],dz=q[1]-p[1];ST.box((p[0]+q[0])/2,1.25,(p[1]+q[1])/2,Math.hypot(dx,dz),0.08,0.08,Math.atan2(-dz,dx),fc);}}}
+  for(let i=0;i<f.length;i++){const a=f[i],nx=f[(i+1)%f.length];if(Math.abs(a[0])<S/2-0.5||Math.abs(nx[0])<S/2-0.5)continue;const p=L(...a),q=L(...nx);
+    ST.box(p[0],0.65,p[1],0.1,1.3,0.1,0,fc);const dx=q[0]-p[0],dz=q[1]-p[1];ST.box((p[0]+q[0])/2,1.25,(p[1]+q[1])/2,Math.hypot(dx,dz),0.08,0.08,Math.atan2(-dz,dx),fc);}}
  ST.toMesh('xxSFStands',vcMat);
- // ⑤ 東南側的小橢圓練習場：藍色環形跑道（寬 2.6 m）＋灰色水泥中心
- {const s2=14,r2=15,B2=newBatch(),inn=oval(s2,r2-2.6,20),out=oval(s2,r2,20),blue=[0.16,0.46,0.82],gray=[0.74,0.73,0.70],c0=L(0,0,SF.C2u,SF.C2v);
-  for(let i=0;i<inn.length;i++){const j=(i+1)%inn.length,a0=L(...inn[i],SF.C2u,SF.C2v),a1=L(...inn[j],SF.C2u,SF.C2v),b0=L(...out[i],SF.C2u,SF.C2v),b1=L(...out[j],SF.C2u,SF.C2v);
+ // ⑤ 溜冰場（藍色小橢圓）：藍色環形跑道（寬 2.8 m）＋灰褐色水泥中心；長軸方位 11°
+ {const s2=15,r2=16,B2=newBatch(),inn=oval(s2,r2-2.8,20),out=oval(s2,r2,20),blue=[0.16,0.46,0.82],gray=[0.74,0.7,0.62],L2=F2.L,c0=L2(0,0);
+  for(let i=0;i<inn.length;i++){const j=(i+1)%inn.length,a0=L2(...inn[i]),a1=L2(...inn[j]),b0=L2(...out[i]),b1=L2(...out[j]);
     B2.quad([a0[0],Y0+0.02,a0[1]],[b0[0],Y0+0.02,b0[1]],[b1[0],Y0+0.02,b1[1]],[a1[0],Y0+0.02,a1[1]],[0,1,0],blue);
     B2.tri([c0[0],Y0,c0[1]],[a1[0],Y0,a1[1]],[a0[0],Y0,a0[1]],[0,1,0],gray);}
   B2.toMesh('xxSFSmallOval',flatMat);SF.r2=r2+s2/2;}
@@ -577,8 +605,8 @@ const C2=px2uv(297,267);SF.C2u=C2[0];SF.C2v=C2[1];
  const EN=-MAPS.HAU+TILT*MAPS.HAV;                                                  // 南邊道路拉直之後，紅框下緣的 du 值
  const banned=(dU,dV)=>{const du=dU-TILT*dV;
    if(dU>-60&&dU<152&&dV>-58&&dV<150)return true;                                   // 球場（含外牆、鼓形塔）
-   if(Math.abs(dU-SF.Cu)<112&&Math.abs(dV-SF.Cv)<74)return true;                          // 第二運動場（含看台、照明塔）
-   if(Math.hypot(dU-SF.C2u,dV-SF.C2v)<32)return true;                                // 東南側的小橢圓練習場
+   {const q=g2uv(SF.c[0],SF.c[1]);if(Math.hypot(dU-q[0],dV-q[1])<98)return true;}   // 第二運動場（含看台、照明塔）
+   {const q=g2uv(SF.c2[0],SF.c2[1]);if(Math.hypot(dU-q[0],dV-q[1])<34)return true;}   // 溜冰場
    if(du<EN+2&&du>EN-64)return true;                                                // 莊敬一路＋光明六路＋之間的綠帶
    if(dV>V_E-13&&dV<V_E+13&&du>EN-6)return true;                                    // 莊敬北路與人行道
    if(dV>=V_E+9&&dV<V_E+96&&dU>D1[0]-40&&dU<D3[0]+20)return true;                   // 百貨公司與廣場

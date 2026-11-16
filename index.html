@@ -272,7 +272,7 @@ html,body{height:100%;background:#000}
 /* 攻守交換時清空其他面板，只留下同一列隊徽與超大比分 */
 #inningScoreFlash{position:absolute;z-index:50;inset:0;width:100%;height:100%;box-sizing:border-box;padding:0;background:transparent;border:0;border-radius:0;box-shadow:none;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transform:scale(.98);transition:opacity .18s,transform .18s;pointer-events:none;text-align:center;overflow:hidden}
 #inningScoreFlash.show{opacity:1;visibility:visible;transform:scale(1)}
-#app.changing-sides #hud> :not(#inningScoreFlash):not(#introPanel):not(#inningBreak){visibility:hidden!important;opacity:0!important}
+#app.changing-sides #hud> :not(#inningScoreFlash):not(#introPanel):not(#inningBreak):not(#skipHint){visibility:hidden!important;opacity:0!important}
 #app.changing-sides #inningBreak.show{visibility:visible;opacity:1}
 #app.changing-sides #inningScoreFlash.show{visibility:visible;opacity:1;transform:scale(1)}
 #inningScoreFlash .flash-line{--flash-size:clamp(108px,24vw,360px);display:flex;align-items:center;justify-content:center;gap:clamp(4px,1.7vw,24px);width:100%;height:100%;padding:0 2.5%;box-sizing:border-box;white-space:nowrap}
@@ -392,6 +392,8 @@ html,body{height:100%;background:#000}
 /* ===== 賽前先發名單畫面 ===== */
 #weatherHud{position:absolute;left:14px;top:12px;z-index:35;display:flex;gap:14px;align-items:center;padding:8px 14px;border-radius:10px;background:rgba(8,16,31,.72);border:1px solid #354765;color:var(--chalk);font:800 15px var(--f-ui);letter-spacing:.04em;pointer-events:none}
 #weatherHud[hidden]{display:none}
+#skipHint{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:36;pointer-events:none;color:rgba(255,255,255,.72);font:700 13px var(--f-ui);letter-spacing:.14em;text-shadow:0 1px 4px #000,0 0 10px rgba(0,0,0,.8)}
+#skipHint[hidden]{display:none}
 #weatherHud b{font-weight:900;color:var(--led)}
 #pregame{position:absolute;inset:0;z-index:34;display:none;pointer-events:none;font-family:var(--f-ui)}
 #pregame.show{display:block}
@@ -552,6 +554,7 @@ button.pg-row.sel.pcon{box-shadow:none}
         <img class="intro-logo" id="introLogoA" alt="" hidden><span></span><img class="intro-logo" id="introLogoB" alt="" hidden>
         <b class="intro-name" id="introNameA"></b><i class="intro-vs">VS</i><b class="intro-name" id="introNameB"></b></div></div>
     <div id="weatherHud" hidden></div>
+    <div id="skipHint" hidden>按滑鼠鍵跳過</div>
     <section id="pregame" aria-label="賽前先發名單"><div class="pg-panel" id="pgLeft"></div><div class="pg-panel" id="pgRight"></div><div class="pd-box" id="pgDetail"></div><button id="pgPlay" type="button">PLAY BALL</button></section>
     <div id="injToast" hidden></div>
     <section id="subPanel" hidden aria-label="替補"><div class="pg-panel" id="subList"></div><div class="pd-box" id="subDetail"></div><div class="sub-bar"><button id="subClose" type="button">返回比賽</button></div></section>
@@ -7138,7 +7141,7 @@ function startPregame(){
   $('app').classList.add('hud-off');   // 只借用這個樣式：隱藏計分板等比賽中 HUD
   pregame={focus:null,pend:null,msg:'',sel:null,edit:false,mode:'order',aerialT:0,ang:0,shown:false};setAerialView(true);
   pgAfterChange();activeBatterIndex.RED=0;
-  $('pregame').classList.remove('show');showWeatherHud(true);
+  $('pregame').classList.remove('show');showWeatherHud(true);skipHint(true);
 }
 // 空拍機繞球場一圈（60 秒）：以場中央為圓心、俯角約 15 度、從遠處往下看
 const AERIAL={cx:0,cz:42,R:180,elev:15*Math.PI/180,period:60,fovK:1.3};
@@ -7205,20 +7208,51 @@ function introCam(dt){
   const k=1-Math.exp(-dt*2.5);g.ct=lerpV(g.ct,t,k);g.cs+=(sc-g.cs)*k;
   camFollow=null;camTgt=g.ct.clone();placeAir(camTgt,g.cs);
 }
+function skipHint(on){const h=$('skipHint');if(h)h.hidden=!on;}
+function pregameShow(){   // 步驟 2：按滑鼠鍵跳過環繞空拍 → 顯示目前球員名單與 PLAY BALL
+  const g=pregame;if(!g||g.shown)return;g.shown=true;skipHint(false);$('pregame').classList.add('show');renderPregame();
+}
 function pregameTick(dt){
   const g=pregame;if(!g)return;
-  g.aerialT+=dt;
-  if(!g.shown&&g.aerialT>=2){g.shown=true;$('pregame').classList.add('show');renderPregame();}   // 空拍兩秒後才出現兩隊名單
+  g.aerialT+=dt;   // 步驟 1：全畫面無遮蔽的環繞空拍，不會自動結束，按滑鼠鍵才跳過
 }
+// ---- 步驟 3：入場後守備員在場上傳球演練（繞內野），不按滑鼠鍵就一直播放 ----
+const WARM_RING=['捕手','三壘手','游擊手','二壘手','一壘手','投手'];
+let warm=null;
+function warmFielder(pos){return pos==='捕手'?catcherDef:pos==='投手'?pitcherDef:defenders.find(d=>d.name===pos);}
+function warmInit(){warm={k:0,t:0,from:warmFielder(WARM_RING[0]),to:null,T:0};warmNext();}
+function warmNext(){
+  const w=warm;w.from=w.to||w.from;
+  let a=WARM_RING.indexOf(w.from.name);if(a<0)a=0;
+  const nx=warmFielder(WARM_RING[(a+1)%WARM_RING.length]);
+  const h0=handPos(w.from,'right'),h1=handPos(nx,'left');
+  w.to=nx;w.t=0;w.hold=0.55;w.T=Math.max(0.35,Math.hypot(h1.x-h0.x,h1.z-h0.z)/22);
+}
+function warmTick(dt){
+  const w=warm;if(!w){return;}
+  w.t+=dt;
+  const a=w.from,b=w.to;if(!a||!b||!a.root||!b.root){return;}
+  const pa=a.root.position,pb=b.root.position;
+  a.aim=V(pb.x,1.1,pb.z);b.aim=V(pa.x,1.1,pa.z);
+  ball.scaling.setAll(1);ball.isVisible=true;
+  if(w.t<w.hold){ball.position.copyFrom(handPos(a,'left'));a.throwing=0;return;}
+  const u=Math.min(1,(w.t-w.hold)/w.T);
+  const h0=handPos(a,'right'),h1=handPos(b,'left');
+  a.throwing=Math.max(0,1-u*2.2);
+  ball.position.set(h0.x+(h1.x-h0.x)*u,h0.y+(h1.y-h0.y)*u+Math.sin(u*Math.PI)*(0.35+0.05*Math.hypot(h1.x-h0.x,h1.z-h0.z)),h0.z+(h1.z-h0.z)*u);
+  if(u>=1){a.throwing=0;warmNext();}
+}
+function warmStop(){if(warm){const a=warm.from,b=warm.to;if(a)a.throwing=0;if(b)b.throwing=0;}warm=null;}
 function resetPlayState(){simLive=false;inningOver=false;flyOut=false;hitStop=0;flightClock=0;ft=0;stT=0;playClock=0;bases=[0,0,0];baseP=[null,null,null];balls=strikes=outs=0;lastRuns=0;}
 function pregamePlayBall(){   // 按 PLAY BALL：才開始入場動畫（裁判與守備員從休息區入場、顯示隊徽 VS）
   if(!pregame||!pregame.shown)return;
   pregame=null;setAerialView(false);$('pregame').classList.remove('show');showWeatherHud(false);
   introCamS=null;$('app').classList.remove('hud-off');
-  startIntro();
+  startIntro();skipHint(true);   // 步驟 3：入場＋守備傳球演練，按滑鼠鍵跳過
 }
 function beginPlayBall(){   // 入場動畫結束：正式開打
   stadiumAudioOpenEnd();   // 第一棒打者要出現了：開場音樂漸出
+  warmStop();skipHint(false);
   pregame=null;setAerialView(false);$('pregame').classList.remove('show');showWeatherHud(false);
   chg=null;$('app').classList.remove('hud-off','changing-sides');
   chase=false;FL=null;P=null;camFollow=null;ball.isVisible=false;
@@ -7394,7 +7428,9 @@ function updateChange(dt){
       if(chg.t>40){clearExiters();clearWalk();}
       finishLeave(false);
     }
-  }else if(fin||chg.t>40)finishChange();
+  }else if(chg.intro&&chg.phase==='warm'){warmTick(dt);}   // 入場完成後持續傳球演練，直到玩家按滑鼠鍵
+  else if(chg.intro&&(fin||chg.t>40)){chg.phase='warm';warmInit();}
+  else if(fin||chg.t>40)finishChange();
 }
 function resetBall(){wild=null;fieldErrInPlay=0;fChain.length=0;fPlay.clear();ifPend=false;
   ball.isVisible=false;
@@ -7414,7 +7450,7 @@ function enterReady(){rcClear();pkAICool=0;healthEpoch++;bodyHitDone.clear();
   batterWalkUpCheck();
   pkOnReady();
 }
-function showModeSelection(){stadiumAudioStop();lgAbort();lgGame=null;homeMe=false;INNINGS=9;$('backToTeams').textContent='返回選擇球隊';pregame=null;setAerialView(false);if($('pregame'))$('pregame').classList.remove('show');odReset();umpSetOn(false);outSongPend=false;outSongDelay=0;outSongFlag=1;outSongTriggered=false;lastBatKey='';
+function showModeSelection(){warmStop();skipHint(false);stadiumAudioStop();lgAbort();lgGame=null;homeMe=false;INNINGS=9;$('backToTeams').textContent='返回選擇球隊';pregame=null;setAerialView(false);if($('pregame'))$('pregame').classList.remove('show');odReset();umpSetOn(false);outSongPend=false;outSongDelay=0;outSongFlag=1;outSongTriggered=false;lastBatKey='';
   tm('leave');
   practiceMode=false;zone.isVisible=true;zg.isVisible=true;practiceShotSettled=false;selectedGameMode=null;st='title';mode='bat';chase=false;FL=null;P=null;camFollow=null;lockerRoomView=false;
   hideMissIndicator();clearSafeIndicators();
@@ -9634,7 +9670,7 @@ window.addEventListener('keydown',e=>{if(mode!=='bat'||st==='title'||e.ctrlKey||
 function buntDragEnd(){if(!BUNT.drag&&!BUNT.held)return;BUNT.held=false;BUNT.charged=false;BUNT.drag=null;BUNT.offX=BUNT.offY=0;}   // 放開右鍵＝收回觸擊姿勢，打擊框回到一般
 window.addEventListener('pointerup',e=>{if(e.button===2)buntDragEnd();});window.addEventListener('pointercancel',buntDragEnd);window.addEventListener('blur',buntDragEnd);
 canvas.addEventListener('pointerdown',e=>{e.preventDefault();ptrX=e.clientX;ptrY=e.clientY;
-  if(pregame)return;
+  if(pregame){if(!pregame.shown&&pregame.aerialT>0.25)pregameShow();return;}   // 空拍畫面：按滑鼠鍵跳過，顯示球員名單
   if(st==='change'){skipChange();return;}   // 換場畫面：點一下直接略過
   if(practiceMode)return;   // 守備練習只由本壘板滑桿與「發射測試球」控制，不接受揮棒輸入
   if(skipWalkUp())return;   // 打者走向打擊區：點一下直接就位

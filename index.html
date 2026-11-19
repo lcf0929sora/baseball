@@ -110,6 +110,7 @@ body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;ba
 .team-footer #go{margin:0;padding:10px 18px;font-size:15px;letter-spacing:.08em}
 #app.hud-off .board,#app.hud-off .stats,#app.hud-off .sc,#app.hud-off #attackTop,#app.hud-off #activePlayerInfo,#app.hud-off #ptypes,#app.hud-off .tbar,#app.hud-off .pitch{display:none!important}
 #app.hud-off #start{display:none!important}
+#app.hud-off .base-mini{display:none!important}   /* 環繞空拍時不顯示跑者壘包狀態圖 */
 @media(max-width:600px){
  .mode-select{padding:22px 14px;gap:13px}.mode-actions{grid-template-columns:1fr;gap:9px}.mode-actions button{padding:12px}
 }
@@ -419,7 +420,6 @@ button.pg-row.sel{background:var(--led);color:#1a1205}
 .pg-seg button{flex:1;padding:6px;border:1px solid #465775;border-radius:6px;background:#17243b;color:var(--chalk);font:700 13px var(--f-ui);cursor:pointer}
 .pg-seg button.on{background:var(--led);color:#1a1205;border-color:var(--led)}
 .pg-sub{font-size:12px;color:var(--dim);margin:6px 0 2px;letter-spacing:.08em}
-.pg-bench{max-height:none;overflow:visible}
 .pg-panel{display:flex;flex-direction:column;overflow:clip}   /* clip：點選按鈕取得焦點時，瀏覽器不會把面板自己捲動（球隊名稱跳動的原因） */
 .pg-panel>*{flex:0 0 auto}
 .pg-scroll{overflow:auto;min-height:60px;scrollbar-color:#46608a #0f1829;overscroll-behavior:contain}
@@ -439,7 +439,6 @@ button.pg-row.sel{background:var(--led);color:#1a1205}
 .pg-th.wide i.a{color:var(--dim)}
 button.pg-row.sel i.pt{color:#1a1205}
 button.pg-row.sel i.a,button.pg-row.sel i.a.hi,button.pg-row.sel i.a.lo{color:#1a1205;font-weight:900}
-.pg-row.wide .st{grid-column:1/-1}
 #subPanel .pg-row.wide{padding-top:2px;padding-bottom:2px;grid-template-columns:34px 40px 118px 62px 58px repeat(9,31px) minmax(0,1fr)}
 #subPanel .pg-row.wide.bench{grid-template-columns:40px 118px 62px 58px repeat(9,31px) minmax(0,1fr)}
 .pg-panel{overscroll-behavior:contain;touch-action:pan-y}
@@ -3435,22 +3434,19 @@ function rdFocusUpdate(d){
 //   ‧ 離跑者太遠（RD_CHASE_MAX 以上，例如外野手持球）→ 回傳 null，走一般傳球／中繼判斷
 // 跑者回頭時要減速、反向再加速，贏不了已就位準備起跑的壘手，所以不需要因為「可能回頭」就提早傳。
 const RD_CHASE_MAX=22;
-// 夾殺診斷面板（右下角）：顯示持球者此刻的夾殺決策與每一關的數值，用來確認「不傳球」到底卡在哪一關。RD_DEBUG=false 可關閉。
-const RD_DEBUG=true;let rdDiagT=0;
+// 偵錯紀錄開關：false＝完全不記錄（夾殺、盜壘、safe／out 判定的紀錄，由設定畫面「儲存除錯訊息」存檔）。
+const RD_DEBUG=true;
 // ===== 夾殺偵錯紀錄 =====
-// 整個 play 的夾殺過程（決策、傳球、接球、補位指派、跑者狀態、每 0.1 s 位置快照、出局／安全）寫進 RDLOG.lines。
-// ‧ 面板（右下角）可選取文字、按「複製」複製全文、按「下載」存成 .txt、「展開」可看全文。
-// ‧ 每個 play 結束（clearRunners）與夾殺進行中每 2 秒自動存：① localStorage 'baseball.rundown.lastlog'（永遠有）
-//   ② 若按過「存檔位置」指定了檔案（Chrome／Edge 的 File System Access），每次都覆寫同一個檔案（固定檔名，例如 rundown_last.txt）。
-// ‧ 紀錄只保留「最近一個有夾殺的 play」；下一個有夾殺的 play 開始時才會清掉舊的。
-const RDLOG={halfKey:'',lines:[],active:false,newPlay:true,max:9000,snapT:0,decKey:'',decT:-9,altT:-9,rst:new Map(),saveAt:0,dirty:false,fh:null,msg:'尚未存檔',autoDl:false,busy:false};
+// 整個半局的偵錯紀錄（夾殺決策／傳球／接球／補位、盜壘指令、觸殺、safe／out 判定、每 0.1 s 位置快照）寫進 RDLOG.lines；
+// 每換半局自動清除（dbgSync），設定畫面的「儲存除錯訊息」把它存成 .txt。
+const RDLOG={halfKey:'',lines:[],active:false,newPlay:true,max:9000,snapT:0,decKey:'',decT:-9,altT:-9,rst:new Map()};
 const rdn=d=>d?(d.name||d.label||'?'):'-';
 const rf=(x,n=2)=>(typeof x==='number'&&Number.isFinite(x))?x.toFixed(n):(x===undefined||x===null?'-':String(x));
 function dbgHalfName(){const top=(mode==='bat')!==!!homeMe;return '第'+inn+'局'+(top?'上':'下')+'半';}
 function dbgHeader(){return '=== 除錯紀錄 '+new Date().toLocaleString()+' | '+dbgHalfName()+' | '+(mode==='bat'?'玩家進攻':'電腦進攻')+' | 球場 '+(stadiumLoadedId||'預設')+' ===';}
 // 每半局自動清除：換半局（inn／mode 改變）後第一次寫紀錄時清掉舊的，重新開始
-function dbgSync(){const k=inn+'|'+mode;if(RDLOG.halfKey===k)return;RDLOG.halfKey=k;RDLOG.lines=[dbgHeader()];RDLOG.active=false;RDLOG.newPlay=true;RDLOG.rst.clear();RDLOG.decKey='';RDLOG.decT=-9;RDLOG.dirty=false;}
-function rdl(kind,txt){if(!RD_DEBUG)return;dbgSync();if(RDLOG.lines.length>=RDLOG.max)return;RDLOG.lines.push('['+rf(playClock)+'] '+kind+' '+txt);RDLOG.dirty=true;}
+function dbgSync(){const k=inn+'|'+mode;if(RDLOG.halfKey===k)return;RDLOG.halfKey=k;RDLOG.lines=[dbgHeader()];RDLOG.active=false;RDLOG.newPlay=true;RDLOG.rst.clear();RDLOG.decKey='';RDLOG.decT=-9;}
+function rdl(kind,txt){if(!RD_DEBUG)return;dbgSync();if(RDLOG.lines.length>=RDLOG.max)return;RDLOG.lines.push('['+rf(playClock)+'] '+kind+' '+txt);}
 function dbgSaveFile(){   // 設定畫面「儲存除錯訊息」：把這半局的所有紀錄存成 .txt（檔名與開頭都有時間與局數）
   dbgSync();const d=new Date(),z=n=>String(n).padStart(2,'0'),stamp=d.getFullYear()+z(d.getMonth()+1)+z(d.getDate())+'_'+z(d.getHours())+z(d.getMinutes())+z(d.getSeconds());
   const t='儲存時間：'+d.toLocaleString()+'　'+dbgHalfName()+'（共 '+RDLOG.lines.length+' 行）\n'+RDLOG.lines.join('\n');
@@ -3479,7 +3475,7 @@ function rdlBegin(why){
   rdl('BEGIN',why+' 專注='+rdlRunner(rdFocus));
   rdl('FIELD',allFielders().map(rdlPos).join(' '));rdl('COVER',rdlCovers());
 }
-function rdlEnd(why){if(!RDLOG.active)return;rdl('END',why+' 跑者='+runners.map(rdlRunner).join(' ; '));RDLOG.active=false;RDLOG.newPlay=true;rdlSave('end');}
+function rdlEnd(why){if(!RDLOG.active)return;rdl('END',why+' 跑者='+runners.map(rdlRunner).join(' ; '));RDLOG.active=false;RDLOG.newPlay=true;}
 function dbgTagInfo(){return allFielders().filter(d=>d&&(d.tag||d.tagChase||d.noTagRunner)).map(d=>rdn(d)+'{'+(d.tag?'tag:'+d.tag.phase+' t='+rf(d.tag.t)+' ok='+d.tag.ok+' →'+((d.tag.r&&d.tag.r.pl&&d.tag.r.pl.name)||'?'):'')+(d.tagChase?' chase→'+((d.tagChase.pl&&d.tagChase.pl.name)||'?'):'')+'}').join(' ');}
 function rdlTick(dt){
   if(!RD_DEBUG)return;dbgSync();
@@ -3494,69 +3490,6 @@ function rdlTick(dt){
     let ball_='';try{if(fieldingStage==='throw')ball_=' ball('+rf(ball.position.x,1)+','+rf(ball.position.z,1)+')';}catch(e){}
     rdl('SNAP','stage='+fieldingStage+ball_+' holder='+rdlPos(ballHolder()||defenseReceiver)+' focus='+rdlRunner(rdFocus)+' others='+runners.filter(q=>q!==rdFocus).map(rdlRunner).join(';')+' cov{'+rdlCovers()+'}');
   }
-  if(RDLOG.dirty&&performance.now()-RDLOG.saveAt>2000)rdlSave('auto');
-}
-function rdlText(){
-  if(RDLOG.lines.length)return RDLOG.lines.join('\n');
-  try{return localStorage.getItem('baseball.rundown.lastlog')||'';}catch(e){return '';}
-}
-async function rdlWriteFile(text){
-  const h=RDLOG.fh;if(!h||RDLOG.busy)return;RDLOG.busy=true;
-  try{
-    if(h.queryPermission&&(await h.queryPermission({mode:'readwrite'}))!=='granted'){RDLOG.msg='檔案需重新授權：按一下「存檔位置」';return;}
-    const w=await h.createWritable();await w.write(text);await w.close();RDLOG.msg='已寫入檔案 '+h.name+'（'+new Date().toLocaleTimeString()+'）';
-  }catch(e){RDLOG.msg='寫檔失敗：'+(e&&e.message||e);}
-  finally{RDLOG.busy=false;rdlPanelMsg();}
-}
-function rdlSave(why){
-  RDLOG.saveAt=performance.now();RDLOG.dirty=false;
-  const text=RDLOG.lines.join('\n');if(!text)return;
-  try{localStorage.setItem('baseball.rundown.lastlog',text.slice(-2800000));RDLOG.msg='已存 localStorage（'+RDLOG.lines.length+' 行，'+new Date().toLocaleTimeString()+'）';}catch(e){RDLOG.msg='localStorage 寫入失敗';}
-  if(RDLOG.fh)rdlWriteFile(text);
-  if(RDLOG.autoDl&&why==='end')rdlDownload();
-  rdlPanelMsg();
-}
-function rdlDownload(){
-  const t=rdlText();if(!t){RDLOG.msg='沒有紀錄可下載';rdlPanelMsg();return;}
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/plain;charset=utf-8'}));a.download='rundown_last.txt';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
-}
-function rdlCopy(){
-  const t=rdlText()||'（尚無夾殺紀錄）';
-  const fb=()=>{const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;left:-9999px';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');RDLOG.msg='已複製 '+t.split('\n').length+' 行';}catch(e){RDLOG.msg='複製失敗：請按「展開」手動全選複製';}ta.remove();rdlPanelMsg();};
-  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(()=>{RDLOG.msg='已複製 '+t.split('\n').length+' 行';rdlPanelMsg();}).catch(fb);else fb();
-}
-function rdlIdb(mode,fn){return new Promise((res,rej)=>{const q=indexedDB.open('baseball-rdlog',1);q.onupgradeneeded=()=>q.result.createObjectStore('h');q.onerror=()=>rej(q.error);q.onsuccess=()=>{const db=q.result,tx=db.transaction('h',mode),rq=fn(tx.objectStore('h'));tx.oncomplete=()=>{db.close();res(rq&&rq.result);};tx.onerror=()=>{db.close();rej(tx.error);};};});}
-async function rdlPickFile(){
-  if(RDLOG.fh&&RDLOG.fh.requestPermission){try{if((await RDLOG.fh.requestPermission({mode:'readwrite'}))==='granted'){RDLOG.msg='已授權：'+RDLOG.fh.name;rdlPanelMsg();const t=RDLOG.lines.join('\n');if(t)rdlWriteFile(t);return;}}catch(e){}}
-  if(!window.showSaveFilePicker){RDLOG.msg='此瀏覽器不能指定自動存檔檔案（請用 Chrome／Edge）；仍可用「複製」「下載」，並且永遠有 localStorage 備份';rdlPanelMsg();return;}
-  try{
-    const h=await showSaveFilePicker({suggestedName:'rundown_last.txt',types:[{description:'文字檔',accept:{'text/plain':['.txt']}}]});
-    RDLOG.fh=h;try{await rdlIdb('readwrite',st=>st.put(h,'fh'));}catch(e){}
-    RDLOG.msg='自動存檔檔案：'+h.name+'（之後每個夾殺 play 結束自動覆寫）';rdlPanelMsg();
-    const t=rdlText();if(t)rdlWriteFile(t);
-  }catch(e){}
-}
-try{rdlIdb('readonly',st=>st.get('fh')).then(h=>{if(h){RDLOG.fh=h;RDLOG.msg='已記住存檔檔案 '+h.name+'（需授權時按「存檔位置」）';}}).catch(()=>{});}catch(e){}
-let rdPanel=null,rdLive=null,rdMsgEl=null,rdTa=null;
-function rdlPanelMsg(){if(rdMsgEl)rdMsgEl.textContent=RDLOG.msg;if(rdTa&&rdTa.style.display!=='none')rdTa.value=rdlText();}
-function rdPanelEnsure(){
-  return;   // 除錯面板不在遊戲畫面顯示；改由設定畫面的「儲存除錯訊息」存檔
-  if(rdPanel)return;
-  rdPanel=document.createElement('div');
-  rdPanel.style.cssText='position:fixed;right:8px;bottom:8px;z-index:9999;background:rgba(0,0,0,.84);color:#9f9;font:12px/1.45 monospace;padding:6px 8px;border:1px solid #2a3a58;max-width:380px;user-select:text;-webkit-user-select:text;pointer-events:auto';
-  ['pointerdown','pointerup','click','dblclick','keydown','keyup','wheel','contextmenu'].forEach(ev=>rdPanel.addEventListener(ev,e=>e.stopPropagation()));
-  const head=document.createElement('div');head.style.cssText='display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px;align-items:center';
-  const t=document.createElement('b');t.textContent='夾殺診斷';t.style.marginRight='6px';head.appendChild(t);
-  const btn=(txt,fn)=>{const b=document.createElement('button');b.type='button';b.textContent=txt;b.style.cssText='font:11px monospace;padding:2px 6px;background:#17243b;color:#cfe;border:1px solid #465775;border-radius:4px;cursor:pointer';b.addEventListener('click',fn);head.appendChild(b);return b;};
-  btn('複製',rdlCopy);btn('下載',rdlDownload);btn('存檔位置',rdlPickFile);
-  btn('展開',function(){const on=rdTa.style.display==='none';rdTa.style.display=on?'block':'none';this.textContent=on?'收合':'展開';if(on)rdTa.value=rdlText();});
-  btn('清除',()=>{RDLOG.lines=[];RDLOG.newPlay=true;RDLOG.active=false;try{localStorage.removeItem('baseball.rundown.lastlog');}catch(e){}RDLOG.msg='已清除';rdlPanelMsg();});
-  const lab=document.createElement('label');lab.style.cssText='font:11px monospace;color:#9fb4d8;display:flex;align-items:center;gap:2px';
-  const cb=document.createElement('input');cb.type='checkbox';cb.addEventListener('change',()=>{RDLOG.autoDl=cb.checked;});lab.appendChild(cb);lab.appendChild(document.createTextNode('結束自動下載'));head.appendChild(lab);
-  rdLive=document.createElement('pre');rdLive.style.cssText='margin:0;white-space:pre-wrap;user-select:text;-webkit-user-select:text';
-  rdMsgEl=document.createElement('div');rdMsgEl.style.cssText='color:#9fb4d8;font-size:11px;margin-top:3px';rdMsgEl.textContent=RDLOG.msg;
-  rdTa=document.createElement('textarea');rdTa.readOnly=true;rdTa.rows=10;rdTa.style.cssText='display:none;width:360px;margin-top:4px;font:11px monospace;background:#06101e;color:#cfe;border:1px solid #2a3a58';
-  rdPanel.appendChild(head);rdPanel.appendChild(rdLive);rdPanel.appendChild(rdMsgEl);rdPanel.appendChild(rdTa);document.body.appendChild(rdPanel);
 }
 function rdDiag(o){
   if(!RD_DEBUG)return;
@@ -3566,9 +3499,6 @@ function rdDiag(o){
       RDLOG.decKey=key;RDLOG.decT=playClock;
       rdl('DEC','持球者='+rdn({name:o.h})+' 決策='+rf(o.res)+' 原因='+rf(o.why)+' | 跑者='+rf(o.rs)+' v='+rf(o.v)+' 目標壘='+rf(o.B)+' 動態不明='+rf(o.ambig)+' 在動='+rf(o.moving)+' 與跑者距離='+rf(o.dist,1)+' | 補位者='+rf(o.cv)+'('+rf(o.cvKind)+') 飛行T='+rf(o.T)+' 補位等待w='+rf(o.w)+' 跑者到壘='+rf(o.tRun)+' 餘裕m='+rf(o.m));
     }
-    return;   // 不再更新畫面上的診斷面板
-    const f=x=>typeof x==='number'?x.toFixed(2):(x===undefined?'-':x);
-    rdLive.textContent='持球者 '+f(o.h)+'  決策 '+f(o.res)+'\n跑者 '+f(o.rs)+' v='+f(o.v)+' 目標壘 '+f(o.B)+'\n補位者 '+f(o.cv)+(o.cvKind?'（'+o.cvKind+'）':'')+'\n在動 '+f(o.moving)+'  飛行T '+f(o.T)+'  補位等待 '+f(o.w)+'\n跑者到壘 '+f(o.tRun)+'  餘裕m '+f(o.m)+'（需 '+RD_LO+'~'+RD_HI+'）\n原因 '+f(o.why);
   }catch(e){}
 }
 // 夾殺傳球出手的那一刻：傳球者立刻轉去補「跑者身後那一壘」（跑者被接球者逼回頭時，下一傳的對象就是他），
@@ -7029,12 +6959,12 @@ function batterWalkUpCheck(inChange){   // 打席換人（或新半局開始）�
   setBatterVisible(false);odSpawn();updateLockerRoster();
 }
 
-// ================= 賽前：先發名單畫面＋場上守備演練 =================
-// 開場入場結束後進入此畫面：左＝玩家球隊（可替換先發）、右＝電腦球隊。按 PLAY BALL 前，守備員持續接傳演練球；按下後才正式開打。
-// 這是獨立的賽前狀態，只借用既有守備員的接傳球邏輯，不影響「守備練習」模式本身。
+// ================= 賽前：環繞空拍 → 先發名單 → 入場與傳球演練 =================
+// ① 環繞空拍（無任何遮蔽，按滑鼠鍵跳過）→ ② 兩隊先發名單（左＝玩家球隊可替換先發、右＝電腦球隊，能力直接列在每位球員後面）＋ PLAY BALL
+// → ③ 球員入場，入場後守備員傳球演練（按滑鼠鍵跳過），然後正式開打。
 function pgTeamInfo(slot){return teamConfig.teams.find(t=>t.id===(slot==='RED'?chosenHomeId:chosenAwayId))||{};}
 function pgEsc(x){return String(x==null?'':x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-// ---- 球員卡（賽前名單與比賽中替補視窗共用）----
+// ---- 球員名單共用工具（賽前名單與比賽中替補畫面共用）----
 const PC_ATTR=[['batBox','打擊框'],['power','打擊威力'],['speed','跑速'],['acceleration','起跑'],['pitchSpeed','球速'],['armStrength','臂力'],['control','控球'],['defense','守備'],['stamina','體力']];
 function pcFind(id){return rosters.RED.concat(rosters.BLUE).find(p=>p.id===id);}
 const PD_ABBR=['框','威','速','起','球','臂','控','守','體'];
@@ -7093,7 +7023,7 @@ function pgPanel(slot){
   h+='</div></div>';
   if(edit)h+='<div class="pg-edit"><div class="pg-seg"><button type="button" data-pgmode="order" class="'+(pregame.mode==='order'?'on':'')+'">兩位先發：調換打序</button><button type="button" data-pgmode="pos" class="'+(pregame.mode==='pos'?'on':'')+'">兩位先發：調換守位</button></div></div>';
   const bench=rosters[slot].filter(p=>!L.includes(p));
-  h+='<div class="pg-sub">候補名單</div><div class="pg-scroll bot"><div class="pg-bench wideb'+(edit?' pg-edit-on':'')+'">'+attrHead(false);
+  h+='<div class="pg-sub">候補名單</div><div class="pg-scroll bot"><div class="pg-bench'+(edit?' pg-edit-on':'')+'">'+attrHead(false);
   if(!bench.length)h+='<div class="pg-hint">沒有候補球員</div>';
   bench.forEach(p=>{h+='<button type="button" class="pg-row wide bench'+on(p)+(p.inj?' injd':'')+'" data-pgid="'+pgEsc(p.id)+'"><i>#'+pgEsc(p.number)+'</i><i>'+pgEsc(p.name)+injTag(p)+'</i><i>'+pgEsc(posLabel(p))+'</i><i>'+pgEsc(handLabel(p))+'</i>'+attrCells(p)+'</button>';});
   h+='</div></div>';
@@ -7216,33 +7146,58 @@ function pregameTick(dt){
   const g=pregame;if(!g)return;
   g.aerialT+=dt;   // 步驟 1：全畫面無遮蔽的環繞空拍，不會自動結束，按滑鼠鍵才跳過
 }
-// ---- 步驟 3：入場後守備員在場上傳球演練（繞內野），不按滑鼠鍵就一直播放 ----
-const WARM_RING=['捕手','三壘手','游擊手','二壘手','一壘手','投手'];
-let warm=null;
+// ---- 步驟 3：入場後守備員在場上傳球演練：內野繞壘、外野長傳、投捕練投，三顆球同時在場；鏡頭近距離跟拍持球者 ----
+const WARM_GROUPS=[
+  {ring:['三壘手','游擊手','二壘手','一壘手'],spd:22,pause:0.5},   // 內野繞壘
+  {ring:['左外野手','中外野手','右外野手','中外野手'],spd:30,pause:0.7},   // 外野長傳
+  {ring:['投手','捕手'],spd:26,pause:0.9}];   // 投手練投、捕手回傳
+let warm=null,warmBalls=[],warmCamS=null;
 function warmFielder(pos){return pos==='捕手'?catcherDef:pos==='投手'?pitcherDef:defenders.find(d=>d.name===pos);}
-function warmInit(){warm={k:0,t:0,from:warmFielder(WARM_RING[0]),to:null,T:0};warmNext();}
-function warmNext(){
-  const w=warm;w.from=w.to||w.from;
-  let a=WARM_RING.indexOf(w.from.name);if(a<0)a=0;
-  const nx=warmFielder(WARM_RING[(a+1)%WARM_RING.length]);
-  const h0=handPos(w.from,'right'),h1=handPos(nx,'left');
-  w.to=nx;w.t=0;w.hold=0.55;w.T=Math.max(0.35,Math.hypot(h1.x-h0.x,h1.z-h0.z)/22);
+function warmBall(i){   // 第 0 組用遊戲本來的球，其餘兩顆是複製出來的
+  if(i===0)return ball;
+  if(!warmBalls[i]){const b=ball.clone('warmBall'+i);b.isVisible=false;warmBalls[i]=b;}
+  return warmBalls[i];
 }
-function warmTick(dt){
-  const w=warm;if(!w){return;}
-  w.t+=dt;
-  const a=w.from,b=w.to;if(!a||!b||!a.root||!b.root){return;}
-  const pa=a.root.position,pb=b.root.position;
+function warmInit(){
+  warm={groups:WARM_GROUPS.map((g,gi)=>{const o={g,gi,k:0,from:warmFielder(g.ring[0]),to:null,t:0,hold:0,T:0,ball:warmBall(gi)};warmNext(o,true);return o;}),focus:0,focusT:0};
+  warmCamS=null;
+}
+function warmNext(o,first){
+  const g=o.g;if(!first)o.from=o.to;
+  o.k=(o.k+1)%g.ring.length;
+  const nx=warmFielder(g.ring[first?(o.k):o.k]);
+  o.to=nx===o.from?warmFielder(g.ring[(o.k+1)%g.ring.length]):nx;
+  const h0=handPos(o.from,'right'),h1=handPos(o.to,'left');
+  o.t=0;o.hold=g.pause+Math.random()*0.35;o.T=Math.max(0.4,Math.hypot(h1.x-h0.x,h1.z-h0.z)/g.spd);
+}
+function warmStep(o,dt){
+  o.t+=dt;
+  const a=o.from,b=o.to;if(!a||!b||!a.root||!b.root)return;
+  const pa=a.root.position,pb=b.root.position,bl=o.ball;
   a.aim=V(pb.x,1.1,pb.z);b.aim=V(pa.x,1.1,pa.z);
-  ball.scaling.setAll(1);ball.isVisible=true;
-  if(w.t<w.hold){ball.position.copyFrom(handPos(a,'left'));a.throwing=0;return;}
-  const u=Math.min(1,(w.t-w.hold)/w.T);
-  const h0=handPos(a,'right'),h1=handPos(b,'left');
+  bl.scaling.setAll(1);bl.isVisible=true;
+  if(o.t<o.hold){bl.position.copyFrom(handPos(a,'left'));a.throwing=0;return;}
+  const u=Math.min(1,(o.t-o.hold)/o.T),h0=handPos(a,'right'),h1=handPos(b,'left'),L=Math.hypot(h1.x-h0.x,h1.z-h0.z);
   a.throwing=Math.max(0,1-u*2.2);
-  ball.position.set(h0.x+(h1.x-h0.x)*u,h0.y+(h1.y-h0.y)*u+Math.sin(u*Math.PI)*(0.35+0.05*Math.hypot(h1.x-h0.x,h1.z-h0.z)),h0.z+(h1.z-h0.z)*u);
-  if(u>=1){a.throwing=0;warmNext();}
+  bl.position.set(h0.x+(h1.x-h0.x)*u,h0.y+(h1.y-h0.y)*u+Math.sin(u*Math.PI)*(0.3+0.045*L),h0.z+(h1.z-h0.z)*u);
+  if(u>=1){a.throwing=0;warmNext(o,false);}
 }
-function warmStop(){if(warm){const a=warm.from,b=warm.to;if(a)a.throwing=0;if(b)b.throwing=0;}warm=null;}
+// 跟球鏡頭：在持球者／傳球者身後側方近距離拍攝，看球飛向接球者；每 5 秒換一組（內野 → 外野 → 投捕）
+function warmCam(dt){
+  const w=warm;if(!w)return;
+  w.focusT+=dt;if(w.focusT>5){w.focusT=0;w.focus=(w.focus+1)%w.groups.length;}
+  const o=w.groups[w.focus],a=o.from,b=o.to;if(!a||!b)return;
+  const pa=a.root.position,pb=b.root.position;
+  let dx=pb.x-pa.x,dz=pb.z-pa.z;const L=Math.hypot(dx,dz)||1;dx/=L;dz/=L;
+  const back=Math.min(9,5.5+L*0.12),side=Math.min(6,3.8+L*0.06);const want=V(pa.x-dx*back-dz*side,2.6,pa.z-dz*back+dx*side);
+  const bp=o.ball.position,tgt=V(bp.x,Math.max(1.1,bp.y*0.9),bp.z);
+  const g=warmCamS||(warmCamS={p:want.clone(),t:tgt.clone()});
+  const k=1-Math.exp(-dt*3.2),kt=1-Math.exp(-dt*6);
+  g.p=lerpV(g.p,want,k);g.t=lerpV(g.t,tgt,kt);
+  camFollow=null;camTgt=g.t.clone();cam.position.copyFrom(g.p);
+}
+function warmTick(dt){if(warm)warm.groups.forEach(o=>warmStep(o,dt));}
+function warmStop(){if(warm){warm.groups.forEach(o=>{if(o.from)o.from.throwing=0;if(o.to)o.to.throwing=0;});warmBalls.forEach(b=>{if(b)b.isVisible=false;});}warm=null;warmCamS=null;}
 function resetPlayState(){simLive=false;inningOver=false;flyOut=false;hitStop=0;flightClock=0;ft=0;stT=0;playClock=0;bases=[0,0,0];baseP=[null,null,null];balls=strikes=outs=0;lastRuns=0;}
 function pregamePlayBall(){   // 按 PLAY BALL：才開始入場動畫（裁判與守備員從休息區入場、顯示隊徽 VS）
   if(!pregame||!pregame.shown)return;
@@ -8768,6 +8723,7 @@ function gameFrame(dt){
   if(lockerRoomView&&STADIUM_LOCKER){camFollow=null;camTgt=V(...STADIUM_LOCKER.camTarget);cam.position.set(...STADIUM_LOCKER.camPos);}
   else if(tm('camera')){}
   else if(chg&&pregame){pregameCam(dt);}
+  else if(chg&&chg.intro&&warm){warmCam(dt);}   // 傳球演練：近距離跟球鏡頭
   else if(chg&&chg.intro){introCam(dt);}   // 入場動畫：固定自動切換視角
   else if(chg){camFollow=null;camTgt=V(0,0,44);placeAir(camTgt,1.9);}   // 換場：高處俯視全場，看得到各守位與兩側休息區
   else if(hrSeq&&hrCamera(dt)){}   // 全壘打：追球 → 高空俯瞰 → 打者特寫 →（主場）啦啦隊
